@@ -5,10 +5,9 @@ import { Link, useSearchParams } from 'react-router';
 import { useCatalog } from '../app/catalog';
 import { usePageTitle } from '../app/page';
 import { ExtLink } from '../components/ExtLink';
-import { Icon } from '../components/Icon';
 import { Markdown } from '../components/Markdown';
 import { Bar } from '../components/Skeleton';
-import { asset, loadReleases } from '../data/catalog';
+import { loadReleases } from '../data/catalog';
 import { formatDate, formatMonth, tagUrl } from '../data/links';
 import type { Release } from '../types';
 
@@ -58,10 +57,6 @@ export function WhatsNewPage() {
             Releases of plugins in the catalog, newest first.
           </p>
         </div>
-        <a className="btn" href={asset('feed.xml')}>
-          <Icon name="rss" />
-          Subscribe (Atom)
-        </a>
       </div>
 
       {plugins.length > 1 && (

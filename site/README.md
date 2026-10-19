@@ -75,6 +75,6 @@ Optionally create the `site-feedback` label used by "Report an issue" links.
 
 - `scripts/build-index.mjs` and real data from `marketplace.json` and `plugins/` (the next lab step); until then the fixtures are deployed.
 - Releases from git tags (`releases.json` is a hand-written fixture).
-- `catalog.json`, `llms.txt` and `feed.xml`: the footer, Getting started and What's new already link to them, but the files are not generated, so the links return 404 for now.
+- `catalog.json`, `llms.txt` and `feed.xml`: not generated yet, so the site does not link to them (footer, Getting started "For agents" block, What's new "Subscribe" button). Restore the links when `build-index` produces the files.
 - Playwright e2e smoke tests (spec FR-95) and the separate `build.yml` / `ci.yml` workflows from spec §8.2.
 - Tablet layout and the mobile filter panel were not designed; both use a full-screen filter panel below 1024 px.

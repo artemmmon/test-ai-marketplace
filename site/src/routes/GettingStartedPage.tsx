@@ -5,7 +5,6 @@ import { usePageTitle } from '../app/page';
 import { usePrefs } from '../app/prefs';
 import { Slip } from '../components/Copy';
 import { Icon } from '../components/Icon';
-import { asset } from '../data/catalog';
 import { ModeSwitch } from './PluginPage';
 
 const FALLBACK = {
@@ -119,20 +118,6 @@ export function GettingStartedPage() {
               bin/
             </code>{' '}
             run with your privileges, outside Claude’s permission rules. Read them on the plugin page before installing.
-          </p>
-        </section>
-        <section aria-labelledby="agents-h" className="card">
-          <h2 id="agents-h">For agents</h2>
-          <p className="muted" style={{ margin: '0 0 10px', fontSize: 14 }}>
-            A machine-readable catalog and full component texts.
-          </p>
-          <p style={{ margin: 0, display: 'flex', gap: 16 }}>
-            <a className="mono" href={asset('llms.txt')} style={{ fontSize: 14 }}>
-              llms.txt
-            </a>
-            <a className="mono" href={asset('catalog.json')} style={{ fontSize: 14 }}>
-              catalog.json
-            </a>
           </p>
         </section>
       </div>

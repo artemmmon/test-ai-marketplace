@@ -1,5 +1,4 @@
 import { useCatalog } from '../app/catalog';
-import { asset } from '../data/catalog';
 import { commitUrl, formatDate, issueUrl } from '../data/links';
 import { ExtLink } from './ExtLink';
 
@@ -17,15 +16,6 @@ export function Footer() {
           </span>
         )}
         <span className="foot-links">
-          <a className="mono" href={asset('catalog.json')}>
-            catalog.json
-          </a>
-          <a className="mono" href={asset('llms.txt')}>
-            llms.txt
-          </a>
-          <a className="mono" href={asset('feed.xml')}>
-            feed.xml
-          </a>
           <ExtLink href={issueUrl(index, '[site] ')}>Report an issue</ExtLink>
         </span>
       </div>
