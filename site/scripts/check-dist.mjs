@@ -1,0 +1,65 @@
+// Post-build checks for site/dist (a subset of spec FR-72):
+// base path in index.html, no root-absolute fetches, data files present,
+// size budgets (NFR-20) and, with REQUIRE_REAL_DATA=1, no fixture data.
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
+
+const BASE = '/test-ai-marketplace/';
+const dist = new URL('../dist/', import.meta.url).pathname;
+const errors = [];
+const warnings = [];
+
+const html = readFileSync(join(dist, 'index.html'), 'utf8');
+for (const [, attr, value] of html.matchAll(/\s(src|href)="([^"]+)"/g)) {
+  if (!value.startsWith(BASE)) errors.push(`index.html: ${attr}="${value}" does not start with ${BASE}`);
+}
+
+const assets = readdirSync(join(dist, 'assets'));
+let js = 0;
+let css = 0;
+for (const file of assets) {
+  const path = join(dist, 'assets', file);
+  if (file.endsWith('.js')) {
+    const text = readFileSync(path, 'utf8');
+    if (/fetch\(\s*["'`]\//.test(text)) errors.push(`assets/${file}: fetch() with a root-absolute path`);
+    if (/fonts\.(googleapis|gstatic)\.com/.test(text)) errors.push(`assets/${file}: references Google Fonts`);
+  }
+  if (file.endsWith('.css')) {
+    const text = readFileSync(path, 'utf8');
+    css += gzipSync(text).length;
+    if (/fonts\.(googleapis|gstatic)\.com/.test(text)) errors.push(`assets/${file}: references Google Fonts`);
+  }
+}
+// The entry chunk is the one referenced from index.html.
+const entry = html.match(/assets\/(index-[^"]+\.js)/)?.[1];
+if (entry) js = gzipSync(readFileSync(join(dist, 'assets', entry))).length;
+
+for (const file of ['index.json', 'releases.json', 'stats.json', 'theme-init.js']) {
+  try {
+    statSync(join(dist, file));
+  } catch {
+    errors.push(`dist/${file} is missing`);
+  }
+}
+
+const budget = (name, size, limit) => {
+  const kb = (size / 1024).toFixed(1);
+  if (size > limit * 1.5) errors.push(`${name} ${kb} KB gzip exceeds 1.5x budget (${limit / 1024} KB)`);
+  else if (size > limit) warnings.push(`${name} ${kb} KB gzip exceeds budget (${limit / 1024} KB)`);
+  else console.log(`${name}: ${kb} KB gzip (budget ${limit / 1024} KB)`);
+};
+budget('initial JS', js, 150 * 1024);
+budget('CSS', css, 30 * 1024);
+
+if (process.env.REQUIRE_REAL_DATA === '1') {
+  const index = JSON.parse(readFileSync(join(dist, 'index.json'), 'utf8'));
+  if (index.fixture !== false) errors.push('index.json is fixture data, but REQUIRE_REAL_DATA=1');
+}
+
+for (const w of warnings) console.warn(`warning: ${w}`);
+if (errors.length) {
+  for (const e of errors) console.error(`error: ${e}`);
+  process.exit(1);
+}
+console.log('check-dist ok');

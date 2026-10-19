@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sdd-engineering — test-ai-marketplace</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{color-scheme:dark;--bg:#161B26;--surface:#1D2331;--surface-raised:#262D3E;--border:#353D51;--text:#E7EAF1;--text-muted:#A4ACBE;--accent:#A9B6FF;--accent-hover:#C6CEFF;--accent-contrast:#151A33;--focus-ring:#C6CEFF;--mark-bg:#5B4A1A;--mark-fg:#FFE8AE;--warning-bg:#3A2B12;--warning-border:#6B4E1E;--warning-text:#F6C36E;--danger:#FF8C8C;--success:#7ED9A0;--success-bg:#173326;--code-bg:#11151E;--type-plugin-bg:#2B3256;--type-plugin-fg:#CDD5FF;--type-skill-bg:#173B37;--type-skill-fg:#86E3D2;--type-agent-bg:#3E2440;--type-agent-fg:#F5B0E0;--type-command-bg:#29371C;--type-command-fg:#BFE68F;--type-hook-bg:#432A1C;--type-hook-fg:#FFBA94;--type-mcp-bg:#1B3148;--type-mcp-fg:#A3D3FF}
+.theme-light{color-scheme:light;--bg:#F3F4F7;--surface:#FFFFFF;--surface-raised:#FFFFFF;--border:#D6DAE3;--text:#1B2030;--text-muted:#566074;--accent:#3346B8;--accent-hover:#28399E;--accent-contrast:#FFFFFF;--focus-ring:#3346B8;--mark-bg:#FFE49A;--mark-fg:#3A2A00;--warning-bg:#FFF2D9;--warning-border:#F0C979;--warning-text:#6E4600;--danger:#B42323;--success:#1E7A45;--success-bg:#DDF3E5;--code-bg:#EEF0F5;--type-plugin-bg:#E4E8FF;--type-plugin-fg:#2D3C9E;--type-skill-bg:#D9F3EE;--type-skill-fg:#0D5E52;--type-agent-bg:#F8E1F1;--type-agent-fg:#8A2468;--type-command-bg:#E6F2D6;--type-command-fg:#3D5E12;--type-hook-bg:#FDE6DA;--type-hook-fg:#8F3A0E;--type-mcp-bg:#DCEBFA;--type-mcp-fg:#1D4E80}
+.ui{font-family:'Schibsted Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-feature-settings:'calt' 0}
+a{color:var(--accent)}a:hover{color:var(--accent-hover)}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:16px;top:-48px;padding:8px 12px;border-radius:8px;background:var(--accent);color:var(--accent-contrast)}.skip:focus{top:12px}
+.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-raised);color:var(--text);font:inherit;font-size:14px;font-weight:500;line-height:1;cursor:pointer;text-decoration:none;white-space:nowrap;transition:border-color .15s,background-color .15s}
+.btn:hover{border-color:var(--text-muted);color:var(--text)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:var(--accent-contrast)}
+.btn-icon{width:36px;padding:0}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);border-color:var(--border)}
+.nav a{color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:8px}
+.nav a:hover{color:var(--text);background:var(--surface)}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.badge .ico{width:13px;height:13px}
+.t-plugin{background:var(--type-plugin-bg);color:var(--type-plugin-fg)}
+.t-skill{background:var(--type-skill-bg);color:var(--type-skill-fg)}
+.t-agent{background:var(--type-agent-bg);color:var(--type-agent-fg)}
+.t-command{background:var(--type-command-bg);color:var(--type-command-fg)}
+.warn{background:var(--warning-bg);color:var(--warning-text);border:1px solid var(--warning-border)}
+.neutral{background:transparent;color:var(--text-muted);border:1px solid var(--border)}
+.ok{background:var(--success-bg);color:var(--success)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.tag{display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:13px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;text-decoration:none}
+.tag:hover{color:var(--text);border-color:var(--text-muted)}
+.hsearch{display:flex;align-items:center;gap:8px;height:38px;padding:0 6px 0 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.hsearch:focus-within{outline:2px solid var(--focus-ring);outline-offset:2px}
+.hsearch input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);font:inherit;font-size:14px;outline:none}
+.hsearch input::placeholder{color:var(--text-muted)}
+kbd{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;border:1px solid var(--border);color:var(--text-muted)}
+.seg{display:inline-flex;padding:3px;border-radius:10px;background:var(--code-bg);border:1px solid var(--border);gap:2px}
+.seg button{height:30px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--text-muted);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.seg button:hover{color:var(--text)}
+.seg button[aria-selected=true],.seg button[aria-pressed=true]{background:var(--surface-raised);color:var(--text);box-shadow:0 0 0 1px var(--border)}
+.slip{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:10px;background:var(--code-bg);overflow:hidden}
+.slip code{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:12px 14px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;color:var(--text);overflow-x:auto;white-space:nowrap}
+.slip code .p{color:var(--text-muted);user-select:none}
+.slip button{display:inline-flex;align-items:center;gap:6px;padding:0 16px;border:0;border-left:1px solid var(--border);background:var(--surface-raised);color:var(--text);font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background-color .15s}
+.slip button:hover{background:var(--accent);color:var(--accent-contrast)}
+.step{display:flex;gap:14px}
+.num{flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--surface-raised);border:1px solid var(--border);font-variant-numeric:tabular-nums}
+h2.sec{margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:500;color:var(--text-muted);font-size:13px;padding:0 12px 10px 0;border-bottom:1px solid var(--border)}
+.tbl td{padding:12px 12px 12px 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.tree{margin:0;padding:0;list-style:none;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;line-height:1.9;color:var(--text)}
+.tree ul{list-style:none;margin:0;padding-left:22px;border-left:1px solid var(--border);margin-left:6px}
+.tree .v{color:var(--text-muted)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tabs button{height:42px;padding:0 14px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent;color:var(--text-muted);font:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:var(--text)}
+.tabs button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent)}
+.acc{border-bottom:1px solid var(--border)}
+.acc h3{margin:0}
+.acc button{width:100%;display:flex;align-items:flex-start;gap:12px;padding:16px 0;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.acc button:hover .nm{text-decoration:underline;text-underline-offset:3px}
+.md{font-size:15px;line-height:1.65}
+.md h1{font-size:22px;margin:0 0 8px;font-weight:600}
+.md h2{font-size:17px;margin:22px 0 6px;font-weight:600}
+.md p{margin:0 0 12px;max-width:72ch}
+.md ul,.md ol{margin:0 0 12px;padding-left:22px;max-width:72ch}
+.md code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;background:var(--code-bg);padding:1px 6px;border-radius:5px}
+dl.meta{margin:0;display:grid;grid-template-columns:118px minmax(0,1fr);gap:14px 12px;font-size:14px}
+dl.meta dt{color:var(--text-muted)}
+dl.meta dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.foot a{color:var(--text-muted)}.foot a:hover{color:var(--text)}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;scroll-behavior:auto !important}}
+</style>
+</helmet>
+<div class="ui theme-{{theme}}" style="min-height: 100%; display: flex; flex-direction: column;">
+<a class="skip" href="#main">Skip to content</a>
+
+<header style="position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border);">
+<div style="max-width: 1280px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 20px;">
+<a href="#" style="display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; flex: none;">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="9" height="9" rx="2" fill="var(--accent)"></rect><rect x="12" y="1" width="9" height="9" rx="2" fill="none" stroke="var(--accent)" stroke-width="2"></rect><rect x="1" y="12" width="9" height="9" rx="2" fill="none" stroke="var(--accent)" stroke-width="2"></rect><rect x="12" y="12" width="9" height="9" rx="2" fill="none" stroke="var(--accent)" stroke-width="2"></rect></svg>
+<span class="mono" style="font-weight: 600; font-size: 15px;" translate="no">test-ai-marketplace</span>
+</a>
+<div class="hsearch" style="flex: 0 1 420px;">
+<svg class="ico" style="color: var(--text-muted);" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M21 21l-4.35-4.35"></path></svg>
+<label for="hq" class="sr-only">Search the catalog</label>
+<input id="hq" type="search" role="searchbox" placeholder="Search plugins, skills, agents…" autocomplete="off" spellcheck="false">
+<kbd aria-hidden="true">/</kbd>
+</div>
+<nav class="nav" aria-label="Main" style="display: flex; gap: 4px; margin-left: auto;">
+<a href="#">Search</a>
+<a href="#">What’s new</a>
+<a href="#">Getting started</a>
+</nav>
+<div style="display: flex; gap: 4px;">
+<button class="btn btn-ghost btn-icon" type="button" aria-label="Switch to light theme"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M6.34 17.66l-1.41 1.41 M19.07 4.93l-1.41 1.41"></path></svg></button>
+<a class="btn btn-ghost btn-icon" href="#" aria-label="GitHub repository"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4 M9 18c-4.51 2-5-2-7-2"></path></svg></a>
+</div>
+</div>
+</header>
+
+<main id="main" style="flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 24px 24px 56px; box-sizing: border-box;">
+<nav aria-label="Breadcrumb" style="font-size: 14px; color: var(--text-muted); margin-bottom: 18px;">
+<a href="#">Search</a><span aria-hidden="true" style="margin: 0 8px;">›</span><span class="mono" aria-current="page" translate="no">sdd-engineering</span>
+</nav>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 32px; padding-bottom: 28px; border-bottom: 1px solid var(--border);">
+<div style="flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; gap: 6px; flex-wrap: wrap;">
+<span class="badge t-plugin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 9.4 7.55 4.24 M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96 12 12.01l8.73-5.05 M12 22.08V12"></path></svg>Plugin</span>
+<span class="badge neutral mono">v1.0.0</span>
+</div>
+<h1 class="mono" style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15;" translate="no">sdd-engineering</h1>
+<p style="margin: 0; font-size: 17px; color: var(--text-muted); max-width: 64ch; text-wrap: pretty;">Spec-driven development: write specs, plan, review — built on the paved path, research and architecture plugins.</p>
+</div>
+<div style="display: flex; gap: 8px;">
+<a class="btn" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4 M9 18c-4.51 2-5-2-7-2"></path></svg>GitHub</a>
+<a class="btn" href="#" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22v-7"></path></svg>Report an issue</a>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; padding-top: 32px;">
+<div style="flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 48px;">
+
+<section aria-labelledby="install-h" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+<h2 class="sec" id="install-h">Install</h2>
+<div class="seg" role="tablist" aria-label="Where to run the commands">
+<button type="button" role="tab" aria-selected="false">In chat</button>
+<button type="button" role="tab" aria-selected="true">In terminal</button>
+</div>
+</div>
+<div class="step">
+<span class="num" aria-hidden="true">1</span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+<p style="margin: 0; font-weight: 500; min-height: 28px; display: flex; align-items: center;">Add the marketplace (once)</p>
+<div class="slip"><code translate="no"><span class="p" aria-hidden="true">$</span>claude plugin marketplace add artemmmon/test-ai-marketplace</code><button type="button" aria-label="Copy the add marketplace command"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h12v12H8z M16 8V4H4v12h4"></path></svg>Copy</button></div>
+</div>
+</div>
+<div class="step">
+<span class="num" aria-hidden="true">2</span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 28px;">
+<p style="margin: 0; font-weight: 500;">Install the plugin</p>
+<div style="display: flex; align-items: center; gap: 8px;">
+<span id="scope-l" style="font-size: 13px; color: var(--text-muted);">Scope</span>
+<div class="seg" role="group" aria-labelledby="scope-l">
+<button type="button" aria-pressed="true" title="Only for the current project">project</button>
+<button type="button" aria-pressed="false" title="For all your projects">user</button>
+</div>
+</div>
+</div>
+<div class="slip"><code translate="no"><span class="p" aria-hidden="true">$</span>claude plugin install sdd-engineering@test-ai-marketplace --scope project</code><button type="button" aria-label="Copy the install command for sdd-engineering"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h12v12H8z M16 8V4H4v12h4"></path></svg>Copy</button></div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding-left: 42px; font-size: 14px; color: var(--text-muted);">
+<p style="margin: 0;">Installs the whole plugin with all its components. Dependencies are installed automatically: <a class="mono" href="#">engineering-paved-path</a>, <a class="mono" href="#">research-tools</a>, <a class="mono" href="#">architecture-review</a>.</p>
+<div role="note" class="warn" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; font-size: 14px;">
+<svg class="ico" style="margin-top: 3px;" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z M12 9v4 M12 17h.01"></path></svg>
+<div><strong style="font-weight: 600;">Dependencies execute code.</strong> <span class="mono" style="font-size: 13px;">engineering-paved-path</span> runs hooks and <span class="mono" style="font-size: 13px;">research-tools</span> starts an MCP server, outside Claude’s permission rules. Read them before installing.</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="deps-h" style="display: flex; flex-direction: column; gap: 16px;">
+<h2 class="sec" id="deps-h">Dependencies</h2>
+<div style="overflow-x: auto;">
+<table class="tbl">
+<thead><tr><th scope="col">Name</th><th scope="col">Required</th><th scope="col">Resolved</th><th scope="col">Status</th></tr></thead>
+<tbody>
+<tr><td><a class="mono" href="#">engineering-paved-path</a></td><td class="mono">^1.0.0</td><td class="mono">1.2.0</td><td><span class="badge ok"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Satisfied</span></td></tr>
+<tr><td><a class="mono" href="#">research-tools</a></td><td class="mono">^1.0.0</td><td class="mono">1.0.1</td><td><span class="badge ok"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Satisfied</span></td></tr>
+<tr><td><a class="mono" href="#">architecture-review</a></td><td class="mono">^1.0.0</td><td class="mono">1.0.0</td><td><span class="badge ok"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Satisfied</span></td></tr>
+</tbody>
+</table>
+</div>
+<details open="open" style="border: 1px solid var(--border); border-radius: 10px; padding: 0 16px;">
+<summary style="cursor: pointer; padding: 12px 0; font-weight: 500;">Dependency tree</summary>
+<ul class="tree" style="padding-bottom: 14px;" translate="no">
+<li>sdd-engineering <span class="v">1.0.0</span>
+<ul>
+<li>engineering-paved-path <span class="v">1.2.0</span></li>
+<li>research-tools <span class="v">1.0.1</span></li>
+<li>architecture-review <span class="v">1.0.0</span>
+<ul><li>engineering-paved-path <span class="v">1.2.0</span></li></ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<p style="margin: 0; font-size: 14px; color: var(--text-muted);">Used by: no other plugins in the catalog.</p>
+</section>
+
+<section aria-labelledby="contents-h" style="display: flex; flex-direction: column; gap: 8px;">
+<h2 class="sec" id="contents-h">Contents</h2>
+<div class="tabs" role="tablist" aria-label="Components by type">
+<button type="button" role="tab" aria-selected="true" aria-controls="panel-skills">Skills (2)</button>
+<button type="button" role="tab" aria-selected="false" tabindex="-1">Agents (1)</button>
+<button type="button" role="tab" aria-selected="false" tabindex="-1">Commands (1)</button>
+</div>
+<div id="panel-skills" role="tabpanel" aria-label="Skills (2)">
+<div class="acc">
+<h3><button type="button" aria-expanded="false" aria-controls="b1">
+<svg class="ico" style="margin-top: 4px; color: var(--text-muted);" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span class="mono nm" style="font-size: 14px; font-weight: 500;" translate="no"><span style="color: var(--text-muted);">sdd-engineering:</span>sdd-workflow</span><span style="font-size: 14px; color: var(--text-muted); font-weight: 400;">Spec-driven development workflow: spec, plan, tasks, implementation, review gates.</span></span>
+</button></h3>
+</div>
+<div class="acc">
+<h3><button type="button" aria-expanded="true" aria-controls="b2">
+<svg class="ico" style="margin-top: 4px; color: var(--text-muted);" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span class="mono nm" style="font-size: 14px; font-weight: 500;" translate="no"><span style="color: var(--text-muted);">sdd-engineering:</span>spec-writing</span><span style="font-size: 14px; color: var(--text-muted); font-weight: 400;">Write a testable specification with numbered requirements and Given/When/Then criteria.</span></span>
+</button></h3>
+<div id="b2" style="margin: 0 0 20px 28px; padding: 20px 22px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--border);">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 13px; color: var(--text-muted);"><span class="mono">SKILL.md</span><a href="#" style="margin-left: auto;">Open page</a></div>
+<div class="md">
+<h1>Spec writing</h1>
+<p>Use this skill when a feature needs a written specification before planning or implementation.</p>
+<h2>Steps</h2>
+<ol>
+<li>State the goal and the non-goals in one paragraph each.</li>
+<li>Number every requirement as <code>FR-n</code> or <code>NFR-n</code>.</li>
+<li>Give each requirement Given/When/Then acceptance criteria.</li>
+<li>List open questions instead of guessing answers.</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="readme-h" style="display: flex; flex-direction: column; gap: 16px;">
+<h2 class="sec" id="readme-h">README</h2>
+<div class="md">
+<p>Spec-driven development for Claude Code. The plugin adds a workflow skill, a spec writing skill, a spec reviewer agent and the <code>/spec</code> command.</p>
+<p>It builds on <code>engineering-paved-path</code> for code review, <code>research-tools</code> for background research and <code>architecture-review</code> for ADRs.</p>
+</div>
+</section>
+
+<section aria-labelledby="changelog-h" style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+<h2 class="sec" id="changelog-h">Changelog</h2>
+<a href="#" style="font-size: 14px;">All releases in What’s new</a>
+</div>
+<article style="display: flex; flex-direction: column; gap: 8px;">
+<h3 style="margin: 0; font-size: 16px; font-weight: 600; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;"><span class="mono">1.0.0</span><span style="font-size: 14px; font-weight: 400; color: var(--text-muted);">Oct 10, 2026</span><a class="mono" href="#" style="font-size: 13px; font-weight: 400;">sdd-engineering--v1.0.0</a></h3>
+<ul class="md" style="margin: 0; padding-left: 22px; font-size: 15px;"><li>First release: <code>sdd-workflow</code> and <code>spec-writing</code> skills, <code>spec-reviewer</code> agent, <code>/spec</code> command.</li></ul>
+</article>
+</section>
+</div>
+
+<aside aria-label="Plugin details" class="card" style="flex: 1 1 300px; min-width: 0; padding: 22px; position: sticky; top: 88px;">
+<h2 style="margin: 0 0 18px; font-size: 16px; font-weight: 600;">Details</h2>
+<dl class="meta">
+<dt>Version</dt><dd class="mono">1.0.0</dd>
+<dt>Owner</dt><dd>artemmmon</dd>
+<dt>License</dt><dd>MIT</dd>
+<dt>Compatibility</dt><dd style="color: var(--text-muted);">Not specified</dd>
+<dt>Source</dt><dd><a class="mono" href="#" style="font-size: 13px;">plugins/sdd-engineering</a></dd>
+<dt>Latest release</dt><dd><span class="mono">1.0.0</span>, Oct 10, 2026<br><a class="mono" href="#" style="font-size: 13px;">sdd-engineering--v1.0.0</a></dd>
+<dt>Contents</dt><dd>2 skills, 1 agent, 1 command</dd>
+<dt>Keywords</dt><dd style="display: flex; flex-wrap: wrap; gap: 6px;"><a class="tag" href="#">sdd</a><a class="tag" href="#">spec</a><a class="tag" href="#">planning</a></dd>
+</dl>
+</aside>
+</div>
+</main>
+
+<footer class="foot" style="border-top: 1px solid var(--border);">
+<div style="max-width: 1280px; margin: 0 auto; padding: 20px 24px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--text-muted);">
+<span>Catalog generated Oct 19, 2026 from <a class="mono" href="#" translate="no">a1b2c3d</a></span>
+<span style="display: flex; gap: 20px; margin-left: auto; flex-wrap: wrap;"><a class="mono" href="#">catalog.json</a><a class="mono" href="#">llms.txt</a><a class="mono" href="#">feed.xml</a><a href="#">Report an issue</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":2280}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? "dark" };
+  }
+}
+</script>
+</body>
+</html>

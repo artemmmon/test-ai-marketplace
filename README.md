@@ -5,15 +5,6 @@ Plugins here are extracted from DevDigest (skills, agents). The catalogue is emp
 
 ## Install
 
-The repo is private, so git must be able to read it non-interactively first:
-
-```sh
-gh auth login && gh auth setup-git
-```
-
-Do not export a global `GITHUB_TOKEN` / `GH_TOKEN` for this — it shadows your `gh` login
-(anthropics/claude-code#74923).
-
 ```sh
 claude plugin marketplace add artemmmon/test-ai-marketplace
 claude plugin install <plugin>@test-ai-marketplace

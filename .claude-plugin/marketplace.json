@@ -2,5 +2,11 @@
   "name": "test-ai-marketplace",
   "owner": { "name": "artemmmon" },
   "description": "Personal Claude Code plugin marketplace — plugins extracted from DevDigest",
-  "plugins": []
+  "plugins": [
+    {
+      "name": "find-skills",
+      "source": "./plugins/find-skills",
+      "description": "Helps discover and install agent skills from the open skills ecosystem (skills.sh, npx skills)"
+    }
+  ]
 }
