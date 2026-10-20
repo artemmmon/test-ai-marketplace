@@ -11,6 +11,11 @@ the case are loaded, and nothing from your user settings, other plugins or `CLAU
 - Claude Code 2.1.269 or newer (`claude --version`); `claude plugin eval` does not exist before that.
 - git 2.31 or newer (`git --version`); older versions make the command stop before any case runs.
 - Credentials for a model provider. Every run and every judge grader is a real model call.
+- The USD figures in this document are the CLI-reported cost estimates at API list prices, not an invoice: on a
+  Claude subscription nothing is billed per run, but the runs use up the plan's usage limits.
+- Of the graders, `tool_used`, `regex` and `file_exists` are deterministic; `llm` graders are judged by a model
+  (default `haiku`, change with `--judge-model`), so their results can vary between runs. Evals are run by hand,
+  not in CI, because they need a logged-in Claude Code session.
 - Cases are tested with `--model sonnet`. A small model may not trigger a skill at all (a `haiku` run of
   `security-ssrf-import-url` rated the SSRF "High" instead of CRITICAL and never called the skill), which
   shows up as a failed case, not as an error.
