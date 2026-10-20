@@ -237,6 +237,21 @@ test('the planner format: Tests (new) and Existing tests to update lines do not 
   has(errors(swap('- Covers: AC-1, EC-1', '- Covers: none').replace('— proves AC-1, EC-1', '— proves AC-1')), 'no step cites EC-1');
 });
 
+test('--implemented P2: the spec follows the plan (implemented plan -> implemented spec, partial plan -> approved spec)', () => {
+  const p2 = (planStatus, specStatus) => {
+    const root = project({ 'docs/plans/06-probe.md': PLAN, 'specs/10-probe.md': SPEC.replace('approved', specStatus) });
+    git(root, 'init', '-q', '-b', 'main');
+    git(root, 'add', '.');
+    git(root, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'base');
+    const text = PLAN.replace('Status: draft', `Status: ${planStatus}`);
+    return checkImplemented(text, root, 'docs/plans/06-probe.md', 'HEAD').find((l) => l.id === 'P2');
+  };
+  assert.equal(p2('implemented', 'implemented').level, 'PASS');
+  assert.equal(p2('implemented', 'approved').level, 'FAIL'); // the implementer forgot the spec
+  assert.equal(p2('partial', 'approved').level, 'PASS');
+  assert.equal(p2('partial', 'implemented').level, 'FAIL');
+});
+
 test('--implemented: falls back to master when there is no main', () => {
   const root = project({ 'docs/plans/06-probe.md': PLAN });
   git(root, 'init', '-q', '-b', 'master');

@@ -117,6 +117,18 @@ test('an insights file is outside the spec folder: blocked for spec-creator, ope
   }
 });
 
+test('the implementer sets an approved spec to implemented; spec-creator cannot', () => {
+  const APPROVED = DRAFT.replace('draft', 'approved');
+  const root = project({ 'specs/10-probe.md': APPROVED });
+  const implementer = { extra: { agent_type: 'sdd-engineering:implementer', agent_id: 'i1' } };
+  const status = { file_path: 'specs/10-probe.md', old_string: 'Status: approved', new_string: 'Status: implemented' };
+  allowed(run(root, 'Edit', status, implementer));
+  allowed(run(root, 'Write', { file_path: 'specs/10-probe.md', content: DRAFT.replace('draft', 'implemented') }, implementer));
+  blocked(run(root, 'Edit', status)); // spec-creator may only reopen it as a draft
+  const done = project({ 'specs/10-probe.md': DRAFT.replace('draft', 'implemented') });
+  blocked(run(done, 'Edit', { file_path: 'specs/10-probe.md', old_string: 'Text.', new_string: 'Other.' }));
+});
+
 test('a symlink cannot lead a write out of the spec folder', () => {
   const root = project({ 'specs/README.md': '# Specs\n', 'src/a.ts': '' });
   symlinkSync(join(root, 'src/a.ts'), join(root, 'specs/10-link.md'));

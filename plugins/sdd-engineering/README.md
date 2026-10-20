@@ -381,8 +381,8 @@ untrusted inputs, open questions.
 draft  ->  approved  ->  implemented
 ```
 
-The author (`spec-creator`) writes `draft`; only you set `approved`; the `implementer` sets `implemented` together
-with the plan's last group. To change an approved spec, amend it (back to `draft`, `Amended:` line, new ids,
+The author (`spec-creator`) writes `draft`; only you set `approved`; the `implementer` of the plan's last group sets
+`implemented` in the same pass as the plan's own status (the spec stays `approved` if the plan ends `partial`). To change an approved spec, amend it (back to `draft`, `Amended:` line, new ids,
 approve again). To change an implemented spec, write a new one with `Supersedes:`. A brief goes `awaiting choice` ->
 `chosen: option <k>`; a plan goes `draft` -> `approved` -> `in progress` -> `implemented` or `partial`.
 

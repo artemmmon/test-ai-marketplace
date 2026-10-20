@@ -79,7 +79,7 @@ The part above the `<!-- implementer-brief:end -->` marker is all an implementer
 
 When the caller sends corrections or new requirements, change the plan file in place with Edit and return a Plan summary whose first line lists what changed. You can edit a plan only while it is a draft: for a plan that is already `approved` or `in progress`, the caller sets it back to `draft` on the user's word first.
 
-Plan `Status` goes `draft` -> `approved` -> `in progress` -> `implemented` | `partial`. You write `draft`. The user approves; the main session writes `approved` on the user's word. The implementer writes the rest.
+Plan `Status` goes `draft` -> `approved` -> `in progress` -> `implemented` | `partial`. You write `draft`. The user approves; the main session writes `approved` on the user's word. The implementer writes the rest, and with the plan's last group it also sets the spec's `Status` to `implemented`. Never write that no step or agent edits the spec: the spec's status line is the one edit the implementer makes to it, and `check-plan.mjs --implemented` fails a finished plan whose spec is still `approved`. Do not add a step for it.
 
 ### Development Plan format
 
@@ -117,7 +117,7 @@ Out of scope: ...
 
 ## Contracts & migrations
 - Generated or copied artefacts (shared contracts, migrations, lock files): yes/no — <which files, and the command that generates them>
-- Spec `Status` update: yes/no
+- Spec `Status` update: <yes - when the plan implements a spec with a `Spec ID:` line: the implementer of the last group sets it `implemented` (it stays `approved` if the plan ends `partial`); this is not a step and needs no Files line | no - there is no spec>
 
 ## Verification
 | Package | Checks |

@@ -85,7 +85,9 @@ A fix or a small feature with no spec starts at stage 2 or 3 with the request as
 | Plan | `draft` -> `approved` -> `in progress` -> `implemented` or `partial` | `implementation-planner` · the main session on the user's word · `implementer` |
 
 Hooks of the plugin keep the spec a draft in `spec-creator`'s hands and let the planner and `brainstorm`
-write only their own draft file. `check-plan.mjs` fails a plan whose spec is not approved.
+write only their own draft file. `check-plan.mjs` fails a plan whose spec is not approved, and (`--implemented`, `P2`) a
+finished plan whose spec is not `implemented`. The implementer of the last group sets both the plan and the spec
+status; the main session never does, and no plan step does.
 
 ## Workflow (copy and tick off)
 
