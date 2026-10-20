@@ -1,7 +1,10 @@
 name: Pages
 
-# Pull requests into main: build only (typecheck, unit tests, vite build, dist checks).
-# Push to main or a manual run: build and deploy site/dist to GitHub Pages.
+# Three separate jobs, so each one shows its own pass/fail mark in the Actions UI and on a PR:
+#   checks  - typecheck and unit tests (the verification harness)
+#   build   - vite build and the dist checks (does the site build at all)
+#   deploy  - publish to GitHub Pages, only after both of the above succeed
+# Pull requests into main run checks and build. Push to main or a manual run also deploys.
 on:
   pull_request:
     branches: [main]
@@ -18,7 +21,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  checks:
+    name: Typecheck and tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,8 +37,29 @@ jobs:
           cache-dependency-path: site/package-lock.json
 
       - run: npm ci
+      - run: npm run typecheck
       - run: npm test
-      - run: npm run build
+
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+      - name: Build
+        run: npx vite build
+      - name: Check dist
+        run: node scripts/check-dist.mjs
 
       - if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v6
@@ -45,8 +70,9 @@ jobs:
           path: site/dist
 
   deploy:
+    name: Deploy to GitHub Pages
     if: github.event_name != 'pull_request'
-    needs: build
+    needs: [checks, build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
