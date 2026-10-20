@@ -1,0 +1,284 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-10-19T12:00:00Z",
+  "commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+  "marketplace": {
+    "name": "test-ai-marketplace",
+    "description": "Personal Claude Code plugin marketplace — plugins extracted from DevDigest",
+    "owner": {
+      "name": "artemmmon"
+    },
+    "repository": "https://github.com/artemmmon/test-ai-marketplace",
+    "siteUrl": "https://artemmmon.github.io/test-ai-marketplace/",
+    "addCommands": {
+      "chat": "/plugin marketplace add artemmmon/test-ai-marketplace",
+      "cli": "claude plugin marketplace add artemmmon/test-ai-marketplace"
+    }
+  },
+  "plugins": [
+    {
+      "name": "architecture-review",
+      "version": "1.0.0",
+      "description": "Architecture review workflow: ADRs, trade-off analysis and a reviewer agent.",
+      "keywords": [
+        "architecture",
+        "adr",
+        "review"
+      ],
+      "source": "local",
+      "sourceUrl": "https://github.com/artemmmon/test-ai-marketplace/tree/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/plugins/architecture-review",
+      "executesCode": false,
+      "dependencies": [
+        {
+          "name": "engineering-paved-path",
+          "range": "^1.0.0"
+        }
+      ],
+      "install": {
+        "chat": "/plugin install architecture-review@test-ai-marketplace",
+        "cliProject": "claude plugin install architecture-review@test-ai-marketplace --scope project",
+        "cliUser": "claude plugin install architecture-review@test-ai-marketplace --scope user"
+      },
+      "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/plugin/architecture-review",
+      "readmeUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/README.md",
+      "components": [
+        {
+          "id": "architecture-review:skill:adr-writing",
+          "type": "skill",
+          "name": "adr-writing",
+          "qualifiedName": "architecture-review:adr-writing",
+          "description": "Write Architecture Decision Records with context, options and consequences.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/skill/adr-writing.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/architecture-review:skill:adr-writing"
+        },
+        {
+          "id": "architecture-review:skill:architecture-review",
+          "type": "skill",
+          "name": "architecture-review",
+          "qualifiedName": "architecture-review:architecture-review",
+          "description": "Run a structured architecture review: context, quality attributes, risks, recommendations.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/skill/architecture-review.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/architecture-review:skill:architecture-review"
+        },
+        {
+          "id": "architecture-review:agent:architecture-reviewer",
+          "type": "agent",
+          "name": "architecture-reviewer",
+          "qualifiedName": "architecture-review:architecture-reviewer",
+          "description": "Reviews a proposed architecture for risks, trade-offs and missing ADRs.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/agent/architecture-reviewer.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/architecture-review:agent:architecture-reviewer"
+        }
+      ]
+    },
+    {
+      "name": "engineering-paved-path",
+      "version": "1.2.0",
+      "description": "Team engineering conventions: React best practices, code review, commit conventions and guard hooks.",
+      "keywords": [
+        "engineering",
+        "react",
+        "review",
+        "conventions"
+      ],
+      "source": "local",
+      "sourceUrl": "https://github.com/artemmmon/test-ai-marketplace/tree/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/plugins/engineering-paved-path",
+      "executesCode": true,
+      "dependencies": [],
+      "install": {
+        "chat": "/plugin install engineering-paved-path@test-ai-marketplace",
+        "cliProject": "claude plugin install engineering-paved-path@test-ai-marketplace --scope project",
+        "cliUser": "claude plugin install engineering-paved-path@test-ai-marketplace --scope user"
+      },
+      "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/plugin/engineering-paved-path",
+      "readmeUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/README.md",
+      "components": [
+        {
+          "id": "engineering-paved-path:skill:code-review",
+          "type": "skill",
+          "name": "code-review",
+          "qualifiedName": "engineering-paved-path:code-review",
+          "description": "Code review checklist for pull requests: correctness, tests, security, readability.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/skill/code-review.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/engineering-paved-path:skill:code-review"
+        },
+        {
+          "id": "engineering-paved-path:skill:commit-conventions",
+          "type": "skill",
+          "name": "commit-conventions",
+          "qualifiedName": "engineering-paved-path:commit-conventions",
+          "description": "Write Conventional Commits messages and split changes into atomic commits.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/skill/commit-conventions.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/engineering-paved-path:skill:commit-conventions"
+        },
+        {
+          "id": "engineering-paved-path:skill:react-best-practices",
+          "type": "skill",
+          "name": "react-best-practices",
+          "qualifiedName": "engineering-paved-path:react-best-practices",
+          "description": "React and TypeScript conventions: components, hooks, state, accessibility and performance.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/skill/react-best-practices.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/engineering-paved-path:skill:react-best-practices"
+        },
+        {
+          "id": "engineering-paved-path:agent:code-reviewer",
+          "type": "agent",
+          "name": "code-reviewer",
+          "qualifiedName": "engineering-paved-path:code-reviewer",
+          "description": "Reviews a diff against the team's paved-path conventions and reports blocking issues first.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/agent/code-reviewer.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/engineering-paved-path:agent:code-reviewer"
+        },
+        {
+          "id": "engineering-paved-path:command:review-pr",
+          "type": "command",
+          "name": "review-pr",
+          "qualifiedName": "engineering-paved-path:review-pr",
+          "description": "Review the current pull request with the code-reviewer agent.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/command/review-pr.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/engineering-paved-path:command:review-pr"
+        },
+        {
+          "id": "engineering-paved-path:hook:hooks",
+          "type": "hook",
+          "name": "hooks",
+          "qualifiedName": "engineering-paved-path:hooks",
+          "description": "Hooks: PreToolUse, PostToolUse.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/hook/hooks.json",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/engineering-paved-path:hook:hooks"
+        }
+      ]
+    },
+    {
+      "name": "research-tools",
+      "version": "1.0.1",
+      "description": "Web and literature research skills with a docs-fetching MCP server.",
+      "keywords": [
+        "research",
+        "docs",
+        "web"
+      ],
+      "source": "local",
+      "sourceUrl": "https://github.com/artemmmon/test-ai-marketplace/tree/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/plugins/research-tools",
+      "executesCode": true,
+      "dependencies": [],
+      "install": {
+        "chat": "/plugin install research-tools@test-ai-marketplace",
+        "cliProject": "claude plugin install research-tools@test-ai-marketplace --scope project",
+        "cliUser": "claude plugin install research-tools@test-ai-marketplace --scope user"
+      },
+      "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/plugin/research-tools",
+      "readmeUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/README.md",
+      "components": [
+        {
+          "id": "research-tools:skill:literature-review",
+          "type": "skill",
+          "name": "literature-review",
+          "qualifiedName": "research-tools:literature-review",
+          "description": "Survey papers and articles on a topic and synthesize findings into a literature review.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/skill/literature-review.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/research-tools:skill:literature-review"
+        },
+        {
+          "id": "research-tools:skill:web-research",
+          "type": "skill",
+          "name": "web-research",
+          "qualifiedName": "research-tools:web-research",
+          "description": "Research a question on the web, cross-check sources and cite them.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/skill/web-research.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/research-tools:skill:web-research"
+        },
+        {
+          "id": "research-tools:agent:researcher",
+          "type": "agent",
+          "name": "researcher",
+          "qualifiedName": "research-tools:researcher",
+          "description": "Researches a question across web sources and returns a cited summary.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/agent/researcher.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/research-tools:agent:researcher"
+        },
+        {
+          "id": "research-tools:mcp:mcp-servers",
+          "type": "mcp",
+          "name": "mcp-servers",
+          "qualifiedName": "research-tools:mcp-servers",
+          "description": "MCP servers: docs-fetch.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/mcp/mcp-servers.json",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/research-tools:mcp:mcp-servers"
+        }
+      ]
+    },
+    {
+      "name": "sdd-engineering",
+      "version": "1.0.0",
+      "description": "Spec-driven development: write specs, plan, review — built on the paved path, research and architecture plugins.",
+      "keywords": [
+        "sdd",
+        "spec",
+        "planning"
+      ],
+      "source": "local",
+      "sourceUrl": "https://github.com/artemmmon/test-ai-marketplace/tree/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/plugins/sdd-engineering",
+      "executesCode": false,
+      "dependencies": [
+        {
+          "name": "engineering-paved-path",
+          "range": "^1.0.0"
+        },
+        {
+          "name": "research-tools",
+          "range": "^1.0.0"
+        },
+        {
+          "name": "architecture-review",
+          "range": "^1.0.0"
+        }
+      ],
+      "install": {
+        "chat": "/plugin install sdd-engineering@test-ai-marketplace",
+        "cliProject": "claude plugin install sdd-engineering@test-ai-marketplace --scope project",
+        "cliUser": "claude plugin install sdd-engineering@test-ai-marketplace --scope user"
+      },
+      "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/plugin/sdd-engineering",
+      "readmeUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/README.md",
+      "components": [
+        {
+          "id": "sdd-engineering:skill:sdd-workflow",
+          "type": "skill",
+          "name": "sdd-workflow",
+          "qualifiedName": "sdd-engineering:sdd-workflow",
+          "description": "Spec-driven development workflow: spec, plan, tasks, implementation, review gates.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/skill/sdd-workflow.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/sdd-engineering:skill:sdd-workflow"
+        },
+        {
+          "id": "sdd-engineering:skill:spec-writing",
+          "type": "skill",
+          "name": "spec-writing",
+          "qualifiedName": "sdd-engineering:spec-writing",
+          "description": "Write a testable specification with numbered requirements and Given/When/Then criteria.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/skill/spec-writing.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/sdd-engineering:skill:spec-writing"
+        },
+        {
+          "id": "sdd-engineering:agent:spec-reviewer",
+          "type": "agent",
+          "name": "spec-reviewer",
+          "qualifiedName": "sdd-engineering:spec-reviewer",
+          "description": "Reviews a specification for testable requirements, gaps and contradictions.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/agent/spec-reviewer.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/sdd-engineering:agent:spec-reviewer"
+        },
+        {
+          "id": "sdd-engineering:command:spec",
+          "type": "command",
+          "name": "spec",
+          "qualifiedName": "sdd-engineering:spec",
+          "description": "Start a new specification from a one-line idea.",
+          "bodyUrl": "https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/command/spec.md",
+          "pageUrl": "https://artemmmon.github.io/test-ai-marketplace/#/artifact/sdd-engineering:command:spec"
+        }
+      ]
+    }
+  ]
+}

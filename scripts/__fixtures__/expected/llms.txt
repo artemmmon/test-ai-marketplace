@@ -1,0 +1,40 @@
+# test-ai-marketplace
+
+> Personal Claude Code plugin marketplace — plugins extracted from DevDigest. Plugins bundle skills, agents, commands, hooks and MCP servers. Installing a plugin installs all of its components.
+
+Add the marketplace: `claude plugin marketplace add artemmmon/test-ai-marketplace` (chat: `/plugin marketplace add artemmmon/test-ai-marketplace`).
+Install a plugin: `claude plugin install <plugin>@test-ai-marketplace --scope project|user` (chat: `/plugin install <plugin>@test-ai-marketplace`).
+Plugins marked "executes code" contain hooks, MCP servers or bin/ executables.
+
+## Catalog
+
+- [catalog.json](https://artemmmon.github.io/test-ai-marketplace/catalog.json): machine-readable catalog, schemaVersion 1.0.0
+
+## Plugins
+
+- [architecture-review](https://artemmmon.github.io/test-ai-marketplace/#/plugin/architecture-review): Architecture review workflow: ADRs, trade-off analysis and a reviewer agent. (v1.0.0; depends on engineering-paved-path ^1.0.0)
+  - [skill architecture-review:adr-writing](https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/skill/adr-writing.md): Write Architecture Decision Records with context, options and consequences.
+  - [skill architecture-review:architecture-review](https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/skill/architecture-review.md): Run a structured architecture review: context, quality attributes, risks, recommendations.
+  - [agent architecture-review:architecture-reviewer](https://artemmmon.github.io/test-ai-marketplace/bodies/architecture-review/agent/architecture-reviewer.md): Reviews a proposed architecture for risks, trade-offs and missing ADRs.
+- [engineering-paved-path](https://artemmmon.github.io/test-ai-marketplace/#/plugin/engineering-paved-path): Team engineering conventions: React best practices, code review, commit conventions and guard hooks. (v1.2.0; executes code: hooks)
+  - [skill engineering-paved-path:code-review](https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/skill/code-review.md): Code review checklist for pull requests: correctness, tests, security, readability.
+  - [skill engineering-paved-path:commit-conventions](https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/skill/commit-conventions.md): Write Conventional Commits messages and split changes into atomic commits.
+  - [skill engineering-paved-path:react-best-practices](https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/skill/react-best-practices.md): React and TypeScript conventions: components, hooks, state, accessibility and performance.
+  - [agent engineering-paved-path:code-reviewer](https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/agent/code-reviewer.md): Reviews a diff against the team's paved-path conventions and reports blocking issues first.
+  - [command engineering-paved-path:review-pr](https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/command/review-pr.md): Review the current pull request with the code-reviewer agent.
+  - [hook engineering-paved-path:hooks](https://artemmmon.github.io/test-ai-marketplace/bodies/engineering-paved-path/hook/hooks.json): Hooks: PreToolUse, PostToolUse.
+- [research-tools](https://artemmmon.github.io/test-ai-marketplace/#/plugin/research-tools): Web and literature research skills with a docs-fetching MCP server. (v1.0.1; executes code: MCP)
+  - [skill research-tools:literature-review](https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/skill/literature-review.md): Survey papers and articles on a topic and synthesize findings into a literature review.
+  - [skill research-tools:web-research](https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/skill/web-research.md): Research a question on the web, cross-check sources and cite them.
+  - [agent research-tools:researcher](https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/agent/researcher.md): Researches a question across web sources and returns a cited summary.
+  - [mcp research-tools:mcp-servers](https://artemmmon.github.io/test-ai-marketplace/bodies/research-tools/mcp/mcp-servers.json): MCP servers: docs-fetch.
+- [sdd-engineering](https://artemmmon.github.io/test-ai-marketplace/#/plugin/sdd-engineering): Spec-driven development: write specs, plan, review — built on the paved path, research and architecture plugins. (v1.0.0; depends on engineering-paved-path ^1.0.0, research-tools ^1.0.0, architecture-review ^1.0.0)
+  - [skill sdd-engineering:sdd-workflow](https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/skill/sdd-workflow.md): Spec-driven development workflow: spec, plan, tasks, implementation, review gates.
+  - [skill sdd-engineering:spec-writing](https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/skill/spec-writing.md): Write a testable specification with numbered requirements and Given/When/Then criteria.
+  - [agent sdd-engineering:spec-reviewer](https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/agent/spec-reviewer.md): Reviews a specification for testable requirements, gaps and contradictions.
+  - [command sdd-engineering:spec](https://artemmmon.github.io/test-ai-marketplace/bodies/sdd-engineering/command/spec.md): Start a new specification from a one-line idea.
+
+## Optional
+
+- [releases.json](https://artemmmon.github.io/test-ai-marketplace/releases.json): release history
+- [feed.xml](https://artemmmon.github.io/test-ai-marketplace/feed.xml): Atom feed of releases

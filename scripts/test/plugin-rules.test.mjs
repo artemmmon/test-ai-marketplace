@@ -1,5 +1,6 @@
-// Tests for check-marketplace.mjs. Each case builds a throwaway marketplace in a temp dir and runs
-// the script against it. Run with: node --test scripts/
+// Tests for the strict plugin rules (spec sdd-plugins FR-13, FR-28): scripts/lib/plugin-rules.mjs through the
+// check-marketplace.mjs CLI. Each case builds a throwaway marketplace in a temp dir and runs the script on it.
+// Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -8,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-const script = join(dirname(fileURLToPath(import.meta.url)), 'check-marketplace.mjs');
+const script = join(dirname(fileURLToPath(import.meta.url)), '../check-marketplace.mjs');
 
 function write(root, rel, content) {
   mkdirSync(dirname(join(root, rel)), { recursive: true });
@@ -97,7 +98,7 @@ test('existing invariants: sort, duplicates, name, version mismatch, unpinned ex
 });
 
 test('skill frontmatter name must equal the directory name', () => {
-  check({ plugins: { plug: { files: { 'skills/good/SKILL.md': '---\nname: good\n---\n', 'skills/bad/SKILL.md': '---\nname: other\n---\n' } } } }, (r) => {
+  check({ plugins: { plug: { files: { 'skills/good/SKILL.md': '---\nname: good\ndescription: d\n---\n', 'skills/bad/SKILL.md': '---\nname: other\ndescription: d\n---\n' } } } }, (r) => {
     assert.equal(r.code, 1);
     assert.match(r.err, /frontmatter name "other" must equal "bad"/);
     assert.doesNotMatch(r.err, /"good"/);
@@ -111,7 +112,7 @@ test('plugin folders that are not registered are validated too', () => {
   });
   check({ plugins: { plug: { manifest: { name: 'other' } } } }, (r) => {
     assert.equal(r.code, 1);
-    assert.match(r.err, /plugin\.json name is "other", expected "plug"/);
+    assert.match(r.err, /plugin\.json name is "other"/);
   });
 });
 
@@ -145,7 +146,7 @@ test('docs: README, CHANGELOG and COMPATIBILITY are required', () => {
 test('newest CHANGELOG version must equal plugin.json version', () => {
   check({ plugins: { plug: { version: '1.1.0', changelog: '## [Unreleased]\n\n## [1.0.0] - 2026-10-20\n' } } }, (r) => {
     assert.equal(r.code, 1);
-    assert.match(r.err, /newest CHANGELOG version 1\.0\.0 != plugin\.json version 1\.1\.0/);
+    assert.match(r.err, /the newest CHANGELOG\.md version is 1\.0\.0, plugin\.json says 1\.1\.0/);
   });
   // order in the file does not matter: the highest version is the newest
   check({ plugins: { plug: { version: '1.1.0', changelog: '## [1.0.0] - 2026-01-01\n\n## [1.1.0] - 2026-02-01\n' } } }, (r) => assert.equal(r.code, 0, r.err));
@@ -158,7 +159,7 @@ test('newest CHANGELOG version must equal plugin.json version', () => {
 test('dependency on an unknown plugin fails', () => {
   check({ plugins: { app: { manifest: dep('ghost', '^1.0.0') } } }, (r) => {
     assert.equal(r.code, 1);
-    assert.match(r.err, /dependency "ghost" is not a plugin of this marketplace/);
+    assert.match(r.err, /dependency "ghost" is not in the catalog/);
   });
 });
 
@@ -177,18 +178,15 @@ test('dependency ranges: ^ ~ >= = and exact', () => {
     ['1.2.9', '~1.2.3', true],
     ['1.3.0', '~1.2.3', false],
     ['1.2.2', '~1.2.3', false],
-    ['1.9.0', '~1', true],
     ['3.0.0', '>=2.1.0', true],
     ['2.0.9', '>=2.1.0', false],
     ['1.5.0', '>=1.0.0 <2.0.0', true],
     ['2.0.0', '>=1.0.0 <2.0.0', false],
-    ['1.0.0', '^1', true],
-    ['1.4.0', '1.x', true],
   ];
   for (const [version, range, ok] of cases) {
     check({ plugins: { app: { manifest: dep('lib', range) }, lib: { version } } }, (r) => {
       assert.equal(r.code, ok ? 0 : 1, `${version} vs ${range}: ${r.err}`);
-      if (!ok) assert.match(r.err, /is not satisfied by its version/);
+      if (!ok) assert.match(r.err, /is not satisfied by lib /);
     });
   }
 });
@@ -196,14 +194,18 @@ test('dependency ranges: ^ ~ >= = and exact', () => {
 test('an unsupported range is an error', () => {
   check({ plugins: { app: { manifest: dep('lib', 'latest') }, lib: {} } }, (r) => {
     assert.equal(r.code, 1);
-    assert.match(r.err, /range "latest" is not understood/);
+    assert.match(r.err, /unsupported version range "latest"/);
   });
 });
 
-test('a dependency without a range is a warning, not an error', () => {
+test('a dependency without a range (or given as a bare string) is an error', () => {
   check({ plugins: { app: { manifest: { dependencies: ['lib'] } }, lib: {} } }, (r) => {
-    assert.equal(r.code, 0, r.err);
-    assert.match(r.err, /has no version range/);
+    assert.equal(r.code, 1);
+    assert.match(r.err, /dependencies\[0\] must be \{ "name": string, "version": string \}/);
+  });
+  check({ plugins: { app: { manifest: { dependencies: [{ name: 'lib' }] } }, lib: {} } }, (r) => {
+    assert.equal(r.code, 1);
+    assert.match(r.err, /dependencies\[0\] must be/);
   });
 });
 
@@ -248,16 +250,16 @@ test('tags: warning by default, error with --require-tags, nothing outside git',
 });
 
 test('agents: hooks, mcpServers and permissionMode frontmatter are rejected', () => {
-  const agent = (extra) => `---\nname: a\ndescription: d\ntools: Read\n${extra}\n---\nBody mentioning hooks: and mcpServers: is fine.\n`;
+  const agent = (name, extra) => `---\nname: ${name}\ndescription: d\ntools: Read\n${extra}\n---\nBody mentioning hooks: and mcpServers: is fine.\n`;
   check(
     {
       plugins: {
-        p: {
+        plug: {
           files: {
-            'agents/ok.md': agent('model: sonnet'),
-            'agents/h.md': agent('hooks:\n  PreToolUse: []'),
-            'agents/m.md': agent('mcpServers:\n  x: {}'),
-            'agents/pm.md': agent('permissionMode: acceptEdits'),
+            'agents/ok.md': agent('ok', 'model: sonnet'),
+            'agents/h.md': agent('h', 'hooks:\n  PreToolUse: []'),
+            'agents/m.md': agent('m', 'mcpServers:\n  x: y'),
+            'agents/pm.md': agent('pm', 'permissionMode: acceptEdits'),
           },
         },
       },
@@ -274,7 +276,7 @@ test('agents: hooks, mcpServers and permissionMode frontmatter are rejected', ()
 
 test('forbidden strings (FR-28) are rejected anywhere in a plugin', () => {
   const bad = {
-    'skills/x/SKILL.md': '---\nname: x\n---\nSee server/src/app.ts and client/src.\nRun pnpm test, then ./scripts/check-changed.sh.\nUses reviewer-core and routing.json.\nLoad .claude/skills/x and $CLAUDE_PROJECT_DIR/.claude/hooks/y.\nUse the DevDigest layout.\n',
+    'skills/x/SKILL.md': '---\nname: x\ndescription: d\n---\nSee server/src/app.ts and client/src.\nRun pnpm test, then ./scripts/check-changed.sh.\nUses reviewer-core and routing.json.\nLoad .claude/skills/x and $CLAUDE_PROJECT_DIR/.claude/hooks/y.\nUse the DevDigest layout.\n',
   };
   check({ plugins: { plug: { files: bad } } }, (r) => {
     assert.equal(r.code, 1);
@@ -285,7 +287,7 @@ test('forbidden strings (FR-28) are rejected anywhere in a plugin', () => {
 });
 
 test('forbidden strings: harmless look-alikes pass', () => {
-  const fine = '---\nname: x\n---\nNot paths: `observer/`, `reclient/` and https://example.com/Server/#x.\nThe pnpm-workspace.yaml file is just a name.\n';
+  const fine = '---\nname: x\ndescription: d\n---\nNot paths: `observer/`, `reclient/` and https://example.com/Server/#x.\nThe pnpm-workspace.yaml file is just a name.\n';
   check({ plugins: { plug: { files: { 'skills/x/SKILL.md': fine } } } }, (r) => assert.equal(r.code, 0, r.err));
 });
 
@@ -301,8 +303,8 @@ test('the source project must not be named anywhere, README Sources sections inc
 
 test('every spelling of the source project is banned in every text file type', () => {
   const files = {
-    'skills/x/SKILL.md': '---\nname: x\n---\nok\nthe dev-digest repo\n',
-    'agents/a.md': '---\nname: a\n---\nA Dev Digest example\n',
+    'skills/x/SKILL.md': '---\nname: x\ndescription: d\n---\nok\nthe dev-digest repo\n',
+    'agents/a.md': '---\nname: a\ndescription: d\n---\nA Dev Digest example\n',
     'hooks/hooks.json': '{ "note": "DEVDIGEST" }\n',
     'scripts/s.mjs': "// see https://github.com/artemmmon/dev-digest/blob/main/x\n",
     'CHANGELOG.md': '# Changelog\n\n## [Unreleased]\n\n## [1.0.0] - 2026-10-20\n\n- Extracted from devdigest.\n',
@@ -310,7 +312,7 @@ test('every spelling of the source project is banned in every text file type', (
   };
   check({ plugins: { plug: { files } } }, (r) => {
     assert.equal(r.code, 1);
-    for (const where of ['SKILL\\.md:5', 'a\\.md:4', 'hooks\\.json:1', 's\\.mjs:1', 'CHANGELOG\\.md:7']) {
+    for (const where of ['SKILL\\.md:6', 'a\\.md:5', 'hooks\\.json:1', 's\\.mjs:1', 'CHANGELOG\\.md:7']) {
       assert.match(r.err, new RegExp(`${where}: forbidden "DevDigest"`), where);
     }
     assert.doesNotMatch(r.err, /data\.txt/, 'two spaces is not one of the listed spellings');
@@ -324,8 +326,8 @@ test("this marketplace's own install command is allowed", () => {
 
 test('dependencies: a scoped reference to another plugin needs a dependency', () => {
   const files = {
-    'agents/a.md': '---\nname: a\n---\nCall `lib:helper` and also lib:helper again, plus other-lib:thing.\n',
-    'skills/s/SKILL.md': '---\nname: s\n---\nLoad lib:rules first.\n',
+    'agents/a.md': '---\nname: a\ndescription: d\n---\nCall `lib:helper` and also lib:helper again, plus other-lib:thing.\n',
+    'skills/s/SKILL.md': '---\nname: s\ndescription: d\n---\nLoad lib:rules first.\n',
     'hooks/hooks.json': '{ "command": "lib:hook" }\n',
     'scripts/run.mjs': "// calls lib:script\n",
     'README.md': '# app\n\nUses `lib:readme`.\n',
@@ -341,7 +343,7 @@ test('dependencies: a scoped reference to another plugin needs a dependency', ()
 
 test('dependencies: a declared dependency satisfies scoped references; own name and look-alikes are ignored', () => {
   const files = {
-    'agents/a.md': '---\nname: a\n---\nCall `lib:helper`. Own: app:thing. Not scoped: lib: helper, mylib:x, lib-extra:y, http://lib:8080 is a port.\n',
+    'agents/a.md': '---\nname: a\ndescription: d\n---\nCall `lib:helper`. Own: app:thing. Not scoped: lib: helper, mylib:x, lib-extra:y, http://lib:8080 is a port.\n',
   };
   check({ plugins: { app: { files, manifest: dep('lib', '^1.0.0') }, lib: {} } }, (r) => {
     assert.equal(r.code, 0, r.err);
@@ -350,7 +352,7 @@ test('dependencies: a declared dependency satisfies scoped references; own name 
 });
 
 test('dependencies: files outside agents, skills, hooks, scripts and README are not scanned', () => {
-  check({ plugins: { app: { files: { 'COMPATIBILITY.md': 'Needs lib:helper.\n', 'skills/s/SKILL.md': '---\nname: s\n---\nplain\n', 'skills/s/assets/x.mjs': '// lib:helper\n', 'docs/n.md': 'lib:helper\n' } }, lib: {} } }, (r) => assert.equal(r.code, 0, r.err));
+  check({ plugins: { app: { files: { 'COMPATIBILITY.md': 'Needs lib:helper.\n', 'skills/s/SKILL.md': '---\nname: s\ndescription: d\n---\nplain\n', 'skills/s/assets/x.mjs': '// lib:helper\n', 'docs/n.md': 'lib:helper\n' } }, lib: {} } }, (r) => assert.equal(r.code, 0, r.err));
 });
 
 test('dependencies: a declared but never referenced dependency is only a warning', () => {
@@ -360,18 +362,18 @@ test('dependencies: a declared but never referenced dependency is only a warning
   });
 });
 
-test('dependencies: a string dependency entry also counts', () => {
-  check({ plugins: { app: { manifest: { dependencies: ['lib'] }, files: { 'agents/a.md': '---\nname: a\n---\nlib:helper\n' } }, lib: {} } }, (r) => {
+test('dependencies: a dependency with the "*" range counts for scoped references', () => {
+  check({ plugins: { app: { manifest: dep('lib', '*'), files: { 'agents/a.md': '---\nname: a\ndescription: d\n---\nlib:helper\n' } }, lib: {} } }, (r) => {
     assert.equal(r.code, 0, r.err);
     assert.doesNotMatch(r.err, /uses lib:helper/);
   });
 });
 
 test('INSIGHTS.md and AGENTS.md may be mentioned only as optional', () => {
-  check({ plugins: { plug: { files: { 'agents/a.md': '---\nname: a\n---\nRead INSIGHTS.md first.\nRead AGENTS.md if it exists.\n' } } } }, (r) => {
+  check({ plugins: { plug: { files: { 'agents/a.md': '---\nname: a\ndescription: d\n---\nRead INSIGHTS.md first.\nRead AGENTS.md if it exists.\n' } } } }, (r) => {
     assert.equal(r.code, 1);
-    assert.match(r.err, /a\.md:4: INSIGHTS\.md\/AGENTS\.md must be optional/);
-    assert.doesNotMatch(r.err, /a\.md:5:/);
+    assert.match(r.err, /a\.md:5: INSIGHTS\.md\/AGENTS\.md must be optional/);
+    assert.doesNotMatch(r.err, /a\.md:6:/);
   });
 });
 

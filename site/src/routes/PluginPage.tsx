@@ -11,11 +11,14 @@ import { Icon } from '../components/Icon';
 import { Body, Markdown, useBody, LoadError } from '../components/Markdown';
 import { Bar } from '../components/Skeleton';
 import { loadReleases } from '../data/catalog';
-import { blobUrl, bodyFileName, composition, formatDate, issueUrl, tagUrl, treeUrl, TYPE_PLURAL } from '../data/links';
+import { blobUrl, bodyFileName, composition, formatDate, issueUrl, tagUrl, treeUrl, typePlural } from '../data/links';
+import { t } from '../i18n';
 import type { ComponentType, IndexFile, IndexItem, PluginItem, Release } from '../types';
 import { NotFound } from './NotFound';
 
 type TabKey = ComponentType | 'bin';
+/** Values of `--scope`, shown as written in the command. */
+const SCOPES = ['project', 'user'] as const;
 const TAB_ORDER: TabKey[] = ['skill', 'agent', 'command', 'hook', 'mcp', 'bin'];
 const TAB_PARAM: Record<TabKey, string> = { skill: 'skills', agent: 'agents', command: 'commands', hook: 'hooks', mcp: 'mcp', bin: 'bin' };
 
@@ -23,9 +26,9 @@ export function PluginPage() {
   const { name = '' } = useParams();
   const catalog = useCatalog();
   const plugin = catalog.index?.items.find((i): i is PluginItem => i.type === 'plugin' && i.name === name) ?? null;
-  usePageTitle(catalog.status === 'ready' ? (plugin ? name : 'Plugin not found') : null);
+  usePageTitle(catalog.status === 'ready' ? (plugin ? name : t('plugin.notFoundTitle')) : null);
 
-  if (catalog.status === 'error') return <NotFound title="Couldn’t load the catalog" />;
+  if (catalog.status === 'error') return <NotFound title={t('common.couldntLoadCatalog')} />;
   if (catalog.status === 'loading') return <PluginSkeleton />;
   if (!plugin) {
     const similar = catalog.index.items
@@ -34,7 +37,7 @@ export function PluginPage() {
       .sort((a, b) => b.d - a.d)
       .slice(0, 3)
       .map((s) => s.name);
-    return <NotFound title={`Plugin “${name}” not found`} suggestions={similar.map((s) => ({ label: s, to: `/plugin/${s}` }))} />;
+    return <NotFound title={t('plugin.notFoundNamed', { name })} suggestions={similar.map((s) => ({ label: s, to: `/plugin/${s}` }))} />;
   }
   return <PluginView index={catalog.index} plugin={plugin} />;
 }
@@ -70,8 +73,8 @@ function PluginView({ index, plugin }: { index: IndexFile; plugin: PluginItem })
 
   return (
     <main id="main" className="page">
-      <nav aria-label="Breadcrumb" className="breadcrumb" style={{ marginBottom: 18 }}>
-        <Link to="/search">Search</Link>
+      <nav aria-label={t('common.breadcrumb')} className="breadcrumb" style={{ marginBottom: 18 }}>
+        <Link to="/search">{t('common.searchLink')}</Link>
         <span aria-hidden="true" className="sep">
           ›
         </span>
@@ -96,12 +99,12 @@ function PluginView({ index, plugin }: { index: IndexFile; plugin: PluginItem })
           {src && (
             <ExtLink className="btn" href={src}>
               <Icon name={external ? 'external' : 'github'} />
-              {external ? 'Source' : 'GitHub'}
+              {external ? t('common.source') : t('common.github')}
             </ExtLink>
           )}
           <ExtLink className="btn" href={issueUrl(index, `[${plugin.name}] `)}>
             <Icon name="flag" />
-            Report an issue
+            {t('common.reportIssue')}
           </ExtLink>
         </div>
       </div>
@@ -124,9 +127,9 @@ function PluginView({ index, plugin }: { index: IndexFile; plugin: PluginItem })
 /** Reasons a plugin executes code, including its transitive dependencies. */
 function execReasons(plugin: PluginItem): string[] {
   const r: string[] = [];
-  if (plugin.components.hook.length) r.push('runs hooks');
-  if (plugin.components.mcp.length) r.push('starts an MCP server');
-  if (plugin.bin.length) r.push('ships bin/ executables');
+  if (plugin.components.hook.length) r.push(t('plugin.install.reason.hooks'));
+  if (plugin.components.mcp.length) r.push(t('plugin.install.reason.mcp'));
+  if (plugin.bin.length) r.push(t('plugin.install.reason.bin'));
   return r;
 }
 
@@ -158,7 +161,7 @@ function InstallBlock({ index, plugin, byName }: { index: IndexFile; plugin: Plu
     <section aria-labelledby="install-h" className="card install">
       <div className="spread">
         <h2 className="sec" id="install-h">
-          Install
+          {t('plugin.install.title')}
         </h2>
         <ModeSwitch />
       </div>
@@ -167,8 +170,8 @@ function InstallBlock({ index, plugin, byName }: { index: IndexFile; plugin: Plu
           1
         </span>
         <div className="step-body">
-          <p className="step-title">Add the marketplace (once)</p>
-          <Slip command={add} prompt={terminal} label="Copy the add marketplace command" />
+          <p className="step-title">{t('plugin.install.addMarketplace')}</p>
+          <Slip command={add} prompt={terminal} label={t('plugin.install.addMarketplaceLabel')} />
         </div>
       </div>
       <div className="step">
@@ -177,33 +180,32 @@ function InstallBlock({ index, plugin, byName }: { index: IndexFile; plugin: Plu
         </span>
         <div className="step-body">
           <div className="spread" style={{ minHeight: 28 }}>
-            <p style={{ margin: 0, fontWeight: 500 }}>Install the plugin</p>
+            <p style={{ margin: 0, fontWeight: 500 }}>{t('plugin.install.installPlugin')}</p>
             {terminal && (
               <div className="row" style={{ gap: 8 }}>
                 <span id="scope-l" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                  Scope
+                  {t('plugin.install.scope')}
                 </span>
                 <div className="seg" role="group" aria-labelledby="scope-l">
-                  <button type="button" aria-pressed={scope === 'project'} title="Only for the current project" onClick={() => setScope('project')}>
-                    project
-                  </button>
-                  <button type="button" aria-pressed={scope === 'user'} title="For all your projects" onClick={() => setScope('user')}>
-                    user
-                  </button>
+                  {SCOPES.map((s) => (
+                    <button key={s} type="button" aria-pressed={scope === s} title={t(`plugin.install.scopeTitle.${s}`)} onClick={() => setScope(s)}>
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
-          <Slip command={install} prompt={terminal} label={`Copy the install command for ${plugin.name}`} />
+          <Slip command={install} prompt={terminal} label={t('plugin.install.installLabel', { plugin: plugin.name })} />
         </div>
       </div>
       <div className="install-notes">
         <p>
-          Installs the whole plugin with all its components.
+          {t('plugin.install.wholePlugin')}
           {plugin.dependencies.length > 0 && (
             <>
               {' '}
-              Dependencies are installed automatically:{' '}
+              {t('plugin.install.dependenciesAuto')}{' '}
               {plugin.dependencies.map((d, i) => (
                 <span key={d.name}>
                   {i > 0 && ', '}
@@ -222,25 +224,25 @@ function InstallBlock({ index, plugin, byName }: { index: IndexFile; plugin: Plu
             <div>
               {own.length > 0 && (
                 <>
-                  <strong style={{ fontWeight: 600 }}>This plugin executes code.</strong> It {joinWords(own)}, outside Claude’s permission rules.{' '}
+                  <strong style={{ fontWeight: 600 }}>{t('plugin.install.executesTitle')}</strong> {t('plugin.install.executesIt', { reasons: joinWords(own) })}{' '}
                 </>
               )}
               {deps.length > 0 && (
                 <>
-                  <strong style={{ fontWeight: 600 }}>Dependencies execute code.</strong>{' '}
+                  <strong style={{ fontWeight: 600 }}>{t('plugin.install.dependenciesExecuteTitle')}</strong>{' '}
                   {deps.map((d, i) => (
                     <span key={d.name}>
-                      {i > 0 && (i === deps.length - 1 ? ' and ' : ', ')}
+                      {i > 0 && (i === deps.length - 1 ? ` ${t('common.and')} ` : ', ')}
                       <span className="mono" style={{ fontSize: 13 }}>
                         {d.name}
                       </span>{' '}
-                      {joinWords(execReasons(d).length ? execReasons(d) : ['executes code'])}
+                      {joinWords(execReasons(d).length ? execReasons(d) : [t('plugin.install.reason.generic')])}
                     </span>
                   ))}
-                  , outside Claude’s permission rules.{' '}
+                  , {t('plugin.install.dependenciesOutside')}{' '}
                 </>
               )}
-              Read them before installing.
+              {t('plugin.install.readBefore')}
             </div>
           </div>
         )}
@@ -251,7 +253,7 @@ function InstallBlock({ index, plugin, byName }: { index: IndexFile; plugin: Plu
 
 function joinWords(words: string[]): string {
   if (words.length <= 1) return words.join('');
-  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`;
+  return `${words.slice(0, -1).join(', ')} ${t('common.and')} ${words[words.length - 1]}`;
 }
 
 /** In chat | In terminal switch, shared with Getting started and remembered. */
@@ -265,12 +267,12 @@ export function ModeSwitch() {
     refs[next === 'chat' ? 0 : 1].current?.focus();
   };
   return (
-    <div className="seg" role="tablist" aria-label="Where to run the commands" onKeyDown={onKey}>
+    <div className="seg" role="tablist" aria-label={t('plugin.modeSwitch.label')} onKeyDown={onKey}>
       <button ref={refs[0]} type="button" role="tab" aria-selected={installMode === 'chat'} tabIndex={installMode === 'chat' ? 0 : -1} onClick={() => setInstallMode('chat')}>
-        In chat
+        {t('plugin.modeSwitch.chat')}
       </button>
       <button ref={refs[1]} type="button" role="tab" aria-selected={installMode === 'terminal'} tabIndex={installMode === 'terminal' ? 0 : -1} onClick={() => setInstallMode('terminal')}>
-        In terminal
+        {t('plugin.modeSwitch.terminal')}
       </button>
     </div>
   );
@@ -280,11 +282,11 @@ function Dependencies({ plugin, byName }: { plugin: PluginItem; byName: Map<stri
   return (
     <section aria-labelledby="deps-h" className="section">
       <h2 className="sec" id="deps-h">
-        Dependencies
+        {t('plugin.dependencies.title')}
       </h2>
       {plugin.dependencies.length === 0 ? (
         <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-          No dependencies.
+          {t('plugin.dependencies.none')}
         </p>
       ) : (
         <>
@@ -292,10 +294,10 @@ function Dependencies({ plugin, byName }: { plugin: PluginItem; byName: Map<stri
             <table className="tbl">
               <thead>
                 <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Required</th>
-                  <th scope="col">Resolved</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">{t('plugin.dependencies.name')}</th>
+                  <th scope="col">{t('plugin.dependencies.required')}</th>
+                  <th scope="col">{t('plugin.dependencies.resolved')}</th>
+                  <th scope="col">{t('plugin.dependencies.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -316,12 +318,12 @@ function Dependencies({ plugin, byName }: { plugin: PluginItem; byName: Map<stri
                       {d.status === 'satisfied' ? (
                         <span className="badge ok">
                           <Icon name="check" />
-                          Satisfied
+                          {t('plugin.dependencies.satisfied')}
                         </span>
                       ) : (
                         <span className="badge warn">
                           <Icon name="warn" />
-                          Not in catalog
+                          {t('common.notInCatalog')}
                         </span>
                       )}
                     </td>
@@ -331,7 +333,7 @@ function Dependencies({ plugin, byName }: { plugin: PluginItem; byName: Map<stri
             </table>
           </div>
           <details open className="details">
-            <summary>Dependency tree</summary>
+            <summary>{t('plugin.dependencies.tree')}</summary>
             <ul className="tree" translate="no">
               <TreeNode plugin={plugin} byName={byName} trail={[]} />
             </ul>
@@ -339,9 +341,9 @@ function Dependencies({ plugin, byName }: { plugin: PluginItem; byName: Map<stri
         </>
       )}
       <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-        Used by:{' '}
+        {t('plugin.dependencies.usedBy')}{' '}
         {plugin.usedBy.length === 0
-          ? 'no other plugins in the catalog.'
+          ? t('plugin.dependencies.usedByNone')
           : plugin.usedBy.map((u, i) => (
               <span key={u}>
                 {i > 0 && ', '}
@@ -368,7 +370,7 @@ function TreeNode({ plugin, byName, trail }: { plugin: PluginItem; byName: Map<s
               <TreeNode key={d.name} plugin={dep} byName={byName} trail={[...trail, plugin.name]} />
             ) : (
               <li key={d.name}>
-                {d.name} <span className="v">not in catalog</span>
+                {d.name} <span className="v">{t('plugin.dependencies.treeNotInCatalog')}</span>
               </li>
             );
           })}
@@ -389,11 +391,11 @@ function Contents({ index, plugin }: { index: IndexFile; plugin: PluginItem }) {
     return (
       <section aria-labelledby="contents-h" className="section">
         <h2 className="sec" id="contents-h">
-          Contents
+          {t('plugin.contents.title')}
         </h2>
         <p className="muted" style={{ margin: 0 }}>
-          Contents are not indexed for external plugins.{' '}
-          {plugin.external && <ExtLink href={plugin.external.url}>View the source →</ExtLink>}
+          {t('plugin.contents.externalNotIndexed')}{' '}
+          {plugin.external && <ExtLink href={plugin.external.url}>{t('plugin.contents.viewSource')}</ExtLink>}
         </p>
       </section>
     );
@@ -422,19 +424,19 @@ function Contents({ index, plugin }: { index: IndexFile; plugin: PluginItem }) {
     select(next);
     refs.current[next]?.focus();
   };
-  const label = (t: TabKey) => {
-    if (t === 'bin') return `bin/ (${plugin.bin.length})`;
-    if (t === 'hook') return 'Hooks';
-    return `${TYPE_PLURAL[t]} (${plugin.components[t].length})`;
+  const label = (tab: TabKey) => {
+    if (tab === 'bin') return t('plugin.contents.tabBin', { count: plugin.bin.length });
+    if (tab === 'hook') return typePlural('hook');
+    return t('plugin.contents.tabCount', { label: typePlural(tab), count: plugin.components[tab].length });
   };
   const items = active === 'bin' ? [] : plugin.components[active].map((id) => index.items.find((i) => i.id === id)).filter((i): i is IndexItem => !!i);
 
   return (
     <section aria-labelledby="contents-h" className="section" style={{ gap: 8 }}>
       <h2 className="sec" id="contents-h">
-        Contents
+        {t('plugin.contents.title')}
       </h2>
-      <div className="tabs" role="tablist" aria-label="Components by type" onKeyDown={onKey}>
+      <div className="tabs" role="tablist" aria-label={t('plugin.contents.tabsLabel')} onKeyDown={onKey}>
         {tabs.map((t) => (
           <button
             key={t}
@@ -457,7 +459,7 @@ function Contents({ index, plugin }: { index: IndexFile; plugin: PluginItem }) {
         {(active === 'hook' || active === 'mcp' || active === 'bin') && (
           <div role="note" className="warn note">
             <Icon name="warn" />
-            <p>This code runs on your machine outside Claude’s permission rules. Read it before installing.</p>
+            <p>{t('common.runsOutsidePermissions')}</p>
           </div>
         )}
         {active === 'bin' ? (
@@ -499,12 +501,12 @@ function Accordion({ item }: { item: IndexItem }) {
         <div id={bodyId} className="acc-body">
           <div className="acc-body-head">
             <span className="mono">{bodyFileName(item)}</span>
-            <Link to={`/artifact/${item.id}`}>Open page</Link>
+            <Link to={`/artifact/${item.id}`}>{t('plugin.contents.openPage')}</Link>
           </div>
           {item.bodyRef && item.bodyFormat ? (
             <Body bodyRef={item.bodyRef} format={item.bodyFormat} baseDir={dirOf(item.path)} what={bodyFileName(item)} />
           ) : (
-            <p className="muted">No content provided.</p>
+            <p className="muted">{t('plugin.contents.noContent')}</p>
           )}
         </div>
       )}
@@ -521,13 +523,13 @@ function Readme({ plugin }: { plugin: PluginItem }) {
   return (
     <section aria-labelledby="readme-h" className="section">
       <h2 className="sec" id="readme-h">
-        README
+        {t('plugin.readme.title')}
       </h2>
       {plugin.readmeRef ? (
         <ReadmeBody refPath={plugin.readmeRef} baseDir={plugin.path ?? ''} />
       ) : (
         <p className="muted" style={{ margin: 0 }}>
-          No README provided.
+          {t('plugin.readme.none')}
         </p>
       )}
     </section>
@@ -537,7 +539,7 @@ function Readme({ plugin }: { plugin: PluginItem }) {
 function ReadmeBody({ refPath, baseDir }: { refPath: string; baseDir: string }) {
   const { state, retry } = useBody(refPath);
   if (state.status === 'loading') return <Bar w="70%" />;
-  if (state.status === 'error') return <LoadError what="README" retry={retry} />;
+  if (state.status === 'error') return <LoadError what={t('plugin.readme.title')} retry={retry} />;
   return <Markdown source={state.text} baseDir={baseDir} />;
 }
 
@@ -561,17 +563,17 @@ function Changelog({ index, plugin }: { index: IndexFile; plugin: PluginItem }) 
     <section aria-labelledby="changelog-h" className="section">
       <div className="spread" style={{ alignItems: 'baseline' }}>
         <h2 className="sec" id="changelog-h">
-          Changelog
+          {t('plugin.changelog.title')}
         </h2>
         <Link to={`/whats-new?plugin=${plugin.name}`} style={{ fontSize: 14 }}>
-          All releases in What’s new
+          {t('plugin.changelog.allReleases')}
         </Link>
       </div>
-      {failed && <p className="muted">Couldn’t load the changelog.</p>}
+      {failed && <p className="muted">{t('plugin.changelog.couldntLoad')}</p>}
       {!releases && !failed && <Bar w="50%" />}
       {releases && releases.length === 0 && (
         <p className="muted" style={{ margin: 0 }}>
-          No changelog provided.
+          {t('plugin.changelog.none')}
         </p>
       )}
       {shown.map((r) => (
@@ -584,15 +586,15 @@ function Changelog({ index, plugin }: { index: IndexFile; plugin: PluginItem }) 
                 {r.tag}
               </ExtLink>
             ) : (
-              <span className="badge neutral">untagged</span>
+              <span className="badge neutral">{t('plugin.changelog.untagged')}</span>
             )}
           </h3>
-          {r.notesMarkdown ? <Markdown source={r.notesMarkdown} baseDir={plugin.path ?? ''} /> : <p className="muted">No release notes.</p>}
+          {r.notesMarkdown ? <Markdown source={r.notesMarkdown} baseDir={plugin.path ?? ''} /> : <p className="muted">{t('plugin.changelog.noNotes')}</p>}
         </article>
       ))}
       {releases && releases.length > 3 && (
         <button className="btn btn-ghost btn-link" type="button" onClick={() => setAll((v) => !v)}>
-          {all ? 'Show fewer releases' : `Show all releases (${releases.length})`}
+          {all ? t('plugin.changelog.showFewer') : t('plugin.changelog.showAll', { count: releases.length })}
         </button>
       )}
     </section>
@@ -604,31 +606,31 @@ function DetailsAside({ index, plugin, mobileOnly }: { index: IndexFile; plugin:
   const owner = plugin.owner ?? (plugin.source === 'local' ? index.marketplace.owner : null);
   const latest = plugin.latestRelease;
   return (
-    <aside aria-label="Plugin details" className={`card plugin-aside ${mobileOnly ? 'aside-mobile' : 'aside-desktop'}`}>
-      <h2>Details</h2>
+    <aside aria-label={t('plugin.aside.label')} className={`card plugin-aside ${mobileOnly ? 'aside-mobile' : 'aside-desktop'}`}>
+      <h2>{t('plugin.aside.title')}</h2>
       <dl className="meta">
-        <dt>Version</dt>
+        <dt>{t('plugin.aside.version')}</dt>
         <dd className="mono">{plugin.version ?? '—'}</dd>
-        <dt>Owner</dt>
-        <dd>{owner?.name ?? 'Unknown'}</dd>
-        <dt>License</dt>
-        <dd className={plugin.license ? undefined : 'muted'}>{plugin.license ?? 'Not specified'}</dd>
-        <dt>Compatibility</dt>
+        <dt>{t('plugin.aside.owner')}</dt>
+        <dd>{owner?.name ?? t('plugin.aside.unknownOwner')}</dd>
+        <dt>{t('plugin.aside.license')}</dt>
+        <dd className={plugin.license ? undefined : 'muted'}>{plugin.license ?? t('common.notSpecified')}</dd>
+        <dt>{t('plugin.aside.compatibility')}</dt>
         <dd>
           {plugin.compatibility?.claudeCode ? (
             <>
-              Claude Code <span className="mono">{plugin.compatibility.claudeCode}</span>
+              {t('plugin.aside.claudeCode')} <span className="mono">{plugin.compatibility.claudeCode}</span>
               {plugin.compatibility.bodyRef && (
                 <>
                   {' '}
                   <button className="linkish" type="button" aria-expanded={compatOpen} onClick={() => setCompatOpen((o) => !o)}>
-                    Details
+                    {t('plugin.aside.compatibilityDetails')}
                   </button>
                 </>
               )}
             </>
           ) : (
-            <span className="muted">Not specified</span>
+            <span className="muted">{t('common.notSpecified')}</span>
           )}
           {compatOpen && plugin.compatibility?.bodyRef && (
             <div style={{ marginTop: 10, fontSize: 14 }}>
@@ -636,7 +638,7 @@ function DetailsAside({ index, plugin, mobileOnly }: { index: IndexFile; plugin:
             </div>
           )}
         </dd>
-        <dt>Source</dt>
+        <dt>{t('plugin.aside.source')}</dt>
         <dd>
           {plugin.external ? (
             <>
@@ -661,7 +663,7 @@ function DetailsAside({ index, plugin, mobileOnly }: { index: IndexFile; plugin:
             '—'
           )}
         </dd>
-        <dt>Latest release</dt>
+        <dt>{t('plugin.aside.latestRelease')}</dt>
         <dd>
           {latest ? (
             <>
@@ -677,14 +679,14 @@ function DetailsAside({ index, plugin, mobileOnly }: { index: IndexFile; plugin:
               )}
             </>
           ) : (
-            <span className="muted">None</span>
+            <span className="muted">{t('plugin.aside.noRelease')}</span>
           )}
         </dd>
-        <dt>Contents</dt>
+        <dt>{t('plugin.aside.contents')}</dt>
         <dd>{composition(plugin)}</dd>
         {plugin.keywords.length > 0 && (
           <>
-            <dt>Keywords</dt>
+            <dt>{t('plugin.aside.keywords')}</dt>
             <dd style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {plugin.keywords.map((k) => (
                 <Link key={k} className="tag" to={`/search?tag=${encodeURIComponent(k)}`}>

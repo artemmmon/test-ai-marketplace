@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "docs-fetch": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/docs-fetch.js"],
+      "env": { "DOCS_FETCH_CACHE": "${CLAUDE_PLUGIN_ROOT}/.cache" }
+    }
+  }
+}

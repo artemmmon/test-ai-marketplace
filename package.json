@@ -1,0 +1,15 @@
+{
+  "name": "test-ai-marketplace",
+  "private": true,
+  "type": "module",
+  "description": "Personal Claude Code plugin marketplace: tooling for the catalog (validation and site data generation, no dependencies)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node scripts/check-marketplace.mjs",
+    "build:index": "node scripts/build-index.mjs",
+    "build:index:fixtures": "node scripts/build-index.mjs --root scripts/__fixtures__/repo --tags-file scripts/__fixtures__/tags.json --fixture",
+    "test": "node scripts/run-tests.mjs"
+  }
+}
