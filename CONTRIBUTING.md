@@ -10,6 +10,7 @@ Related documents:
 - [docs/PLUGIN-GUIDELINES.md](docs/PLUGIN-GUIDELINES.md): rules for writing skills, agents, hooks and `userConfig`.
 - [docs/RELEASES.md](docs/RELEASES.md): versions, tags and the release procedure.
 - [docs/SECURITY.md](docs/SECURITY.md): reporting a vulnerability and what plugin code is allowed to do.
+- [docs/COST-BASELINE.md](docs/COST-BASELINE.md): the measured cost of one `sdd-engineering` run and how to re-measure it.
 - [evals/README.md](evals/README.md): how to run the behaviour tests.
 
 ## Requirements

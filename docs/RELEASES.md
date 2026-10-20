@@ -17,7 +17,8 @@ How a plugin version is chosen, released and, if needed, rolled back. Contributo
   `## [Unreleased]` on top. The newest version in the changelog must equal `plugin.json` `version`
   (`check-marketplace.mjs` fails otherwise).
 
-All four plugins are at `1.0.0` and each has its `--v1.0.0` tag on the remote.
+`engineering-paved-path`, `research-tools` and `architecture-review` are at `1.0.0`, `sdd-engineering` is at `1.1.0`, and
+each released version has its `<plugin>--v<version>` tag on the remote.
 
 ## Semver rules for plugins
 
@@ -127,6 +128,16 @@ Checked with Claude Code 2.1.304, using a throw-away `CLAUDE_CONFIG_DIR` so that
 The `#<ref>` syntax (a branch or tag appended to a GitHub or git-URL marketplace) is also described in the Claude Code
 documentation, "Hold users on one version".
 
+A second check, after `sdd-engineering` 1.1.0 was released and tagged, again with a throw-away `CLAUDE_CONFIG_DIR`,
+covered a real upgrade and a real downgrade:
+
+- `claude plugin marketplace add artemmmon/test-ai-marketplace#sdd-engineering--v1.0.0` followed by an install of
+  `sdd-engineering` installs `sdd-engineering` `1.0.0` and the three dependencies at `1.0.0`.
+- After `claude plugin marketplace remove test-ai-marketplace`, adding the marketplace again without a ref and installing
+  `sdd-engineering` gives `1.1.0`. The dependencies stayed at `1.0.0` because no newer version of them exists.
+- Removing the marketplace and adding it again pinned to `#sdd-engineering--v1.0.0` installs `sdd-engineering` `1.0.0`
+  again: this is a working rollback from `1.1.0` to `1.0.0`, using the procedure below.
+
 ### Pin a user to a previous release
 
 Because every plugin in this marketplace has a relative-path source, its files come from the marketplace checkout, so
@@ -143,9 +154,10 @@ the pin, remove the marketplace and add it again without `#<ref>`.
 
 Not verified:
 
-- Only `1.0.0` exists so far, so no real downgrade (for example from `1.1.0` to `1.0.0`) has been run.
-- How dependencies resolve while the marketplace is pinned. By the Claude Code documentation a range resolves to the
-  highest tag that satisfies it, so a pinned `sdd-engineering` may still receive a newer `1.x` of its dependencies.
+- How dependencies resolve while the marketplace is pinned to an older tag **and a newer `1.x` of a dependency exists**.
+  No dependency has a release newer than `1.0.0` yet, so this case could not be run. By the Claude Code documentation a
+  range resolves to the highest tag that satisfies it, so a pinned `sdd-engineering` may still receive a newer `1.x` of its
+  dependencies.
 - Loading a tagged checkout for one session (`git worktree add ../rollback <tag>` and `claude --plugin-dir ../rollback/plugins/<name>`)
   is documented by Claude Code for `--plugin-dir`, but was not run here.
 
