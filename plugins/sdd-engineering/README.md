@@ -22,8 +22,9 @@ a framework or a folder layout.
 7. [Guards and checks (hooks) and what to read before installing](#guards-and-checks-hooks)
 8. [Keeping token cost down](#keeping-token-cost-down)
 9. [The retro: workflow-retro](#the-retro-workflow-retro)
-10. [Spec lifecycle](#spec-lifecycle)
-11. [What is intentionally not included](#what-is-intentionally-not-included)
+10. [Insights files: engineering-insights](#insights-files-engineering-insights)
+11. [Spec lifecycle](#spec-lifecycle)
+12. [What is intentionally not included](#what-is-intentionally-not-included)
 
 ## What you get
 
@@ -43,13 +44,14 @@ Limits expressed as "may not" for `Bash` (read-only git and search commands for 
 instructions in the agent prompts. What the plugin enforces technically are the `tools` lists of the agents and the
 hooks described below.
 
-### Skills (3)
+### Skills (4)
 
 | Skill | Called by | What it does |
 |---|---|---|
 | `run-plan` | You: `/sdd-engineering:run-plan` | The entry point. Takes a spec, a plan, designs and a requirements text in any combination, finds out which stage the feature is in and drives it along the route below. Claude never starts it on its own |
 | `workflow-retro` | You: `/sdd-engineering:workflow-retro` | Measures a finished run from the Claude Code transcripts on disk, proposes three to five concrete actions and appends a row to the retro ledger. Claude never starts it on its own |
 | `spec-authoring` | The agents `spec-creator` (preloaded), `implementation-planner` and `implementation-verifier` (read by path); also loaded by Claude when you write or review a spec | The spec template, EARS acceptance criteria, the `US/AC/EC/NFR/OQ` ids, provenance tags for inputs, untrusted inputs and the spec lifecycle; ships `check-spec.mjs`, a runnable spec form check |
+| `engineering-insights` | The agent `implementer` (loads it when it has a finding to record); also loaded by Claude on its own, or by you, when a session hits a dead end, a quirk or an error and its fix | Appends non-obvious findings to the nearest `INSIGHTS.md` of the module you are working in: fixed sections, dated entries with a `Where: path:line` anchor, append-only. Creates the file when it does not exist yet; ships `assets/INSIGHTS.template.md` |
 
 ## Dependencies
 
@@ -342,6 +344,24 @@ estimates from `assets/prices.json`, output tokens are partly estimated, and qua
 change the agents; applying an action is a separate change. Options: `--session <id>`, `--since`, `--until`,
 `--shallow` (main session only), `--ledger`.
 
+## Insights files: engineering-insights
+
+Lessons a session learns the hard way (a library quirk, a dead end, an error and its fix, an unwritten convention)
+are lost when the session ends. The `engineering-insights` skill keeps them in an `INSIGHTS.md` next to the code:
+
+- **Where.** The nearest module or package folder to the finding (most specific wins); the repository root file is
+  for findings that span modules. The file is optional and is created on the first finding worth keeping, from
+  `skills/engineering-insights/assets/INSIGHTS.template.md`.
+- **What goes in.** Only non-obvious findings, one `### YYYY-MM-DD — title` entry of 1-4 lines under one of seven
+  fixed sections, closing with `Where: path:line`. Unchecked claims are marked `(unverified)`.
+- **Append-only.** Entries are never edited or deleted; a finding proven wrong gets a new `Supersedes "<title>"`
+  entry, so the history of what was believed stays readable.
+- **Who reads and writes.** `spec-creator`, `brainstorm` and `implementation-planner` read the files that exist
+  (and the planner lists new findings under "Insights to record"); `implementer` writes them by following the
+  skill. The spec-creator and planner guards still allow writes only to their own files, so those agents never
+  edit an insights file.
+- **Without the files.** Nothing requires them: when a project has none, every agent skips the read.
+
 ## Spec lifecycle
 
 A spec is a Markdown file `<specs_dir>/NN-feature-name.md` with a header (`Spec ID: SPEC-NN`, `Status`,
@@ -374,7 +394,6 @@ approve again). To change an implemented spec, write a new one with `Supersedes:
 | A correctness review, a security review, a documentation stage, a pull-request self-review | Run them with your own tools or skills. `engineering-paved-path:security` is a rulebook you can apply by hand |
 | Committing, pushing, opening or merging pull requests | `run-plan` never does these |
 | A fixed mapping from file paths to skills and checks | The planner chooses skills from their descriptions and from your `CLAUDE.md` / `AGENTS.md` when they exist, and records the choice in each step |
-| An insights file for lessons learned | If your project keeps `INSIGHTS.md` files, the agents read and update them; they are never required |
 | Default check commands | Configure `check_commands` (or write a Verification section in the plan); the plugin does not guess your tooling |
 
 ## Requirements
