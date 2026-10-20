@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MARKER, TEST_FILE, checkImplemented, checkPlan, isPlanPath, option, specIds, stepFiles, parsePlan } from '../check-plan.mjs';
 
+const NOTES = 'src/INSIGHTS.md'; // optional file a plan may list under "Insights to record"
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '../check-plan.mjs');
 
 const SPEC = [
@@ -41,14 +42,14 @@ const PLAN = [
   '- Covers: AC-2, NFR-1',
   '- Done when: the log line appears.', '',
   '## Verification', '| Package | Checks |', '|---|---|', '| api | `npm test` |', '',
-  '## Insights to record', '- `src/INSIGHTS.md` · Codebase Patterns — the probe', '',
+  '## Insights to record', `- \`${NOTES}\` · Codebase Patterns — the probe`, '',
   MARKER, '',
   '## Design notes', 'None.', '',
 ].join('\n');
 
 function project(files = {}) {
   const root = mkdtempSync(join(tmpdir(), 'check-plan-'));
-  const all = { 'specs/10-probe.md': SPEC, 'src/app.ts': 'export {};\n', 'src/INSIGHTS.md': '# Insights\n', ...files };
+  const all = { 'specs/10-probe.md': SPEC, 'src/app.ts': 'export {};\n', [NOTES]: '# Insights\n', ...files };
   for (const [path, content] of Object.entries(all)) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), content);

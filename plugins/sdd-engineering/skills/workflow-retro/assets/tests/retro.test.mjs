@@ -34,24 +34,24 @@ function fixture(cwd = CWD) {
     // One response written as two lines: the usage must be counted once, with the final output.
     line('m1', T(0, 5), { input: 10, output: 5, read: 1000, write: 500, write1h: 500 }, [tool('tu_a', 'Agent', { subagent_type: 'implementer' })], { model: 'claude-opus-5-5', final: false }),
     line('m1', T(0, 6), { input: 10, output: 200, read: 1000, write: 500, write1h: 500 }, [tool('tu_b', 'Agent', { subagent_type: 'implementer' })], { model: 'claude-opus-5-5' }),
-    line('m2', T(30), { input: 10, output: 100, read: 2000 }, [tool('tu_r', 'Read', { file_path: `${CWD}/AGENTS.md` })], { model: 'claude-opus-5-5' }),
+    line('m2', T(30), { input: 10, output: 100, read: 2000 }, [tool('tu_r', 'Read', { file_path: `${CWD}/GUIDE.md` })], { model: 'claude-opus-5-5' }),
   ].join('\n'));
   const agent = (id, meta, lines) => {
     writeFileSync(join(sub, `agent-${id}.meta.json`), JSON.stringify(meta));
     writeFileSync(join(sub, `agent-${id}.jsonl`), lines.join('\n'));
   };
   agent('aaaa1111', { agentType: 'implementer', description: 'group A', toolUseId: 'tu_a', spawnDepth: 1 }, [
-    line('a1', T(1), { input: 5, output: 50, read: 100, write: 900 }, [tool('tu_a1', 'Read', { file_path: `${CWD}/src/INSIGHTS.md` })]),
-    line('a2', T(5), { input: 5, output: 50, read: 1000 }, [tool('tu_n', 'Agent', { subagent_type: 'researcher' }), tool('tu_a2', 'Bash', { command: `cat ${CWD}/src/INSIGHTS.md | head -5` })]),
+    line('a1', T(1), { input: 5, output: 50, read: 100, write: 900 }, [tool('tu_a1', 'Read', { file_path: `${CWD}/src/NOTES.md` })]),
+    line('a2', T(5), { input: 5, output: 50, read: 1000 }, [tool('tu_n', 'Agent', { subagent_type: 'researcher' }), tool('tu_a2', 'Bash', { command: `cat ${CWD}/src/NOTES.md | head -5` })]),
     // No stop_reason on any line of this request: output is estimated from the 400 characters.
     line('a3', T(10), { input: 5, output: 3, read: 2000 }, [{ type: 'text', text: 'x'.repeat(400) }], { final: false }),
   ]);
   agent('bbbb2222', { agentType: 'implementer', description: 'group B', toolUseId: 'tu_b', spawnDepth: 1 }, [
-    line('b1', T(2), { input: 5, output: 50, read: 100, write: 900 }, [tool('tu_b1', 'Bash', { command: `sed -n '1,40p' src/INSIGHTS.md && npm run typecheck` })]),
+    line('b1', T(2), { input: 5, output: 50, read: 100, write: 900 }, [tool('tu_b1', 'Bash', { command: `sed -n '1,40p' src/NOTES.md && npm run typecheck` })]),
     line('b2', T(8), { input: 5, output: 50, read: 1000 }, [tool('tu_b2', 'Edit', { file_path: `${CWD}/a.ts` })]),
   ]);
   agent('cccc3333', { agentType: 'researcher', description: 'nested question', toolUseId: 'tu_n', spawnDepth: 2 }, [
-    line('c1', T(6), { input: 5, output: 20, read: 100, write: 300 }, [tool('tu_c1', 'Read', { file_path: `${CWD}/src/INSIGHTS.md` })], { model: 'claude-haiku-4-5' }),
+    line('c1', T(6), { input: 5, output: 20, read: 100, write: 300 }, [tool('tu_c1', 'Read', { file_path: `${CWD}/src/NOTES.md` })], { model: 'claude-haiku-4-5' }),
     line('c2', T(7), { input: 5, output: 20, read: 400 }, [{ type: 'text', text: 'done' }], { model: 'claude-haiku-4-5' }),
   ]);
   return projects;
@@ -125,7 +125,7 @@ test('bashReads: cat, sed -n, head and tail name files with a folder; other comm
 test('signals: a file read by several agents, through Read or Bash', () => {
   const result = collect(opts(fixture()));
   const kinds = result.signals.map((s) => `${s.kind}: ${s.text}`);
-  assert.ok(kinds.some((k) => k.startsWith('preload') && k.includes('2 of 2 `implementer` agents read `src/INSIGHTS.md`')), kinds.join('\n'));
+  assert.ok(kinds.some((k) => k.startsWith('preload') && k.includes('2 of 2 `implementer` agents read `src/NOTES.md`')), kinds.join('\n'));
   assert.ok(kinds.some((k) => k.includes('read more than once by the same agent: implementer:1111 ×2')), kinds.join('\n'));
   assert.ok(!kinds.some((k) => k.startsWith('concurrency')), 'peak 3 is under the limit');
 });
