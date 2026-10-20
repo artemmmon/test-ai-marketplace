@@ -24,7 +24,8 @@ never inferred from the fact that `run-plan` was run.
 
 ## Where the run ends
 
-The run ends with a report after `sdd-engineering:implementation-verifier`. Writing tests, a correctness
+The run ends with a report after `sdd-engineering:implementation-verifier`. New tests are written only when
+the user asks for them (the implementers get `tests: on`, see `references/handoffs.md`); a correctness
 review, a security review, documentation and a pull-request self-review are **outside this plugin**: this
 command does not run them and says so in the closing report. The code is not
 committed, pushed or opened as a pull request.

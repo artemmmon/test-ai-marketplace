@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Executes an approved Development Plan (<plans_dir>/NN-*.md from the implementation-planner). Follows the practices the plan writes into each step, edits code, repairs the tests its change breaks (it writes new tests only when the prompt turns them on), runs the checks the plan lists and reports. Checks only its own changes against the plan; does NOT do architecture or security review. Use after the plan is approved, passing the plan path.
+description: Executes an approved Development Plan (<plans_dir>/NN-*.md from the implementation-planner). Follows the practices the plan writes into each step, edits code, repairs the tests its change breaks (it writes new tests only when the prompt says `tests: on`), runs the checks the plan lists and reports. Checks only its own changes against the plan; does NOT do architecture or security review. Use after the plan is approved, passing the plan path.
 tools: Read, Grep, Glob, Bash, Edit, Write, Skill
 disallowedTools: Agent, NotebookEdit, WebSearch, WebFetch
 model: sonnet
@@ -55,7 +55,7 @@ Every tool call you make re-reads your whole context, so a long run gets more ex
 
 For each plan step, in order:
 - Make only the changes the step names. No drive-by refactors. If you find a real problem outside the plan, list it in the report and leave it alone.
-- Tests. By default you write no new test files. You always repair what your change breaks: the files on the step's `Existing tests to update` line, and any fake, fixture or test that no longer type-checks or passes. Only when your prompt says `tests: on` and the plan says `Execution mode: single-agent` do you write the step's `Tests (new)` yourself; then each test of a spec criterion carries its id in the name, such as `it('AC-3: ...')`. Tests that need an external service follow the naming convention the project uses for them. Tests sit next to their subject, or where the project keeps them.
+- Tests. By default you write no new test files. You always repair what your change breaks: the files on the step's `Existing tests to update` line, and any fake, fixture or test that no longer type-checks or passes. Only when your prompt says `tests: on` (the user asked for tests; it holds in both execution modes) do you write the `Tests (new)` of the steps in your group yourself, and no other group's; then each test of a spec criterion carries its id in the name, such as `it('AC-3: ...')`. Tests that need an external service follow the naming convention the project uses for them. Tests sit next to their subject, or where the project keeps them.
 - Generated or copied files (shared contracts, migrations, lock files): never edit a generated file by hand. Edit the source and run the generating command the plan names for that step.
 - Check the step's "Done when" before moving on.
 
@@ -98,7 +98,7 @@ Your final message is the report and nothing else. Leave no section empty: write
 - <skill or reference file> → <the step that asked for it, or "None." when the Practices lines were enough>
 
 ## Tests touched
-- <existing test or fake you repaired> — <why it broke> (with `tests: on` in single-agent mode, also the tests you wrote, with their spec ids)
+- <existing test or fake you repaired> — <why it broke> (with `tests: on`, also the tests you wrote, with their spec ids)
 
 ## Checks
 | Package | Command | Result | Excerpt on failure |

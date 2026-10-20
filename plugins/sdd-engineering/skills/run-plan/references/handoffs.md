@@ -28,11 +28,11 @@ for that file. Never infer approval from "looks good so far".
 
 | Stage | Agent | Prompt |
 |---|---|---|
-| 4 | `sdd-engineering:implementer` | `Plan: <plans_dir>/NN-name.md` · `group: G2` · `Handoff from G1:` the previous report's "Handoff to the next group" section, verbatim |
+| 4 | `sdd-engineering:implementer` | `Plan: <plans_dir>/NN-name.md` · `group: G2` · `tests: on` only when the user asked for tests · `Handoff from G1:` the previous report's "Handoff to the next group" section, verbatim |
 | 5 | `architecture-review:architecture-reviewer` | `mode: diff` · `base: <base>` · `Plan: <path>` · `checks:` the `architecture_checks` entries, one per line, when there are any |
-| 6 | `sdd-engineering:implementer` | `Fix mode.` · `Plan: <path>` · the fix list, one line per item: `<id>` · `path:line` - what is wrong - what the rule or criterion requires |
+| 6 | `sdd-engineering:implementer` | `Fix mode.` · `Plan: <path>` · `tests: on` only when the user asked for tests · the fix list, one line per item: `<id>` · `path:line` - what is wrong - what the rule or criterion requires |
 | 6 | `architecture-review:architecture-reviewer` again | `mode: diff` · `base: <base>` · `recheck:` the findings that were sent to the fix, one line each: `<id>` · `file:line` · `rule` · `fixed_files:` the fix report's changed files |
-| 7 | `sdd-engineering:implementation-verifier` | `Plan: <path>` · `base: <base>` · `tests: off` |
+| 7 | `sdd-engineering:implementation-verifier` | `Plan: <path>` · `base: <base>` · `tests: off` (`tests: on` when the user asked for tests) |
 | 7 | `sdd-engineering:implementation-verifier` again | the same + `recheck: AC-3, S4.done, ...` |
 
 ### Stage 4: groups
@@ -52,10 +52,16 @@ implementer for the next group: start a new one.
 No brainstorm before a standalone planner, no next stage after either. The gates hold: a spec with a
 `Spec ID:` line must be approved before it is planned.
 
-### Tests: off
+### Tests: off by default, on when the user asks
 
-The route writes no new tests. The verifier gets `tests: off`, and the closing report says the feature has
-no new tests. `implementer` still repairs the existing tests its change breaks.
+By default the route writes no new tests: the verifier gets `tests: off`, and the closing report says the
+feature has no new tests. `implementer` still repairs the existing tests its change breaks.
+
+When the user asks for tests (in the request or any later message), add `tests: on` to the prompt of every
+`implementer` (each group, and fix mode) and of the verifier, whatever the execution mode. Each implementer
+writes the `Tests (new)` of the steps in its own group, so a step's tests are written by the agent that wrote
+its code; the planner needs no separate test step. The line is one flag, not the tests themselves: never
+paste test text into a prompt.
 
 ### Stage 5: the architecture review
 

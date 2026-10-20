@@ -37,7 +37,7 @@ All are addressed by scoped name, for example `sdd-engineering:spec-creator`.
 | `sdd-engineering:spec-creator` | Pass 1: reads your sources, finds design gaps and edge cases, and returns a discovery report of questions and proposals. Pass 2: writes one spec | opus | Only `<specs_dir>/*.md`, only while the spec is `Status: draft` (a hook enforces it) | Approve a spec, write plans or code, run a shell, use the web, start any agent except `research-tools:researcher`, call any MCP tool except Figma read tools (`get_*`) |
 | `sdd-engineering:brainstorm` | Compares 3-5 materially different ways to build the feature in a weighted matrix with a sensitivity check (or a short brief when only one way is viable) and recommends one | sonnet | Only its own brief, `<plans_dir>/NN-short-name.brainstorm.md`, as `Status: awaiting choice` (a hook enforces it) | Edit anything else, write steps or code, start agents |
 | `sdd-engineering:implementation-planner` | Reviews the requirements (questions, recommendations, execution mode), then writes a Development Plan whose every step names files, rules with `path:line`, the spec ids it covers and a checkable "Done when" | opus | Only its own plan, `<plans_dir>/NN-short-name.md`, only while it is `Status: draft` (a hook enforces it) | Write or edit a spec, approve a plan, write code, review architecture or security, start agents, use the web |
-| `sdd-engineering:implementer` | Executes one step group of an approved plan (or, in fix mode, a list of gaps), repairs the tests its change breaks, runs the checks and compares its own diff with the plan | sonnet | Project code, and the `Status:` lines of the plan and the spec it implements | Start agents, use the web, review architecture or security, write new tests unless asked (`tests: on`, single-agent mode), commit, push or open pull requests |
+| `sdd-engineering:implementer` | Executes one step group of an approved plan (or, in fix mode, a list of gaps), repairs the tests its change breaks, runs the checks and compares its own diff with the plan | sonnet | Project code, and the `Status:` lines of the plan and the spec it implements | Start agents, use the web, review architecture or security, write new tests unless asked (`tests: on`, either mode), commit, push or open pull requests |
 | `sdd-engineering:implementation-verifier` | The last gate: read-only trace of the finished code to every spec id and every plan step, one verdict per item, `PASS`, `FAIL` or `INCOMPLETE` overall; `recheck:` after a fix | sonnet | Nothing | Write or edit files, start agents, use the web, judge whether the plan was the right one |
 
 Limits expressed as "may not" for `Bash` (read-only git and search commands for the read-only agents) are
@@ -160,7 +160,7 @@ How it behaves:
 - **Amending an approved spec.** If planning or building finds a gap (a missing criterion, an undecided edge case),
   you decide it, `spec-creator` reopens the spec as a draft under an `Amended:` line, adds the new requirement under
   the next free id, and you approve again. Existing ids are never renumbered.
-- **Where the run ends.** After the verifier, with a closing report. Writing new tests, a correctness review, a
+- **Where the run ends.** After the verifier, with a closing report. Writing new tests (only when you ask for them, see below), a correctness review, a
   security review, documentation, committing, pushing and opening a pull request are outside the plugin: `run-plan`
   does none of them and tells you so in the report.
 
@@ -319,8 +319,11 @@ far more than with the model. The route is built around that:
 - **A small start for every agent.** The implementer reads only the plan up to the `implementer-brief:end` marker,
   the spec lines it needs by id, and only the matching parts of long notes.
 - **Bounded loops.** Three review rounds, two verifier rounds, then the run stops and asks you.
-- **No test-writing stage.** The implementer only repairs the tests its change breaks. New tests are not part of
-  the route; the verifier checks each criterion by reading the code (and by existing tests that name the id).
+- **No test-writing stage; tests only on request.** By default the implementer only repairs the tests its change
+  breaks, and the verifier checks each criterion by reading the code (and by existing tests that name the id).
+  When you ask for tests, `run-plan` passes `tests: on` to every implementer and to the verifier, in `multi-agent`
+  and `single-agent` runs alike; the implementer of a step's group writes that step's `Tests (new)` and names each
+  test with its spec id.
 - **Narrow checks.** A group that is not the last runs only the cheap checks; the full set runs once at the end.
 - **Fresh session after a break.** The main session's cache expires after about an hour; after planning, or a long
   break, start the execution from the handoff note instead of resuming a large context.
@@ -390,7 +393,7 @@ approve again). To change an implemented spec, write a new one with `Supersedes:
 
 | Not here | What to do instead |
 |---|---|
-| A test-writing stage | The route repairs broken tests only. Ask for new tests yourself, or pass `tests: on` to the implementer in a single-agent plan |
+| A test-writing stage | There is none. By default the route repairs broken tests only; ask for tests in your request and each implementer writes the tests of its own steps (`tests: on`), in either mode |
 | A correctness review, a security review, a documentation stage, a pull-request self-review | Run them with your own tools or skills. `engineering-paved-path:security` is a rulebook you can apply by hand |
 | Committing, pushing, opening or merging pull requests | `run-plan` never does these |
 | A fixed mapping from file paths to skills and checks | The planner chooses skills from their descriptions and from your `CLAUDE.md` / `AGENTS.md` when they exist, and records the choice in each step |
