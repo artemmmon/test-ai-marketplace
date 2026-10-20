@@ -110,7 +110,7 @@ substituted as `${user_config.KEY}` in skill and agent content and exported to h
   (see [SECURITY.md](SECURITY.md)).
 - English only: skills, agents, scripts, README, CHANGELOG, COMPATIBILITY and comments.
 - Scripts are self-contained Node ESM without dependencies (Node 16 or newer for the sdd-engineering scripts), with their
-  tests (`*.test.mjs`) beside them.
+  tests (`*.test.mjs`) beside them; `npm test` at the repository root runs them too, so CI covers them.
 
 ## Required documents
 

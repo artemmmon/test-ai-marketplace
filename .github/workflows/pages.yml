@@ -1,7 +1,7 @@
 name: Pages
 
 # Three separate jobs, so each one shows its own pass/fail mark in the Actions UI and on a PR:
-#   checks  - typecheck, unit tests of the site and of the indexer scripts (the verification harness)
+#   checks  - typecheck, unit tests of the indexer scripts and of the plugins' own scripts (npm test at the root), and of the site
 #   build   - generate the catalog index, vite build and the dist checks (does the site build at all)
 #   deploy  - publish to GitHub Pages, only after both of the above succeed
 # Pull requests into main run checks and build. Push to main or a manual run also deploys.

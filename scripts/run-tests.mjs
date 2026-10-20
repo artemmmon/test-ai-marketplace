@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-// Runs every scripts/**/*.test.mjs with the Node test runner (fixtures are skipped).
+// Runs every scripts/**/*.test.mjs and plugins/**/*.test.mjs (the tests that sit beside the plugins' own scripts)
+// with the Node test runner. Fixtures, node_modules and eval results (evals/) are skipped.
 // Needed because `node --test <directory>` and glob arguments behave differently on Node 20 and 22.
 import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const scripts = dirname(fileURLToPath(import.meta.url));
-const SKIP = new Set(['__fixtures__', 'node_modules']);
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOTS = ['scripts', 'plugins'];
+const SKIP = new Set(['__fixtures__', 'node_modules', 'evals']);
 
 function find(dir) {
   return readdirSync(dir, { withFileTypes: true })
@@ -18,9 +20,10 @@ function find(dir) {
     });
 }
 
-const files = find(scripts);
+// Each file once, even if the roots ever overlap.
+const files = [...new Set(ROOTS.map((r) => join(root, r)).filter(existsSync).flatMap(find))];
 if (files.length === 0) {
-  console.error('no *.test.mjs files found under scripts/');
+  console.error(`no *.test.mjs files found under ${ROOTS.join('/, ')}/`);
   process.exit(1);
 }
 const result = spawnSync(process.execPath, ['--test', ...process.argv.slice(2), ...files], { stdio: 'inherit' });
