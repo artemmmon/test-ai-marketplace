@@ -50,7 +50,7 @@ jobs:
             exit 1
           fi
 
-      - name: Indexer script tests
+      - name: Script tests (indexer and plugins)
         working-directory: .
         run: npm test
 
