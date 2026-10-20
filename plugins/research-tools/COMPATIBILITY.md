@@ -1,6 +1,6 @@
 # Compatibility
 
-Minimum Claude Code version: TBD (spike S-1)
+Minimum Claude Code version: 2.1.269 (first release that supports `claude plugin eval`, which the plugin set uses)
 
 ## Dependencies
 
