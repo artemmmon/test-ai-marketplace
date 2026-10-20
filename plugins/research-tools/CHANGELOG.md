@@ -12,3 +12,4 @@ All notable changes to this plugin are documented here. The format follows
 
 - `researcher` agent: read-only, answers one concrete question from the repository, from external
   sources, or from both, and returns a Repository report, an External report or a Clarification report.
+- README with usage examples, the input contract, the report formats and the limits of the agent.
