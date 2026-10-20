@@ -1,134 +1,134 @@
-# Специфікація: статичний каталог-сайт для `test-ai-marketplace`
+# Specification: static catalog site for `test-ai-marketplace`
 
 | | |
 |---|---|
-| Статус | Draft v1 — основа для дизайну (Claude Design) і реалізації |
-| Дата | 2026-10-19 |
-| Репо | https://github.com/artemmmon/test-ai-marketplace (гілка `main`) |
-| Цільовий URL | `https://artemmmon.github.io/test-ai-marketplace/` |
-| Контекст | GoIT, L08 «Hands-On Lab — Cost Surgery», крок 6 |
+| Status | Draft v1 — basis for design (Claude Design) and implementation |
+| Date | 2026-10-19 |
+| Repo | https://github.com/artemmmon/test-ai-marketplace (branch `main`) |
+| Target URL | `https://artemmmon.github.io/test-ai-marketplace/` |
+| Context | GoIT, L08 "Hands-On Lab — Cost Surgery", step 6 |
 
-Нотація: **FR-n** — функційна вимога, **NFR-n** — нефункційна, **US-n** — сценарій користувача, **A-n** — припущення, **Q-n** — відкрите питання. Слова «MUST / має» означають обов'язкову вимогу MVP, «SHOULD / бажано» — рекомендацію.
+Notation: **FR-n** — functional requirement, **NFR-n** — non-functional requirement, **US-n** — user scenario, **A-n** — assumption, **Q-n** — open question. The word "MUST" denotes a mandatory MVP requirement, "SHOULD" a recommendation.
 
-## Зміст
+## Table of contents
 
-1. [Мета, не-цілі, аудиторія, сценарії](#1-мета-не-цілі-аудиторія-сценарії)
-2. [Передумови й обмеження](#2-передумови-й-обмеження)
-3. [Архітектура](#3-архітектура)
-4. [Модель даних](#4-модель-даних)
-5. [Пошук](#5-пошук)
-6. [Екрани й компоненти](#6-екрани-й-компоненти)
-7. [Нефункційні вимоги](#7-нефункційні-вимоги)
-8. [Збірка й деплой](#8-збірка-й-деплой)
-9. [Тестування й acceptance](#9-тестування-й-acceptance)
-10. [Фазування](#10-фазування)
-11. [Припущення й відкриті питання](#11-припущення-й-відкриті-питання)
-12. [Додатки](#12-додатки)
+1. [Goal, non-goals, audience, scenarios](#1-goal-non-goals-audience-scenarios)
+2. [Prerequisites and constraints](#2-prerequisites-and-constraints)
+3. [Architecture](#3-architecture)
+4. [Data model](#4-data-model)
+5. [Search](#5-search)
+6. [Screens and components](#6-screens-and-components)
+7. [Non-functional requirements](#7-non-functional-requirements)
+8. [Build and deploy](#8-build-and-deploy)
+9. [Testing and acceptance](#9-testing-and-acceptance)
+10. [Phasing](#10-phasing)
+11. [Assumptions and open questions](#11-assumptions-and-open-questions)
+12. [Appendices](#12-appendices)
 
 ---
 
-## 0. Стан репо: «є зараз» vs «має бути»
+## 0. Repo state: "as is" vs "to be"
 
-| Елемент | Є зараз | Має бути (ця специфікація) |
+| Item | As is | To be (this specification) |
 |---|---|---|
-| `.claude-plugin/marketplace.json` | `name: test-ai-marketplace`, `owner.name: artemmmon`, `plugins: []` | Без змін схеми; наповнюється плагінами окремо від сайту |
-| `plugins/` | лише `.gitkeep` | `plugins/<name>/…` за структурою з `README.md` |
-| `scripts/check-marketplace.mjs` | самодостатній Node ESM-скрипт без залежностей (sort/dup/name regex/hidden Unicode/pinning external/`plugin.json` name+version/SKILL.md frontmatter `name`) | тонка CLI-обгортка над спільним модулем `scripts/lib/marketplace.mjs` (FR-12) |
-| `scripts/build-index.mjs` | немає | генератор даних сайту (§3, §4) |
-| `package.json` у корені | немає | з npm-скриптами, **без залежностей** (FR-14) |
-| `site/` | немає | React + TypeScript + Vite застосунок |
-| `.github/workflows/` | немає | `build.yml` (reusable), `ci.yml` (PR), `pages.yml` (deploy) |
-| `.gitignore` | `.DS_Store`, `node_modules/` | + згенеровані файли (FR-73) |
-| Видимість репо | приватне (`README.md` описує `gh auth setup-git`) | публічне — дія користувача, передумова деплою (§2) |
+| `.claude-plugin/marketplace.json` | `name: test-ai-marketplace`, `owner.name: artemmmon`, `plugins: []` | No schema changes; filled with plugins separately from the site |
+| `plugins/` | only `.gitkeep` | `plugins/<name>/…` following the structure from `README.md` |
+| `scripts/check-marketplace.mjs` | a self-contained, dependency-free Node ESM script (sort/dup/name regex/hidden Unicode/pinning external/`plugin.json` name+version/SKILL.md frontmatter `name`) | a thin CLI wrapper over the shared module `scripts/lib/marketplace.mjs` (FR-12) |
+| `scripts/build-index.mjs` | absent | site data generator (§3, §4) |
+| `package.json` in the root | absent | with npm scripts, **no dependencies** (FR-14) |
+| `site/` | absent | React + TypeScript + Vite application |
+| `.github/workflows/` | absent | `build.yml` (reusable), `ci.yml` (PR), `pages.yml` (deploy) |
+| `.gitignore` | `.DS_Store`, `node_modules/` | + generated files (FR-73) |
+| Repo visibility | private (`README.md` describes `gh auth setup-git`) | public — a user action, a prerequisite for deploy (§2) |
 
-Оскільки каталог порожній, дизайн і тести спираються на **фіктивні fixtures** (§12.1). Сайт MUST коректно працювати і з порожнім реальним каталогом (FR-55).
+Because the catalog is empty, the design and tests rely on **fictitious fixtures** (§12.1). The site MUST also work correctly with an empty real catalog (FR-55).
 
 ---
 
-## 1. Мета, не-цілі, аудиторія, сценарії
+## 1. Goal, non-goals, audience, scenarios
 
-### 1.1 Мета
+### 1.1 Goal
 
-Дати людям і агентам **discovery** для плагінів marketplace: знайти плагін або вкладений компонент (skill, agent, command, hook, MCP), прочитати його повний вміст і скопіювати точну команду встановлення. Встановлення лишається в Claude Code (chat `/plugin …` або CLI `claude plugin …`).
+Give people and agents **discovery** for marketplace plugins: find a plugin or a nested component (skill, agent, command, hook, MCP), read its full content and copy the exact install command. Installation itself stays in Claude Code (chat `/plugin …` or CLI `claude plugin …`).
 
-### 1.2 Не-цілі (non-goals)
+### 1.2 Non-goals
 
-- Backend, API, бази даних, серверний рендеринг.
-- Рейтинги, коментарі, лічильники завантажень/встановлень, аналітика, акаунти, логін.
-- Встановлення з браузера (кнопка лише копіює команду).
-- Checkout і індексація коду зовнішніх плагінів.
-- Семантичний/embedding-пошук.
-- SEO-індексація окремих сторінок (hash routing, див. NFR-30).
-- Локалізація UI (UI англійською).
+- Backend, API, databases, server-side rendering.
+- Ratings, comments, download/install counters, analytics, accounts, login.
+- Installing from the browser (the button only copies the command).
+- Checkout and code indexing of external plugins.
+- Semantic/embedding search.
+- SEO indexing of individual pages (hash routing, see NFR-30).
+- UI localization (the UI is in English).
 
-### 1.3 Аудиторія
+### 1.3 Audience
 
-| Аудиторія | Що потрібно |
+| Audience | Needs |
 |---|---|
-| Розробник-користувач Claude Code (UA/EN) | знайти skill під задачу, оцінити ризик (виконує код?), скопіювати команду |
-| Мейнтейнер marketplace (власник репо) | бачити, що каталог валідний і задеплоєний; ділитися посиланнями |
-| AI-агент | машиночитний каталог `catalog.json` + `llms.txt` |
-| Рев'юер безпеки | прочитати hooks, `.mcp.json`, `bin/` до встановлення |
+| Claude Code developer-user (UA/EN) | find a skill for a task, assess the risk (does it execute code?), copy the command |
+| Marketplace maintainer (repo owner) | see that the catalog is valid and deployed; share links |
+| AI agent | machine-readable catalog `catalog.json` + `llms.txt` |
+| Security reviewer | read hooks, `.mcp.json`, `bin/` before installing |
 
-### 1.4 Сценарії користувача
+### 1.4 User scenarios
 
-Ключові сценарії (Given/When/Then). Результати наведені для fixtures з §12.1.
+Key scenarios (Given/When/Then). Results are given for the fixtures from §12.1.
 
-**US-1. «Мені треба скіл для код-рев'ю» (UA).**
-- Given сайт завантажено з fixtures,
-- When користувач вводить у пошук `мені треба скіл для код-рев'ю`,
-- Then першим результатом є skill `engineering-paved-path:code-review`; шаблонна фраза «мені треба» і стоп-слово «для» ігноруються; слово «скіл» розпізнане як тип `skill` (буст + чип «Only skills», FR-38); у назві підсвічено `code-review`.
+**US-1. "мені треба скіл для код-рев'ю" ("I need a skill for code review", UA).**
+- Given the site is loaded with fixtures,
+- When the user types `мені треба скіл для код-рев'ю` ("I need a skill for code review") into search,
+- Then the first result is the skill `engineering-paved-path:code-review`; the boilerplate phrase `мені треба` ("I need") and the stop word `для` ("for") are ignored; the word `скіл` ("skill") is recognized as type `skill` (boost + chip "Only skills", FR-38); `code-review` is highlighted in the name.
 
-**US-2. «I need a skill for code review» (EN).**
-- Given те саме,
-- When запит `I need a skill for code review`,
-- Then топ-1 — той самий skill, що в US-1.
+**US-2. "I need a skill for code review" (EN).**
+- Given the same setup,
+- When the query is `I need a skill for code review`,
+- Then the top-1 result is the same skill as in US-1.
 
-**US-3. Деталі плагіна.**
-- Given користувач на картці плагіна `sdd-engineering`,
-- When натискає **View**,
-- Then відкривається `#/plugin/sdd-engineering` з `version` = `1.0.0` (як у `plugin.json`), трьома залежностями (`engineering-paved-path ^1.0.0`, `research-tools ^1.0.0`, `architecture-review ^1.0.0`) зі статусом «satisfied» і resolved-версією, складом за типами, README і changelog.
+**US-3. Plugin details.**
+- Given the user is on the `sdd-engineering` plugin card,
+- When they click **View**,
+- Then `#/plugin/sdd-engineering` opens with `version` = `1.0.0` (as in `plugin.json`), three dependencies (`engineering-paved-path ^1.0.0`, `research-tools ^1.0.0`, `architecture-review ^1.0.0`) with status "satisfied" and the resolved version, the composition by type, the README and the changelog.
 
 **US-4. Copy install.**
-- Given картка або сторінка плагіна `engineering-paved-path`,
-- When користувач натискає **Copy install** (режим «In chat»),
-- Then у буфер обміну потрапляє рівно `/plugin install engineering-paved-path@test-ai-marketplace` (без пробілів на кінцях), з'являється toast «Copied» і анонс для screen reader.
-- And у режимі «In terminal» зі scope `user` копіюється `claude plugin install engineering-paved-path@test-ai-marketplace --scope user`.
+- Given the card or page of the plugin `engineering-paved-path`,
+- When the user clicks **Copy install** (mode "In chat"),
+- Then exactly `/plugin install engineering-paved-path@test-ai-marketplace` is placed on the clipboard (no trailing whitespace), a toast "Copied" appears and a screen reader announcement is made.
+- And in mode "In terminal" with scope `user`, `claude plugin install engineering-paved-path@test-ai-marketplace --scope user` is copied.
 
 **US-5. Deep-link.**
-- Given користувач відфільтрував пошук (`q=review`, `type=skill`),
-- When копіює URL і відкриває його в новій вкладці,
-- Then URL має вигляд `…/test-ai-marketplace/#/search?q=review&type=skill`, і стан пошуку (рядок, фільтри, результати) відновлено.
+- Given the user has filtered the search (`q=review`, `type=skill`),
+- When they copy the URL and open it in a new tab,
+- Then the URL looks like `…/test-ai-marketplace/#/search?q=review&type=skill`, and the search state (query, filters, results) is restored.
 
-**US-6. Що нового.** Given у fixtures є релізи, When користувач відкриває `#/whats-new`, Then бачить стрічку релізів (нові зверху) з версією, датою, тегом `<plugin>--v<semver>` і нотатками з `CHANGELOG.md`, а також посилання на Atom-фід `feed.xml`.
+**US-6. What's new.** Given the fixtures contain releases, When the user opens `#/whats-new`, Then they see a feed of releases (newest first) with version, date, tag `<plugin>--v<semver>` and the notes from `CHANGELOG.md`, plus a link to the Atom feed `feed.xml`.
 
-**US-7. Перший запуск.** Given новий користувач, When відкриває `#/getting-started`, Then бачить кроки: додати marketplace, встановити плагін, оновлювати; кожна команда має кнопку Copy.
+**US-7. First run.** Given a new user, When they open `#/getting-started`, Then they see the steps: add the marketplace, install a plugin, update; every command has a Copy button.
 
-**US-8. Агент читає каталог.** Given агент знає URL сайту, When завантажує `llms.txt`, Then знаходить посилання на `catalog.json` і повні тексти компонентів (`bodies/…`) з абсолютними URL; `catalog.json` містить `schemaVersion`.
+**US-8. An agent reads the catalog.** Given an agent knows the site URL, When it fetches `llms.txt`, Then it finds links to `catalog.json` and the full texts of the components (`bodies/…`) with absolute URLs; `catalog.json` contains `schemaVersion`.
 
-**US-9. Перевірка безпеки.** Given плагін має hooks, When користувач відкриває його сторінку, Then бачить попередження «Executes code» у шапці, на вкладці Hooks і на картках; вміст `hooks.json` показано як форматований JSON до встановлення.
+**US-9. Security check.** Given a plugin has hooks, When the user opens its page, Then they see the "Executes code" warning in the header, on the Hooks tab and on the cards; the content of `hooks.json` is shown as formatted JSON before installing.
 
-**US-10. Мейнтейнер ламає каталог.** Given PR, де `plugin.json` name не збігається з записом у `marketplace.json`, When запускається CI, Then job `validate` падає, `build-index`/`build-site` не запускаються, і після merge такого стану deploy не відбувається.
+**US-10. A maintainer breaks the catalog.** Given a PR where the `plugin.json` name does not match the entry in `marketplace.json`, When CI runs, Then the `validate` job fails, `build-index`/`build-site` do not run, and no deploy happens after such a state is merged.
 
-**US-11. Report an issue.** Given користувач на сторінці артефакту, When натискає «Report an issue», Then у новій вкладці відкривається `github.com/artemmmon/test-ai-marketplace/issues/new` з передзаповненим title `[<id>] ` і label (FR-60).
+**US-11. Report an issue.** Given the user is on an artifact page, When they click "Report an issue", Then `github.com/artemmmon/test-ai-marketplace/issues/new` opens in a new tab with a prefilled title `[<id>] ` and a label (FR-60).
 
 ---
 
-## 2. Передумови й обмеження
+## 2. Prerequisites and constraints
 
-- **P-1. Репо публічне.** GitHub Pages для приватного репо потребує платного плану, а raw-посилання на файли й `issues/new` мають бути доступні анонімно. Зробити репо публічним — дія користувача до першого deploy. Розділ «Install» у `README.md` (про `gh auth setup-git`) після цього варто спростити — окрема задача, не частина сайту.
-- **P-2. Лише статика.** GitHub Pages віддає файли з `site/dist`. Жодних серверних маршрутів, redirect-правил, заголовків (CSP лише через `<meta>`).
-- **P-3. Base path** `/test-ai-marketplace/` (Vite `base`). Усі URL ресурсів і даних будуються від `import.meta.env.BASE_URL` (FR-71).
-- **P-4. Hash routing** (`#/…`), бо Pages не підтримує SPA-fallback без `404.html`-хаків.
-- **P-5. Жодних запитів до GitHub API з браузера** (rate limit, CORS, приватність). Усі дані запікаються в CI в JSON. Браузер робить запити лише до власного origin (+ зображення з `raw.githubusercontent.com`, FR-64).
-- **P-6. Свіжість даних = останній deploy.** Сайт показує стан `main` на момент збірки; дата генерації й commit SHA видно у footer.
+- **P-1. The repo is public.** GitHub Pages for a private repo requires a paid plan, and raw links to files and `issues/new` must be available anonymously. Making the repo public is a user action before the first deploy. After that, the "Install" section of `README.md` (about `gh auth setup-git`) should be simplified — a separate task, not part of the site.
+- **P-2. Static only.** GitHub Pages serves files from `site/dist`. No server routes, redirect rules or headers (CSP only via `<meta>`).
+- **P-3. Base path** `/test-ai-marketplace/` (Vite `base`). All resource and data URLs are built from `import.meta.env.BASE_URL` (FR-71).
+- **P-4. Hash routing** (`#/…`), because Pages does not support an SPA fallback without `404.html` hacks.
+- **P-5. No GitHub API requests from the browser** (rate limit, CORS, privacy). All data is baked into JSON in CI. The browser makes requests only to its own origin (+ images from `raw.githubusercontent.com`, FR-64).
+- **P-6. Data freshness = the last deploy.** The site shows the state of `main` at build time; the generation date and commit SHA are visible in the footer.
 - **P-7.** Pages settings: *Settings → Pages → Source: GitHub Actions*.
 
 ---
 
-## 3. Архітектура
+## 3. Architecture
 
-### 3.1 Потік даних
+### 3.1 Data flow
 
 ```
 repo (main)
@@ -144,115 +144,115 @@ repo (main)
 site/public/  index.json  catalog.json  releases.json  stats.json
               llms.txt    feed.xml      bodies/<plugin>/…
  │
- ▼  vite build (site/)  → site/dist/  (public/* копіюється як є)
+ ▼  vite build (site/)  → site/dist/  (public/* is copied as is)
  │
  ▼  actions/upload-pages-artifact → actions/deploy-pages
  │
- ▼  браузер: fetch index.json (1 раз) → MiniSearch у пам'яті → UI
-             fetch bodies/… лише при відкритті деталей (lazy)
+ ▼  browser: fetch index.json (once) → MiniSearch in memory → UI
+             fetch bodies/… only when details are opened (lazy)
 ```
 
-### 3.2 Структура директорій (має бути)
+### 3.2 Directory structure (to be)
 
 ```
 .claude-plugin/marketplace.json
-package.json                      # root, без dependencies (FR-14)
+package.json                      # root, no dependencies (FR-14)
 scripts/
-  check-marketplace.mjs           # CLI-обгортка над lib/marketplace.mjs
-  build-index.mjs                 # CLI генератора
+  check-marketplace.mjs           # CLI wrapper over lib/marketplace.mjs
+  build-index.mjs                 # generator CLI
   lib/
-    marketplace.mjs               # load + validate (спільне з check-marketplace)
-    frontmatter.mjs               # zero-dep парсер підмножини YAML (FR-16)
+    marketplace.mjs               # load + validate (shared with check-marketplace)
+    frontmatter.mjs               # zero-dep parser for a YAML subset (FR-16)
     semver.mjs                    # parse/compare/satisfies (FR-23)
-    changelog.mjs                 # парсер CHANGELOG.md (FR-26)
+    changelog.mjs                 # CHANGELOG.md parser (FR-26)
     emit/*.mjs                    # index, catalog, releases, stats, llms, feed
-  __fixtures__/repo/              # фіктивний marketplace для тестів і демо (§12.1)
-  __fixtures__/tags.json          # фіктивні git-теги для тестів
+  __fixtures__/repo/              # fictitious marketplace for tests and demo (§12.1)
+  __fixtures__/tags.json          # fictitious git tags for tests
   test/*.test.mjs                 # node:test
 site/
   package.json  vite.config.ts  tsconfig.json  index.html
-  public/                         # тут генеруються JSON/bodies (gitignored), + статичні favicon, theme-init.js
+  public/                         # JSON/bodies are generated here (gitignored), + static favicon, theme-init.js
   src/
     main.tsx  App.tsx  routes/  components/  data/  search/
     search/synonyms.json  search/stopwords.ts  search/stem-uk.ts  search/query.ts
-    types/index.ts                # TS-типи з §4 (джерело правди для фронтенду)
-  scripts/check-dist.mjs          # перевірка base path і вмісту dist (FR-72)
+    types/index.ts                # TS types from §4 (source of truth for the frontend)
+  scripts/check-dist.mjs          # checks base path and dist contents (FR-72)
   e2e/*.spec.ts                   # Playwright smoke
-docs/specs/site.md                # цей документ
+docs/specs/site.md                # this document
 .github/workflows/build.yml  ci.yml  pages.yml
 ```
 
-### 3.3 Генератор і валідатор
+### 3.3 Generator and validator
 
-- **FR-12.** Логіка `check-marketplace.mjs` виноситься в `scripts/lib/marketplace.mjs` з API `loadMarketplace(root)` → нормалізовані записи плагінів і `validate(root)` → `{ errors: string[], warnings: Warning[] }`. `check-marketplace.mjs` лишається з тим самим CLI-контрактом (аргумент `[marketplace-root]`, exit 1 при помилках, повідомлення `marketplace invariants ok (N plugins)`). Існуючі перевірки не послаблюються.
-- **FR-13.** `build-index.mjs` першим кроком викликає `validate()`; при `errors.length > 0` друкує помилки й завершується з кодом 1, **не записуючи** жодного файлу. Відповідно CI не має що деплоїти (US-10).
-- **FR-14.** `build-index.mjs` і `scripts/lib/*` — Node ESM **без npm-залежностей** (лише `node:*`), щоб `npm run build:index` працював без `npm ci` у корені, як у лабораторній. Мінімальна версія Node — 20.
-- **FR-15.** CLI: `node scripts/build-index.mjs [--root <dir>] [--out <dir>] [--tags-file <json>] [--now <iso>] [--commit <sha>] [--fixture]`. Дефолти: `--root .`, `--out site/public`, теги з `git for-each-ref refs/tags`, `now` = поточний час, `commit` = `$GITHUB_SHA` або `git rev-parse HEAD`. `--fixture` ставить `fixture: true` у мета-даних (FR-72). Перед записом генератор видаляє лише власні виходи (список з FR-73), а не весь `site/public`.
-- **FR-16.** Frontmatter парситься zero-dep парсером підмножини YAML: `key: scalar` (рядок без лапок, `"…"`, `'…'`, число, `true/false`), inline-список `[a, b]`, блочний список `- a`, folded/literal `>`/`|`. Будь-що інше → помилка парсингу з файлом і рядком (див. FR-19).
-- **FR-17.** Попередження друкуються в stdout, а в GitHub Actions додатково як `::warning file=<path>::<msg>`; помилки — `::error …`.
+- **FR-12.** The logic of `check-marketplace.mjs` is moved into `scripts/lib/marketplace.mjs` with the API `loadMarketplace(root)` → normalized plugin records and `validate(root)` → `{ errors: string[], warnings: Warning[] }`. `check-marketplace.mjs` keeps the same CLI contract (argument `[marketplace-root]`, exit 1 on errors, message `marketplace invariants ok (N plugins)`). Existing checks are not weakened.
+- **FR-13.** As its first step, `build-index.mjs` calls `validate()`; if `errors.length > 0` it prints the errors and exits with code 1, **writing no files**. Accordingly, CI has nothing to deploy (US-10).
+- **FR-14.** `build-index.mjs` and `scripts/lib/*` are Node ESM **without npm dependencies** (only `node:*`), so that `npm run build:index` works without `npm ci` in the root, as in the lab. Minimum Node version is 20.
+- **FR-15.** CLI: `node scripts/build-index.mjs [--root <dir>] [--out <dir>] [--tags-file <json>] [--now <iso>] [--commit <sha>] [--fixture]`. Defaults: `--root .`, `--out site/public`, tags from `git for-each-ref refs/tags`, `now` = current time, `commit` = `$GITHUB_SHA` or `git rev-parse HEAD`. `--fixture` sets `fixture: true` in the metadata (FR-72). Before writing, the generator deletes only its own outputs (the list from FR-73), not the whole `site/public`.
+- **FR-16.** Frontmatter is parsed by a zero-dep parser of a YAML subset: `key: scalar` (unquoted string, `"…"`, `'…'`, number, `true/false`), inline list `[a, b]`, block list `- a`, folded/literal `>`/`|`. Anything else → a parse error with the file and line (see FR-19).
+- **FR-17.** Warnings are printed to stdout, and in GitHub Actions additionally as `::warning file=<path>::<msg>`; errors as `::error …`.
 
-### 3.4 Що генератор читає
+### 3.4 What the generator reads
 
-| Джерело | Для чого |
+| Source | Purpose |
 |---|---|
-| `marketplace.json` | список плагінів, `source`, метадані external, `owner`, `name` marketplace |
+| `marketplace.json` | list of plugins, `source`, external metadata, `owner`, marketplace `name` |
 | `plugins/<p>/.claude-plugin/plugin.json` | `name`, `version`, `description`, `keywords`, `author`, `license`, `homepage`, `repository`, `dependencies` |
-| `plugins/<p>/README.md` | тіло сторінки плагіна + пошук |
-| `plugins/<p>/CHANGELOG.md` | changelog плагіна, `releases.json`, `feed.xml` |
-| `plugins/<p>/COMPATIBILITY.md` | блок compatibility: markdown-тіло + витягнутий мінімум Claude Code (A-3) |
-| `skills/*/SKILL.md`, `agents/*.md`, `commands/*.md` | frontmatter + тіло |
-| `hooks/hooks.json`, `.mcp.json` | events / servers + сирий JSON |
-| `bin/*` | лише список імен файлів (вміст не рендериться) |
-| git-теги `<plugin>--v<semver>` | дати релізів і посилання на теги |
+| `plugins/<p>/README.md` | body of the plugin page + search |
+| `plugins/<p>/CHANGELOG.md` | plugin changelog, `releases.json`, `feed.xml` |
+| `plugins/<p>/COMPATIBILITY.md` | compatibility block: markdown body + extracted minimum Claude Code version (A-3) |
+| `skills/*/SKILL.md`, `agents/*.md`, `commands/*.md` | frontmatter + body |
+| `hooks/hooks.json`, `.mcp.json` | events / servers + raw JSON |
+| `bin/*` | file names only (content is not rendered) |
+| git tags `<plugin>--v<semver>` | release dates and links to tags |
 
-### 3.5 Правила валідації: fail vs warn
+### 3.5 Validation rules: fail vs warn
 
-- **FR-19.** Таблиця нижче — нормативна. «fail» = помилка у `validate()`/генераторі, exit 1. «warn» = продовжити, використати fallback.
+- **FR-19.** The table below is normative. "fail" = an error in `validate()`/the generator, exit 1. "warn" = continue, use the fallback.
 
-| Умова | Реакція | Fallback |
+| Condition | Reaction | Fallback |
 |---|---|---|
-| Будь-яка помилка з поточного `check-marketplace.mjs` | fail | — |
-| Невалідний JSON (`plugin.json`, `hooks.json`, `.mcp.json`) | fail | — |
-| Frontmatter не парситься (FR-16) | fail | — |
-| `SKILL.md` без `description` | fail | — |
-| `agents/*.md` без `description` | fail | — |
-| Ім'я компонента не відповідає `^[a-z0-9][a-z0-9-]{0,63}$` | fail | — |
-| Дубль `id` (FR-21) | fail | — |
-| `dependencies[]`: залежність є в каталозі, але її версія не задовольняє range | fail | — |
-| `dependencies[]`: непідтримуваний синтаксис range (FR-23) | fail | — |
-| Цикл у залежностях | fail | — |
-| Локальний плагін без `version` у `plugin.json` | fail | — (README вимагає bump версії) |
-| `agents/*.md` без `name` | warn | ім'я з імені файлу |
-| `commands/*.md` без `description` | warn | перший непорожній рядок тіла, ≤ 160 символів |
-| Залежність відсутня в каталозі | warn | `status: "not-in-catalog"` |
-| Немає `README.md` / `CHANGELOG.md` / `COMPATIBILITY.md` | warn | секція «Not provided» |
-| `COMPATIBILITY.md` без розпізнаного рядка `Claude Code <range>` | warn | `claudeCode: null`, тіло все одно показується |
-| `CHANGELOG.md`: заголовок `## …` не розпізнано | warn | секцію пропущено |
-| Найновіша версія в changelog ≠ `plugin.json` `version` | warn | — |
-| Тег `<p>--v<x>` без секції в changelog, або тег для невідомого плагіна | warn | реліз з `notesMarkdown: ""` / тег ігнорується |
-| `hooks.json` без об'єкта `hooks` | warn | `events: []` |
-| `.mcp.json` без об'єкта `mcpServers` | warn | `servers: []` |
-| `plugin.json` має ключі `hooks`, `mcpServers`, `commands`, `agents`, `skills` (inline/кастомні шляхи) | warn | `executesCode: true` для `hooks`/`mcpServers`; вміст не індексується (A-6) |
+| Any error from the current `check-marketplace.mjs` | fail | — |
+| Invalid JSON (`plugin.json`, `hooks.json`, `.mcp.json`) | fail | — |
+| Frontmatter does not parse (FR-16) | fail | — |
+| `SKILL.md` without `description` | fail | — |
+| `agents/*.md` without `description` | fail | — |
+| Component name does not match `^[a-z0-9][a-z0-9-]{0,63}$` | fail | — |
+| Duplicate `id` (FR-21) | fail | — |
+| `dependencies[]`: the dependency is in the catalog, but its version does not satisfy the range | fail | — |
+| `dependencies[]`: unsupported range syntax (FR-23) | fail | — |
+| Cycle in dependencies | fail | — |
+| Local plugin without `version` in `plugin.json` | fail | — (README requires a version bump) |
+| `agents/*.md` without `name` | warn | name from the file name |
+| `commands/*.md` without `description` | warn | first non-empty line of the body, ≤ 160 characters |
+| Dependency missing from the catalog | warn | `status: "not-in-catalog"` |
+| No `README.md` / `CHANGELOG.md` / `COMPATIBILITY.md` | warn | "Not provided" section |
+| `COMPATIBILITY.md` without a recognized `Claude Code <range>` line | warn | `claudeCode: null`, the body is still shown |
+| `CHANGELOG.md`: a `## …` heading is not recognized | warn | the section is skipped |
+| Newest version in the changelog ≠ `plugin.json` `version` | warn | — |
+| Tag `<p>--v<x>` without a changelog section, or a tag for an unknown plugin | warn | release with `notesMarkdown: ""` / the tag is ignored |
+| `hooks.json` without a `hooks` object | warn | `events: []` |
+| `.mcp.json` without an `mcpServers` object | warn | `servers: []` |
+| `plugin.json` has the keys `hooks`, `mcpServers`, `commands`, `agents`, `skills` (inline/custom paths) | warn | `executesCode: true` for `hooks`/`mcpServers`; the content is not indexed (A-6) |
 
 ---
 
-## 4. Модель даних
+## 4. Data model
 
-### 4.1 Ідентифікатори й slug-и
+### 4.1 Identifiers and slugs
 
-- **FR-20.** `name` плагіна — як у `marketplace.json` (вже валідується `NAME_RE`). `name` компонента: skill — ім'я директорії (= frontmatter `name`), agent — frontmatter `name` або ім'я файлу без `.md`, command — ім'я файлу без `.md`, hook — константа `hooks`, MCP — константа `mcp-servers`.
+- **FR-20.** A plugin's `name` is as in `marketplace.json` (already validated by `NAME_RE`). A component's `name`: skill — the directory name (= frontmatter `name`), agent — frontmatter `name` or the file name without `.md`, command — the file name without `.md`, hook — the constant `hooks`, MCP — the constant `mcp-servers`.
 - **FR-21.** `id`:
-  - плагін: `<plugin>` (напр. `sdd-engineering`);
-  - компонент: `<plugin>:<type>:<name>` (напр. `engineering-paved-path:skill:react-best-practices`). Тип в id потрібен, бо skill і command можуть мати однакове ім'я.
-  - `qualifiedName` (відображуване, namespaced): плагін — `<plugin>`, компонент — `<plugin>:<name>` (напр. `engineering-paved-path:react-best-practices`).
-- **FR-22.** id стабільний: залежить лише від імені плагіна, типу та імені компонента, не від порядку файлів чи версії. URL: `#/plugin/<plugin>`, `#/artifact/<id>`. Двокрапка в hash не кодується. Файли тіл: `bodies/<plugin>/<type>/<name>.md` (для hook/MCP — `.json`), `bodies/<plugin>/README.md`, `bodies/<plugin>/CHANGELOG.md`, `bodies/<plugin>/COMPATIBILITY.md` (без двокрапок в іменах файлів — сумісність з Windows).
+  - plugin: `<plugin>` (e.g. `sdd-engineering`);
+  - component: `<plugin>:<type>:<name>` (e.g. `engineering-paved-path:skill:react-best-practices`). The type is needed in the id because a skill and a command can have the same name.
+  - `qualifiedName` (displayed, namespaced): plugin — `<plugin>`, component — `<plugin>:<name>` (e.g. `engineering-paved-path:react-best-practices`).
+- **FR-22.** The id is stable: it depends only on the plugin name, the type and the component name, not on file order or version. URL: `#/plugin/<plugin>`, `#/artifact/<id>`. The colon in the hash is not encoded. Body files: `bodies/<plugin>/<type>/<name>.md` (for hook/MCP — `.json`), `bodies/<plugin>/README.md`, `bodies/<plugin>/CHANGELOG.md`, `bodies/<plugin>/COMPATIBILITY.md` (no colons in file names — Windows compatibility).
 
-### 4.2 Залежності й semver
+### 4.2 Dependencies and semver
 
-- **FR-23.** `dependencies` у `plugin.json`: масив `{ "name": string, "version": string }`, де `version` — semver-range. Підтримувана підмножина: точна `1.2.3`, `^1.2.3`, `~1.2.3`, `>=1.2.3`, `>=1.0.0 <2.0.0` (пробіл = AND), `*`. Інше → fail (FR-19).
-- **FR-24.** Генератор обчислює для кожної залежності `resolvedVersion` і `status`, для кожного плагіна — `usedBy` (зворотні залежності). Транзитивне дерево будує UI з цих даних.
+- **FR-23.** `dependencies` in `plugin.json`: an array of `{ "name": string, "version": string }`, where `version` is a semver range. Supported subset: exact `1.2.3`, `^1.2.3`, `~1.2.3`, `>=1.2.3`, `>=1.0.0 <2.0.0` (space = AND), `*`. Anything else → fail (FR-19).
+- **FR-24.** For each dependency the generator computes `resolvedVersion` and `status`, and for each plugin `usedBy` (reverse dependencies). The UI builds the transitive tree from this data.
 
-### 4.3 TypeScript-типи `index.json` (нормативні)
+### 4.3 TypeScript types of `index.json` (normative)
 
 ```ts
 // site/src/types/index.ts
@@ -262,10 +262,10 @@ export type ComponentType = Exclude<ArtifactType, 'plugin'>;
 export interface IndexFile {
   schemaVersion: '1.0';
   generatedAt: string;          // ISO 8601 UTC
-  commit: string;               // 40-символьний SHA
-  fixture: boolean;             // true, якщо зібрано з --fixture
+  commit: string;               // 40-character SHA
+  fixture: boolean;             // true if built with --fixture
   marketplace: MarketplaceInfo;
-  items: IndexItem[];           // відсортовано: плагіни за name, потім компоненти за id
+  items: IndexItem[];           // sorted: plugins by name, then components by id
 }
 
 export interface MarketplaceInfo {
@@ -290,18 +290,18 @@ interface BaseItem {
   type: ArtifactType;
   name: string;
   qualifiedName: string;
-  plugin: string;               // для плагіна = name
-  version: string | null;       // версія плагіна; null лише для external без version
-  description: string;          // англійською, plain text
-  keywords: string[];           // lower-case, унікальні; теги для фільтра
-  path: string | null;          // repo-relative шлях до файлу/директорії; null для external
-  bodyRef: string | null;       // відносно BASE_URL, напр. "bodies/p/skill/x.md"
+  plugin: string;               // for a plugin = name
+  version: string | null;       // plugin version; null only for external without version
+  description: string;          // in English, plain text
+  keywords: string[];           // lower-case, unique; tags for the filter
+  path: string | null;          // repo-relative path to the file/directory; null for external
+  bodyRef: string | null;       // relative to BASE_URL, e.g. "bodies/p/skill/x.md"
   bodyFormat: 'markdown' | 'json' | null;
-  searchText: string;           // plain text тіла (без markdown/frontmatter), ≤ 8000 символів
+  searchText: string;           // plain text of the body (no markdown/frontmatter), ≤ 8000 characters
   source: 'local' | 'external';
   executesCode: boolean;
-  installCommands: InstallCommands; // компонент → команди його плагіна
-  updatedAt: string | null;     // дата останнього релізу плагіна (YYYY-MM-DD)
+  installCommands: InstallCommands; // component → the commands of its plugin
+  updatedAt: string | null;     // date of the plugin's last release (YYYY-MM-DD)
 }
 
 export interface PluginItem extends BaseItem {
@@ -312,44 +312,44 @@ export interface PluginItem extends BaseItem {
   repository: string | null;
   compatibility: Compatibility | null;
   dependencies: Dependency[];
-  usedBy: string[];                                   // імена плагінів
-  components: Record<ComponentType, string[]>;        // id компонентів за типами
-  bin: string[];                                      // імена файлів у bin/
+  usedBy: string[];                                   // plugin names
+  components: Record<ComponentType, string[]>;        // component ids by type
+  bin: string[];                                      // file names in bin/
   readmeRef: string | null;
   changelogRef: string | null;
   latestRelease: { version: string; date: string | null; tag: string | null } | null;
-  external: ExternalSource | null;                    // лише для source: 'external'
+  external: ExternalSource | null;                    // only for source: 'external'
 }
 
 export interface ExternalSource {
   kind: 'github' | 'git-subdir' | 'url';
-  url: string;                  // посилання для людини (github → https://github.com/<repo>)
+  url: string;                  // link for humans (github → https://github.com/<repo>)
   ref: string | null;
   sha: string | null;
-  path: string | null;          // для git-subdir
+  path: string | null;          // for git-subdir
 }
 
 export interface Compatibility {
-  claudeCode: string | null;    // semver-range, витягнутий з COMPATIBILITY.md за шаблоном `Claude Code <range>`, напр. ">=2.1.110"
-  bodyRef: string | null;       // bodies/<plugin>/COMPATIBILITY.md — повний текст (markdown), lazy
+  claudeCode: string | null;    // semver range extracted from COMPATIBILITY.md by the template `Claude Code <range>`, e.g. ">=2.1.110"
+  bodyRef: string | null;       // bodies/<plugin>/COMPATIBILITY.md — full text (markdown), lazy
 }
 
 export interface Dependency {
   name: string;
-  range: string;                // як у plugin.json
+  range: string;                // as in plugin.json
   resolvedVersion: string | null;
   status: 'satisfied' | 'not-in-catalog';
 }
 
 export interface SkillItem extends BaseItem {
   type: 'skill';
-  frontmatter: Record<string, unknown>; // увесь frontmatter для таблиці
-  files: string[];              // інші файли директорії skill, repo-relative
+  frontmatter: Record<string, unknown>; // the entire frontmatter for the table
+  files: string[];              // other files of the skill directory, repo-relative
 }
 
 export interface AgentItem extends BaseItem {
   type: 'agent';
-  tools: string[] | null;       // з frontmatter `tools` (рядок через кому або список); null = не вказано
+  tools: string[] | null;       // from frontmatter `tools` (comma-separated string or list); null = not specified
   model: string | null;
   frontmatter: Record<string, unknown>;
 }
@@ -362,7 +362,7 @@ export interface CommandItem extends BaseItem {
 
 export interface HookItem extends BaseItem {
   type: 'hook';
-  events: string[];             // ключі об'єкта `hooks` у hooks.json
+  events: string[];             // keys of the `hooks` object in hooks.json
   executesCode: true;
 }
 
@@ -371,8 +371,8 @@ export interface McpItem extends BaseItem {
   servers: Array<{
     name: string;
     transport: 'stdio' | 'http' | 'sse' | 'unknown';
-    command: string | null;     // для stdio
-    url: string | null;         // для http/sse
+    command: string | null;     // for stdio
+    url: string | null;         // for http/sse
   }>;
   executesCode: true;
 }
@@ -380,17 +380,17 @@ export interface McpItem extends BaseItem {
 export type IndexItem = PluginItem | SkillItem | AgentItem | CommandItem | HookItem | McpItem;
 ```
 
-Правила заповнення:
+Filling rules:
 
 - **FR-25.**
-  - `description` плагіна: `plugin.json` → fallback `marketplace.json`. `keywords` = об'єднання обох, lower-case. Компоненти успадковують `keywords` плагіна, плюс власні з frontmatter `keywords`/`tags` (якщо є). Для MCP до `keywords` додаються імена серверів.
-  - `executesCode` плагіна = є hook-артефакт АБО MCP-артефакт АБО `bin.length > 0` АБО спрацювало правило A-6.
-  - GitHub-посилання не зберігаються: UI будує `${repo.url}/blob/${commit}/${path}` (файл) або `/tree/` (директорія).
-  - External: індексуються лише метадані з `marketplace.json` (`name`, `description`, `keywords`, `source`, `version` якщо є). `components` порожні, `bodyRef`/`readmeRef`/`changelogRef` = null, `executesCode: false` (невідомо; UI показує «Not indexed», FR-52), `path: null`.
+  - Plugin `description`: `plugin.json` → fallback `marketplace.json`. `keywords` = the union of both, lower-case. Components inherit the plugin's `keywords`, plus their own from frontmatter `keywords`/`tags` (if present). For MCP, the server names are added to `keywords`.
+  - Plugin `executesCode` = there is a hook artifact OR an MCP artifact OR `bin.length > 0` OR rule A-6 triggered.
+  - GitHub links are not stored: the UI builds `${repo.url}/blob/${commit}/${path}` (file) or `/tree/` (directory).
+  - External: only the metadata from `marketplace.json` is indexed (`name`, `description`, `keywords`, `source`, `version` if present). `components` are empty, `bodyRef`/`readmeRef`/`changelogRef` = null, `executesCode: false` (unknown; the UI shows "Not indexed", FR-52), `path: null`.
 
 ### 4.4 `releases.json`
 
-- **FR-26.** Джерела: `CHANGELOG.md` (формат Keep a Changelog) + git-теги `<plugin>--v<semver>`. Розпізнається заголовок `## [1.2.0] - 2026-09-30`, `## 1.2.0 - 2026-09-30`, `## [1.2.0]` (regex `^##\s+\[?v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]?(?:\s+[-–]\s+(\d{4}-\d{2}-\d{2}))?\s*$`); `## [Unreleased]` пропускається. Реліз = пара (plugin, version) з об'єднання обох джерел. Дата: з changelog, інакше дата тегу (`creatordate`). Сортування: дата desc, потім semver desc, потім plugin asc.
+- **FR-26.** Sources: `CHANGELOG.md` (Keep a Changelog format) + git tags `<plugin>--v<semver>`. Recognized headings: `## [1.2.0] - 2026-09-30`, `## 1.2.0 - 2026-09-30`, `## [1.2.0]` (regex `^##\s+\[?v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]?(?:\s+[-–]\s+(\d{4}-\d{2}-\d{2}))?\s*$`); `## [Unreleased]` is skipped. A release = a (plugin, version) pair from the union of both sources. Date: from the changelog, otherwise the tag date (`creatordate`). Sorting: date desc, then semver desc, then plugin asc.
 
 ```ts
 export interface ReleasesFile {
@@ -404,9 +404,9 @@ export interface Release {
   plugin: string;
   version: string;
   date: string | null;          // YYYY-MM-DD
-  tag: string | null;           // "<plugin>--v<version>" якщо тег існує
-  commit: string | null;        // SHA, на який вказує тег
-  notesMarkdown: string;        // секція changelog без заголовка; "" якщо немає
+  tag: string | null;           // "<plugin>--v<version>" if the tag exists
+  commit: string | null;        // SHA the tag points to
+  notesMarkdown: string;        // changelog section without the heading; "" if none
   origin: 'changelog+tag' | 'changelog' | 'tag';
 }
 ```
@@ -421,17 +421,17 @@ export interface StatsFile {
   counts: {
     plugins: number; pluginsLocal: number; pluginsExternal: number;
     skills: number; agents: number; commands: number;
-    hooks: number;        // кількість hook-артефактів (= плагінів з hooks.json)
-    hookEvents: number;   // сума events.length
-    mcp: number;          // кількість MCP-серверів (сума servers.length)
+    hooks: number;        // number of hook artifacts (= plugins with hooks.json)
+    hookEvents: number;   // sum of events.length
+    mcp: number;          // number of MCP servers (sum of servers.length)
     releases: number;
   };
 }
 ```
 
-### 4.6 `catalog.json` (машиночитний каталог)
+### 4.6 `catalog.json` (machine-readable catalog)
 
-- **FR-27.** Стабільна публічна схема для агентів; `schemaVersion` — semver схеми: додавання полів → minor, видалення/перейменування/зміна типу → major. Усі URL абсолютні (від `siteUrl`). Без `searchText` і без повних тіл (лише посилання).
+- **FR-27.** A stable public schema for agents; `schemaVersion` is the semver of the schema: adding fields → minor, removing/renaming/changing a type → major. All URLs are absolute (from `siteUrl`). No `searchText` and no full bodies (links only).
 
 ```ts
 export interface Catalog {
@@ -451,8 +451,8 @@ export interface Catalog {
     description: string;
     keywords: string[];
     source: 'local' | 'external';
-    sourceUrl: string;            // GitHub tree для local, ExternalSource.url для external
-    executesCode: boolean | null; // null для external (невідомо)
+    sourceUrl: string;            // GitHub tree for local, ExternalSource.url for external
+    executesCode: boolean | null; // null for external (unknown)
     dependencies: Array<{ name: string; range: string }>;
     install: InstallCommands;
     pageUrl: string;              // <siteUrl>#/plugin/<name>
@@ -469,44 +469,44 @@ export interface Catalog {
 
 ### 4.7 `llms.txt`
 
-- **FR-28.** Формат за конвенцією llms.txt: `# <marketplace name>`, blockquote з описом, абзац з інструкцією встановлення, секція `## Catalog` з посиланням на `catalog.json`, секція `## Plugins` — по одному рядку на плагін `- [<name>](<pageUrl>): <description> (v<version>)`, під ним вкладені рядки компонентів з посиланнями на `bodyUrl`. Секція `## Optional` — `releases.json`, `feed.xml`. Приклад — §12.2.
+- **FR-28.** Format per the llms.txt convention: `# <marketplace name>`, a blockquote with the description, a paragraph with installation instructions, a `## Catalog` section with a link to `catalog.json`, a `## Plugins` section — one line per plugin `- [<name>](<pageUrl>): <description> (v<version>)`, below it nested lines for the components with links to `bodyUrl`. A `## Optional` section — `releases.json`, `feed.xml`. Example — §12.2.
 
 ### 4.8 `feed.xml`
 
-- **FR-29.** Atom 1.0. `feed/id` = `siteUrl`; `title` = `<marketplace name> — releases`; `link rel="self"` = `<siteUrl>feed.xml`; `link rel="alternate"` = `<siteUrl>#/whats-new`; `updated` = дата найновішого релізу (або `generatedAt`). До 50 entries з `releases.json`: `id` = `<siteUrl>#/whats-new?release=<plugin>@<version>`, `title` = `<plugin> v<version>`, `link` = `<siteUrl>#/plugin/<plugin>`, `updated` = дата релізу (T00:00:00Z), `content type="text"` = `notesMarkdown`. XML-екранування всіх рядків.
+- **FR-29.** Atom 1.0. `feed/id` = `siteUrl`; `title` = `<marketplace name> — releases`; `link rel="self"` = `<siteUrl>feed.xml`; `link rel="alternate"` = `<siteUrl>#/whats-new`; `updated` = the date of the newest release (or `generatedAt`). Up to 50 entries from `releases.json`: `id` = `<siteUrl>#/whats-new?release=<plugin>@<version>`, `title` = `<plugin> v<version>`, `link` = `<siteUrl>#/plugin/<plugin>`, `updated` = the release date (T00:00:00Z), `content type="text"` = `notesMarkdown`. All strings are XML-escaped.
 
 ---
 
-## 5. Пошук
+## 5. Search
 
-### 5.1 Рушій і документи
+### 5.1 Engine and documents
 
-- **FR-30.** Пошук виконується в браузері MiniSearch по всіх `items` з `index.json` (плагіни теж є документами). Індекс будується один раз після завантаження `index.json` і живе в пам'яті.
-- **FR-31.** Поля й ваги (boost): `name` ×6, `qualifiedName` ×4, `keywords` ×3, `description` ×2, `plugin` ×1.5, `searchText` ×1. `searchText` містить README (для плагіна) або тіло SKILL.md / agent / command (для компонентів), тож вимога «пошук по README і SKILL.md» виконана без завантаження `bodies/`.
-- **FR-32.** Налаштування за замовчуванням: `prefix: true` для термів довжиною ≥ 2; `fuzzy: 0.2` лише для термів довжиною ≥ 5 (тобто максимум 1 правка для 5–9 символів); `combineWith: 'AND'` між групами термів, з fallback на `OR`, якщо AND дав 0 результатів (у UI — підпис «Showing partial matches»).
+- **FR-30.** Search runs in the browser with MiniSearch over all `items` from `index.json` (plugins are documents too). The index is built once after `index.json` is loaded and lives in memory.
+- **FR-31.** Fields and weights (boost): `name` ×6, `qualifiedName` ×4, `keywords` ×3, `description` ×2, `plugin` ×1.5, `searchText` ×1. `searchText` contains the README (for a plugin) or the body of SKILL.md / agent / command (for components), so the requirement "search over README and SKILL.md" is met without loading `bodies/`.
+- **FR-32.** Default settings: `prefix: true` for terms of length ≥ 2; `fuzzy: 0.2` only for terms of length ≥ 5 (i.e. at most 1 edit for 5–9 characters); `combineWith: 'AND'` between term groups, with a fallback to `OR` if AND gave 0 results (the UI shows the label "Showing partial matches").
 
-### 5.2 Конвеєр обробки запиту
+### 5.2 Query processing pipeline
 
-`site/src/search/query.ts` експортує чисту функцію `parseQuery(raw: string): ParsedQuery` (unit-тестується окремо, FR-90):
+`site/src/search/query.ts` exports the pure function `parseQuery(raw: string): ParsedQuery` (unit-tested separately, FR-90):
 
 ```ts
 interface ParsedQuery {
   raw: string;
   detectedType: ArtifactType | null;
-  groups: string[][];   // кожна група = терм + синоніми (OR всередині, AND між групами)
+  groups: string[][];   // each group = a term + synonyms (OR inside, AND between groups)
   highlightTerms: string[];
   exactName: string | null;
 }
 ```
 
-- **FR-33. Нормалізація:** обрізати до 200 символів; NFKC; lower-case; `ё→е` не потрібно; апострофи `' ’ ʼ ‘ \`` усередині слова видаляються (`рев'ю` → `ревю`); `ґ` зберігається.
-- **FR-34. Шаблонні фрази** на початку запиту видаляються (regex, до токенізації), напр.: UA `мені (треба|потрібен|потрібна|потрібно)`, `шукаю`, `хочу`, `чи є`, `є щось для`, `знайди`, `покажи`; EN `i need`, `i want`, `i'm looking for`, `looking for`, `is there`, `find me`, `show me`, `something for`, `a (skill|agent|command|plugin|tool) (for|to)`.
-- **FR-35. Фразові синоніми** застосовуються до токенізації: багатослівні записи з `synonyms.json` (напр. `перевірка коду`, `огляд коду`, `code review`) замінюються на канонічний терм першого елемента групи.
-- **FR-36. Токенізація:** split по `[^\p{L}\p{N}]+` (дефіс розділяє: `code-review` → `code`, `review`); токени довжиною < 2 відкидаються.
-- **FR-37. Стоп-слова** (`stopwords.ts`) видаляються. Мінімальний набір EN: `a an the for to of with in on and or me i my need want some any that which please find show how`; UA: `для з із зі в у на і й та що щоб як мені мене треба потрібно потрібен потрібна хочу якийсь щось будь ласка знайди покажи`. Якщо після видалення не лишилося токенів — використовуються токени до видалення.
-- **FR-38. Визначення типу:** токен, що збігається (за префіксом після нормалізації) з одним зі словників, видаляється з термів і задає `detectedType`:
+- **FR-33. Normalization:** truncate to 200 characters; NFKC; lower-case; `ё→е` is not needed; apostrophes `' ’ ʼ ‘ \`` inside a word are removed (`рев'ю` → `ревю`, i.e. "review"); `ґ` is preserved.
+- **FR-34. Boilerplate phrases** at the start of the query are removed (regex, before tokenization), e.g.: UA `мені (треба|потрібен|потрібна|потрібно)` ("I need"), `шукаю` ("I am looking for"), `хочу` ("I want"), `чи є` ("is there"), `є щось для` ("is there something for"), `знайди` ("find"), `покажи` ("show"); EN `i need`, `i want`, `i'm looking for`, `looking for`, `is there`, `find me`, `show me`, `something for`, `a (skill|agent|command|plugin|tool) (for|to)`.
+- **FR-35. Phrase synonyms** are applied before tokenization: multi-word entries from `synonyms.json` (e.g. `перевірка коду` ("code check"), `огляд коду` ("code overview"), `code review`) are replaced by the canonical term, the first element of the group.
+- **FR-36. Tokenization:** split on `[^\p{L}\p{N}]+` (a hyphen separates: `code-review` → `code`, `review`); tokens shorter than 2 are dropped.
+- **FR-37. Stop words** (`stopwords.ts`) are removed. Minimum EN set: `a an the for to of with in on and or me i my need want some any that which please find show how`; UA: `для з із зі в у на і й та що щоб як мені мене треба потрібно потрібен потрібна хочу якийсь щось будь ласка знайди покажи` (Ukrainian equivalents of: for, with/from, in, on, and, that, so that, how, to me, me, need (several forms), I want, some, something, please, find, show). If no tokens remain after removal, the tokens from before the removal are used.
+- **FR-38. Type detection:** a token that matches (by prefix after normalization) one of the dictionaries is removed from the terms and sets `detectedType`. The Ukrainian entries are translations or transliterations of the English ones: `скіл*`, `скілл*`, `навичк*` = skill, `агент*` = agent, `субагент*` = subagent, `команд*` = command, `слеш` = slash, `хук*` = hook, `мсп`, `мцп` = mcp, `плагін*` = plugin.
 
-  | Тип | Слова |
+  | Type | Words |
   |---|---|
   | `skill` | `skill*`, `скіл*`, `скілл*`, `навичк*` |
   | `agent` | `agent*`, `агент*`, `subagent*`, `субагент*` |
@@ -515,9 +515,9 @@ interface ParsedQuery {
   | `mcp` | `mcp`, `мсп`, `мцп` |
   | `plugin` | `plugin*`, `плагін*` |
 
-  Поведінка: якщо фільтр `type` у URL не заданий — `detectedType` дає буст ×2 документам цього типу (MiniSearch `boostDocument`) і показує чип «Only <type>s» (клік ставить фільтр). Якщо запит складався лише зі слова типу (`skills`, `хуки`) — фільтр застосовується одразу, запит стає порожнім. Явний фільтр у URL має пріоритет над `detectedType`.
-- **FR-39. Стемінг** (і для індексації, і для запиту, через MiniSearch `processTerm`): токени латиницею — Porter stemmer (npm-пакет `stemmer` або власна реалізація — на вибір імплементатора); кирилицею — легкий суфіксний стемер `stem-uk.ts`: відкидає найдовший із суфіксів (`ування ання ення ами ями ові еві ого ому ими ій ий ою ею ам ям ах ях ом ем ів ти и і а я у ю о е ь`) за умови, що лишається ≥ 3 символи. Prefix search (FR-32) компенсує неточності стемера.
-- **FR-40. Синоніми:** `site/src/search/synonyms.json` у репо, формат:
+  Behavior: if the `type` filter is not set in the URL, `detectedType` gives a ×2 boost to documents of that type (MiniSearch `boostDocument`) and shows the chip "Only <type>s" (a click sets the filter). If the query consisted only of a type word (`skills`, `хуки` ("hooks")), the filter is applied immediately and the query becomes empty. An explicit filter in the URL takes precedence over `detectedType`.
+- **FR-39. Stemming** (for both indexing and the query, via MiniSearch `processTerm`): Latin tokens — the Porter stemmer (the npm package `stemmer` or a custom implementation — the implementer's choice); Cyrillic tokens — the light suffix stemmer `stem-uk.ts`: it strips the longest of the suffixes (`ування ання ення ами ями ові еві ого ому ими ій ий ою ею ам ям ах ях ом ем ів ти и і а я у ю о е ь`, i.e. Ukrainian noun, adjective and verb endings), provided that ≥ 3 characters remain. Prefix search (FR-32) compensates for the stemmer's inaccuracies.
+- **FR-40. Synonyms:** `site/src/search/synonyms.json` in the repo, format:
 
   ```json
   {
@@ -536,222 +536,222 @@ interface ParsedQuery {
   }
   ```
 
-  При завантаженні всі записи проганяються через той самий конвеєр (FR-33, FR-36, FR-39); кожен однослівний терм запиту розширюється до групи (стемовані форми всіх її членів). Перший елемент групи — канонічний англійський терм. Додавання синоніма не вимагає змін коду.
-- **FR-41. Точний збіг імені:** якщо нормалізований запит (без шаблонних фраз і слова типу) дорівнює `name`, `qualifiedName` або `name` з дефісами, заміненими на пробіли, такий документ отримує множник ×5 і завжди стоїть першим.
+  On load, all entries are run through the same pipeline (FR-33, FR-36, FR-39); every single-word query term is expanded to its group (the stemmed forms of all its members). The first element of a group is the canonical English term. The Ukrainian members of each group are translations or transliterations of that term (e.g. `ревю`, `рев'ю` "review"; `перевірка коду` "code check"; `огляд коду` "code overview"; `рецензія` "review (critique)"; `код`, `коду` "code"; `тест`, `тести`, `тестування` "test", "tests", "testing"; `коміт`, `коміти`, `комміт` "commit"; `деплой` "deploy"; `розгортання` "deployment"; `архітектура` "architecture"; `специфікація` "specification"; `спека` "spec" (colloquial); `дослідження` "research"; `ресерч` "research" (transliteration); `пошук інформації` "information search"; `реакт` "React"). Adding a synonym does not require code changes.
+- **FR-41. Exact name match:** if the normalized query (without boilerplate phrases and the type word) equals `name`, `qualifiedName`, or `name` with hyphens replaced by spaces, that document gets a ×5 multiplier and is always first.
 
-### 5.3 Видача
+### 5.3 Results
 
-- **FR-42. Порожній запит** → показати **всі** елементи (з урахуванням фільтрів), сортування «Recently updated» (`updatedAt` desc, потім `name`). Обґрунтування: каталог малий (десятки), даних про популярність немає й не буде (без аналітики), тож «popular» було б вигадкою; повний список і є найкращим discovery.
-- **FR-43. Сортування:** `relevance` (дефолт при непорожньому `q`), `name` (A–Z за `qualifiedName`), `updated` (дефолт при порожньому `q`). Параметр `sort` у URL зберігається лише якщо відрізняється від дефолту.
-- **FR-44. Debounce** 150 мс на введення; пошук синхронний і має займати ≤ 50 мс для 500 документів (NFR-21).
-- **FR-45. Ліміти:** рендериться до 60 карток, далі кнопка «Show more» (+60). Лічильник показує повну кількість.
-- **FR-46. Підсвітка:** терми, що дали збіг (з MiniSearch `match` + `highlightTerms`, з урахуванням префіксів), обгортаються в `<mark>` у `qualifiedName` і `description`. Якщо збіг лише в `searchText` — картка показує сніпет «Matched in README/SKILL.md: …» (≤ 160 символів навколо першого збігу). Підсвітка робиться на екранованому тексті, не через `innerHTML` з даних.
-- **FR-47. Нічого не знайдено:** повідомлення «No results for "<q>"» + підказки: (1) скинути фільтри (якщо є активні), (2) спробувати англійською (якщо запит кирилицею), (3) 3–5 тегів з найбільшою кількістю елементів як чипи, (4) посилання «Request a plugin» → Report an issue (FR-60) з title `[request] <q>`.
+- **FR-42. Empty query** → show **all** items (subject to filters), sorted by "Recently updated" (`updatedAt` desc, then `name`). Rationale: the catalog is small (tens of items), there is no popularity data and there will not be any (no analytics), so "popular" would be a fabrication; the full list is the best discovery.
+- **FR-43. Sorting:** `relevance` (default for a non-empty `q`), `name` (A–Z by `qualifiedName`), `updated` (default for an empty `q`). The `sort` URL parameter is kept only if it differs from the default.
+- **FR-44. Debounce** of 150 ms on input; search is synchronous and MUST take ≤ 50 ms for 500 documents (NFR-21).
+- **FR-45. Limits:** up to 60 cards are rendered, then a "Show more" button (+60). The counter shows the full count.
+- **FR-46. Highlighting:** the terms that produced a match (from MiniSearch `match` + `highlightTerms`, taking prefixes into account) are wrapped in `<mark>` in `qualifiedName` and `description`. If the match is only in `searchText`, the card shows a snippet "Matched in README/SKILL.md: …" (≤ 160 characters around the first match). Highlighting is done on escaped text, not via `innerHTML` from data.
+- **FR-47. Nothing found:** the message "No results for "<q>"" + hints: (1) reset the filters (if any are active), (2) try English (if the query is in Cyrillic), (3) 3–5 tags with the most items as chips, (4) a "Request a plugin" link → Report an issue (FR-60) with title `[request] <q>`.
 
 ---
 
-## 6. Екрани й компоненти
+## 6. Screens and components
 
 ### 6.1 Routes
 
 - **FR-50.**
 
-  | Route | Екран | Параметри |
+  | Route | Screen | Parameters |
   |---|---|---|
   | `#/` | redirect → `#/search` | — |
   | `#/search` | Search | `q`, `type`, `plugin`, `tag`, `sort` |
   | `#/plugin/<name>` | Plugin page | `tab` (`skills\|agents\|commands\|hooks\|mcp\|bin`) |
   | `#/artifact/<id>` | Artifact page | — |
-  | `#/whats-new` | What's new | `plugin`, `release` (якір до релізу) |
+  | `#/whats-new` | What's new | `plugin`, `release` (anchor to a release) |
   | `#/getting-started` | Getting started | — |
-  | інше | 404 | — |
+  | other | 404 | — |
 
-  - `type`, `tag` приймають список через кому (OR всередині параметра), `plugin` — одне значення; між параметрами — AND. Невідомі значення фільтрів ігноруються (і прибираються з URL через `replace`).
-  - `#/artifact/<plugin>:<name>` (qualifiedName без типу) резолвиться, якщо однозначний, з `replace`-redirect на канонічний id; інакше — сторінка вибору з кількох збігів.
-  - Роутер: `HashRouter` з `react-router` (або еквівалент); стан пошуку живе в URL (single source of truth). Введення тексту оновлює URL через `replace` після debounce; зміна фільтрів — через `push` (Back повертає попередній фільтр).
-  - При зміні route фокус переходить на `<h1>` сторінки, scroll — нагору.
+  - `type`, `tag` accept a comma-separated list (OR inside the parameter), `plugin` takes a single value; between parameters — AND. Unknown filter values are ignored (and removed from the URL via `replace`).
+  - `#/artifact/<plugin>:<name>` (qualifiedName without the type) is resolved if unambiguous, with a `replace` redirect to the canonical id; otherwise — a page for choosing among several matches.
+  - Router: `HashRouter` from `react-router` (or equivalent); the search state lives in the URL (single source of truth). Typing updates the URL via `replace` after the debounce; changing filters goes via `push` (Back returns the previous filter).
+  - On a route change, focus moves to the page's `<h1>` and scroll goes to the top.
 
-### 6.2 Глобальні елементи
+### 6.2 Global elements
 
-**Header** (на всіх сторінках, sticky):
-- Логотип/назва `test-ai-marketplace` → `#/search`.
-- Глобальне поле пошуку (на `/search` — це те саме поле, що й основне; на інших сторінках Enter веде на `#/search?q=…`). Плейсхолдер `Search plugins, skills, agents…  (/)`. Хоткей `/` фокусує поле (крім випадку, коли фокус уже в полі вводу); `Esc` очищає поле, повторний `Esc` знімає фокус.
-- Навігація: **Search**, **What's new**, **Getting started**.
-- Перемикач теми (іконка сонце/місяць, `aria-label="Switch to light theme"`/`"…dark theme"`).
-- Іконка GitHub → репо.
-- Mobile (< 640 px): навігація ховається в меню-кнопку; поле пошуку — повна ширина під логотипом.
+**Header** (on all pages, sticky):
+- Logo/name `test-ai-marketplace` → `#/search`.
+- Global search field (on `/search` it is the same field as the main one; on other pages Enter leads to `#/search?q=…`). Placeholder `Search plugins, skills, agents…  (/)`. The `/` hotkey focuses the field (except when focus is already in an input field); `Esc` clears the field, a second `Esc` removes focus.
+- Navigation: **Search**, **What's new**, **Getting started**.
+- Theme switcher (sun/moon icon, `aria-label="Switch to light theme"`/`"…dark theme"`).
+- GitHub icon → the repo.
+- Mobile (< 640 px): the navigation collapses into a menu button; the search field is full width under the logo.
 
-**Footer:** `Catalog generated <date> from <short SHA>` (SHA → commit на GitHub) · `catalog.json` · `llms.txt` · `feed.xml` · `Report an issue`.
+**Footer:** `Catalog generated <date> from <short SHA>` (SHA → commit on GitHub) · `catalog.json` · `llms.txt` · `feed.xml` · `Report an issue`.
 
-**Skip link** «Skip to content» першим елементом.
+**Skip link** "Skip to content" as the first element.
 
-**Toast:** унизу по центру (mobile) / внизу справа (desktop), 2 с, `role="status"` `aria-live="polite"`, тексти: `Copied`, `Couldn't copy — press Ctrl/Cmd+C` (fallback, FR-59).
+**Toast:** at the bottom center (mobile) / bottom right (desktop), 2 s, `role="status"` `aria-live="polite"`, texts: `Copied`, `Couldn't copy — press Ctrl/Cmd+C` (fallback, FR-59).
 
-**Design tokens** (значення обирає дизайнер, обидві теми мають виконувати NFR-2): `--bg`, `--surface`, `--surface-raised`, `--border`, `--text`, `--text-muted`, `--accent`, `--accent-contrast`, `--focus-ring`, `--mark-bg`, `--warning-bg`, `--warning-text`, `--danger`, `--success`, `--code-bg`, а також по парі `--type-<type>-bg/-fg` для 6 типів.
+**Design tokens** (values are chosen by the designer, both themes MUST satisfy NFR-2): `--bg`, `--surface`, `--surface-raised`, `--border`, `--text`, `--text-muted`, `--accent`, `--accent-contrast`, `--focus-ring`, `--mark-bg`, `--warning-bg`, `--warning-text`, `--danger`, `--success`, `--code-bg`, and also a `--type-<type>-bg/-fg` pair for each of the 6 types.
 
-**TypeBadge** — текст + іконка + колір (колір ніколи не єдиний носій сенсу). Пропозиція іконок (Lucide-назви): plugin `package`, skill `sparkles`, agent `bot`, command `square-terminal`, hook `webhook`, mcp `plug`.
+**TypeBadge** — text + icon + color (color is never the sole carrier of meaning). Suggested icons (Lucide names): plugin `package`, skill `sparkles`, agent `bot`, command `square-terminal`, hook `webhook`, mcp `plug`.
 
-**Інші бейджі:** `Executes code` (warning-стиль, іконка трикутника, tooltip/`title`: «Contains hooks, MCP servers or bin/ executables that run outside Claude's permission rules. Review before installing.»), `External` (нейтральний, tooltip «Metadata only — source code is not indexed»), `vX.Y.Z`.
+**Other badges:** `Executes code` (warning style, triangle icon, tooltip/`title`: "Contains hooks, MCP servers or bin/ executables that run outside Claude's permission rules. Review before installing."), `External` (neutral, tooltip "Metadata only — source code is not indexed"), `vX.Y.Z`.
 
-**CopyButton** — кнопка з текстом (`Copy install` / `Copy`), після успіху на 2 с змінює іконку на галочку й текст на `Copied`; `aria-label` містить, що саме копіюється.
+**CopyButton** — a button with text (`Copy install` / `Copy`); after success, for 2 s the icon changes to a checkmark and the text to `Copied`; `aria-label` states what exactly is being copied.
 
-### 6.3 Екран `/search`
+### 6.3 The `/search` screen
 
-**Призначення:** знайти елемент за 1–2 запити.
+**Purpose:** find an item in 1–2 queries.
 
-**Дані:** `index.json`.
+**Data:** `index.json`.
 
-**Компонування (desktop ≥ 1024):** рядок пошуку на всю ширину контенту → під ним ліва колонка фільтрів (240 px) + права колонка: тулбар (лічильник `23 results` · чип detectedType · сортування select) → сітка карток (2 колонки 1024–1439, 3 колонки ≥ 1440; max-width контенту 1280). Tablet: фільтри — кнопка `Filters (n)`, що розкриває панель над сіткою; 2 колонки. Mobile: 1 колонка, фільтри — bottom sheet / повноекранна панель. Wireframe — §12.3.
+**Layout (desktop ≥ 1024):** a search row across the full content width → below it a left filter column (240 px) + a right column: toolbar (counter `23 results` · detectedType chip · sort select) → card grid (2 columns at 1024–1439, 3 columns at ≥ 1440; content max-width 1280). Tablet: filters are a `Filters (n)` button that expands a panel above the grid; 2 columns. Mobile: 1 column, filters are a bottom sheet / full-screen panel. Wireframe — §12.3.
 
-**Фільтри (FacetGroup):**
-- **Type** — checkbox-и 6 типів з лічильниками;
-- **Plugin** — radio/список плагінів з лічильниками (якщо > 8 — з полем «Filter plugins»);
-- **Tag** — checkbox-и, топ-12 за частотою + «Show all».
-Лічильники рахуються для поточного `q` з урахуванням інших фасетів. Активні фільтри дублюються чипами над сіткою з «×» і кнопкою `Clear all`.
+**Filters (FacetGroup):**
+- **Type** — checkboxes for the 6 types with counters;
+- **Plugin** — radio/list of plugins with counters (if > 8 — with a "Filter plugins" field);
+- **Tag** — checkboxes, top 12 by frequency + "Show all".
+Counters are computed for the current `q`, taking the other facets into account. Active filters are duplicated as chips above the grid with "×" and a `Clear all` button.
 
-**Картка (ArtifactCard)** — FR-51:
-- рядок 1: TypeBadge · (External) · (Executes code);
-- `qualifiedName` (посилання на сторінку, з підсвіткою) — заголовок `h3`;
-- для компонента: `in <plugin> · v<version>` (plugin — посилання); для плагіна: склад `3 skills · 1 agent · 1 command · hooks` і `Depends on 0/3 plugins`;
-- `description` (clamp 3 рядки) з підсвіткою; сніпет збігу з тіла (FR-46);
-- теги (до 4 + `+N`), клік по тегу ставить фільтр `tag`;
-- дії: **Copy install** (копіює `installCommands.chat`; tooltip для компонента: «Installs the whole plugin <plugin>»), **View** (→ `#/artifact/<id>` або `#/plugin/<name>`), **GitHub** (іконка; для external — `Source` → `external.url`).
-- Уся картка не є одним посиланням (щоб не вкладати інтерактивні елементи); hover/focus-within підсвічує картку.
+**Card (ArtifactCard)** — FR-51:
+- row 1: TypeBadge · (External) · (Executes code);
+- `qualifiedName` (a link to the page, highlighted) — `h3` heading;
+- for a component: `in <plugin> · v<version>` (plugin is a link); for a plugin: the composition `3 skills · 1 agent · 1 command · hooks` and `Depends on 0/3 plugins`;
+- `description` (clamped to 3 lines) with highlighting; a snippet of the body match (FR-46);
+- tags (up to 4 + `+N`), a click on a tag sets the `tag` filter;
+- actions: **Copy install** (copies `installCommands.chat`; tooltip for a component: "Installs the whole plugin <plugin>"), **View** (→ `#/artifact/<id>` or `#/plugin/<name>`), **GitHub** (icon; for external — `Source` → `external.url`).
+- The whole card is not a single link (to avoid nesting interactive elements); hover/focus-within highlights the card.
 
-**Стани:** loading (6 skeleton-карток, лічильник `Loading catalog…`), error (FR-56), порожній каталог (FR-55), нічого не знайдено (FR-47), часткові збіги (FR-32), результати.
+**States:** loading (6 skeleton cards, counter `Loading catalog…`), error (FR-56), empty catalog (FR-55), nothing found (FR-47), partial matches (FR-32), results.
 
-**a11y:** поле — `role="searchbox"` з `<label>` (візуально прихованим); лічильник результатів — регіон `aria-live="polite"`, оновлюється після debounce (`23 results for "review"`); фасети — `<fieldset><legend>`; сітка — список `<ul>`.
+**a11y:** the field is `role="searchbox"` with a `<label>` (visually hidden); the results counter is an `aria-live="polite"` region, updated after the debounce (`23 results for "review"`); facets are `<fieldset><legend>`; the grid is a `<ul>` list.
 
-### 6.4 Екран `/plugin/<name>`
+### 6.4 The `/plugin/<name>` screen
 
-**Призначення:** все про плагін для рішення «ставити чи ні» + встановлення.
+**Purpose:** everything about a plugin for the "install or not" decision + installation.
 
-**Дані:** `PluginItem` + його компоненти з `index.json`; `bodies/<p>/README.md`, `CHANGELOG.md` і тіла компонентів — lazy.
+**Data:** `PluginItem` + its components from `index.json`; `bodies/<p>/README.md`, `CHANGELOG.md` and the component bodies — lazy.
 
-**Компонування (desktop):** шапка на всю ширину; нижче — основна колонка (≈ 2/3) і права бокова панель метаданих (≈ 1/3, sticky). Mobile — все в одну колонку в порядку: шапка → Install → метадані → решта.
+**Layout (desktop):** a header across the full width; below it the main column (≈ 2/3) and a right metadata sidebar (≈ 1/3, sticky). Mobile — everything in one column in this order: header → Install → metadata → the rest.
 
-1. **Шапка:** breadcrumb `Search › <plugin>`; `h1` = name; TypeBadge Plugin, `v<version>`, External, Executes code; description; кнопки **GitHub** (tree плагіна) / **Source** (external), **Report an issue**.
+1. **Header:** breadcrumb `Search › <plugin>`; `h1` = name; TypeBadge Plugin, `v<version>`, External, Executes code; description; buttons **GitHub** (plugin tree) / **Source** (external), **Report an issue**.
 2. **InstallBlock** (FR-52):
-   - перемикач-tabs `In chat` | `In terminal` (вибір запам'ятовується в localStorage, з try/catch);
-   - Крок 1 «Add the marketplace (once)»: `addCommands.chat` / `addCommands.cli` + Copy;
-   - Крок 2 «Install the plugin»: `installCommands.chat` / для terminal — segmented control scope `project | user` (дефолт `project`) і відповідний `cliProject`/`cliUser` + Copy;
-   - примітки: «Installs the whole plugin with all its components.»; якщо є залежності — «Dependencies are installed automatically: a, b, c.» з посиланнями (A-12); якщо плагін або будь-яка транзитивна залежність `executesCode` — warning-банер з переліком причин (hooks / MCP / bin / dependency X).
-3. **Метадані (sidebar):** Version, Owner, License, Compatibility (мінімальна версія Claude Code, напр. `>=2.1.110`; посилання «Details» розкриває `COMPATIBILITY.md`; або «Not specified»), Source (local path / external kind+url+ref/sha), Latest release (версія, дата, тег → `/tree/<tag>`), Keywords (чипи → `#/search?tag=`).
-4. **Dependencies** (FR-53): таблиця/список: name (посилання), required range, resolved version, статус (`Satisfied` — success, `Not in catalog` — warning); під нею розгортуване дерево транзитивних залежностей (вкладений список з відступами, цикли неможливі через FR-19); блок **Used by** — список плагінів. Порожній стан: «No dependencies».
-5. **Contents** (FR-54) — tabs за типами з лічильниками, порожні таби приховані: `Skills (3)`, `Agents (1)`, `Commands (1)`, `Hooks`, `MCP (1)`, `bin/ (2)`. Кожен елемент — accordion-рядок: `qualifiedName`, description, посилання `Open page`; розкриття lazy-завантажує й рендерить повне тіло (markdown для skill/agent/command; форматований JSON для hooks/MCP). Таби Hooks, MCP, bin/ мають постійний warning-банер «This code runs on your machine outside Claude's permission rules. Read it before installing.». `bin/` — лише список файлів з посиланнями на GitHub. Для external — замість табів: «Contents are not indexed for external plugins. View the source →».
-6. **README** — відрендерений markdown (lazy). Порожній стан: «No README provided».
-7. **Changelog** — останні 3 релізи розгорнуті, решта під `Show all releases`; кожен з якорем, посилання на `#/whats-new?plugin=<p>`.
+   - tab switcher `In chat` | `In terminal` (the choice is remembered in localStorage, with try/catch);
+   - Step 1 "Add the marketplace (once)": `addCommands.chat` / `addCommands.cli` + Copy;
+   - Step 2 "Install the plugin": `installCommands.chat` / for terminal — a segmented control for scope `project | user` (default `project`) and the corresponding `cliProject`/`cliUser` + Copy;
+   - notes: "Installs the whole plugin with all its components."; if there are dependencies — "Dependencies are installed automatically: a, b, c." with links (A-12); if the plugin or any transitive dependency is `executesCode` — a warning banner listing the reasons (hooks / MCP / bin / dependency X).
+3. **Metadata (sidebar):** Version, Owner, License, Compatibility (minimum Claude Code version, e.g. `>=2.1.110`; a "Details" link expands `COMPATIBILITY.md`; or "Not specified"), Source (local path / external kind+url+ref/sha), Latest release (version, date, tag → `/tree/<tag>`), Keywords (chips → `#/search?tag=`).
+4. **Dependencies** (FR-53): a table/list: name (link), required range, resolved version, status (`Satisfied` — success, `Not in catalog` — warning); below it an expandable tree of transitive dependencies (a nested list with indentation; cycles are impossible because of FR-19); a **Used by** block — a list of plugins. Empty state: "No dependencies".
+5. **Contents** (FR-54) — tabs by type with counters, empty tabs are hidden: `Skills (3)`, `Agents (1)`, `Commands (1)`, `Hooks`, `MCP (1)`, `bin/ (2)`. Each item is an accordion row: `qualifiedName`, description, an `Open page` link; expanding lazy-loads and renders the full body (markdown for skill/agent/command; formatted JSON for hooks/MCP). The Hooks, MCP, bin/ tabs have a permanent warning banner "This code runs on your machine outside Claude's permission rules. Read it before installing.". `bin/` is only a list of files with links to GitHub. For external — instead of tabs: "Contents are not indexed for external plugins. View the source →".
+6. **README** — rendered markdown (lazy). Empty state: "No README provided".
+7. **Changelog** — the last 3 releases are expanded, the rest are under `Show all releases`; each has an anchor, a link to `#/whats-new?plugin=<p>`.
 
-**Стани:** loading (skeleton шапки й табів), плагін не знайдено (404-варіант «Plugin "<name>" not found» + до 3 найближчих за іменем), помилка завантаження тіла (inline «Couldn't load README. Retry»).
+**States:** loading (skeleton of the header and tabs), plugin not found (a 404 variant "Plugin "<name>" not found" + up to 3 closest by name), body load error (inline "Couldn't load README. Retry").
 
-**a11y:** tabs за WAI-ARIA Tabs pattern (стрілки ←/→, `aria-selected`); accordion — `button[aria-expanded]` + `aria-controls`; таблиця залежностей з `<th scope>`.
+**a11y:** tabs follow the WAI-ARIA Tabs pattern (←/→ arrows, `aria-selected`); accordion — `button[aria-expanded]` + `aria-controls`; the dependencies table with `<th scope>`.
 
-### 6.5 Екран `/artifact/<id>`
+### 6.5 The `/artifact/<id>` screen
 
-**Призначення:** прочитати один компонент повністю, з контекстом плагіна.
+**Purpose:** read a single component in full, with the plugin context.
 
-**Дані:** item з `index.json` + `bodyRef` (lazy).
+**Data:** an item from `index.json` + `bodyRef` (lazy).
 
-**Компонування:** breadcrumb `Search › <plugin> › <Type plural> › <name>`; `h1` = `qualifiedName`; TypeBadge, `in <plugin> v<version>`, Executes code; дії **Copy install** (команда плагіна + підпис «Installs the whole plugin»), **GitHub**, **Report an issue**. Далі:
-- для hook/MCP — warning-банер (як у FR-54);
-- **Frontmatter table** (ключ → значення; списки як чипи) для skill/agent/command; для agent — виділені `tools` («Not specified» якщо null) і `model`; для command — `argument-hint`; для hook — список `events`; для MCP — таблиця servers (name, transport, command/url);
-- тіло: markdown (FR-63) або JSON у `<pre><code>` з кнопкою Copy;
-- для skill — список `files` з посиланнями на GitHub;
-- «More from <plugin>» — до 6 інших компонентів плагіна (компактні картки).
-Mobile — одна колонка, таблиця frontmatter стає списком «ключ: значення».
+**Layout:** breadcrumb `Search › <plugin> › <Type plural> › <name>`; `h1` = `qualifiedName`; TypeBadge, `in <plugin> v<version>`, Executes code; actions **Copy install** (the plugin's command + the caption "Installs the whole plugin"), **GitHub**, **Report an issue**. Then:
+- for hook/MCP — a warning banner (as in FR-54);
+- **Frontmatter table** (key → value; lists as chips) for skill/agent/command; for an agent — `tools` ("Not specified" if null) and `model` are highlighted; for a command — `argument-hint`; for a hook — the list of `events`; for MCP — a table of servers (name, transport, command/url);
+- the body: markdown (FR-63) or JSON in `<pre><code>` with a Copy button;
+- for a skill — a list of `files` with links to GitHub;
+- "More from <plugin>" — up to 6 other components of the plugin (compact cards).
+Mobile — one column, the frontmatter table becomes a "key: value" list.
 
-**Стани:** loading тіла (skeleton), id не знайдено (404-варіант «Artifact not found» + пошук за останнім сегментом id), помилка тіла (Retry).
+**States:** body loading (skeleton), id not found (a 404 variant "Artifact not found" + a search by the last segment of the id), body error (Retry).
 
-### 6.6 Екран `/whats-new`
+### 6.6 The `/whats-new` screen
 
-**Призначення:** що змінилося в каталозі.
+**Purpose:** what has changed in the catalog.
 
-**Дані:** `releases.json` (lazy, при першому відкритті екрана).
+**Data:** `releases.json` (lazy, on the first opening of the screen).
 
-**Компонування:** `h1` What's new; праворуч `Subscribe (Atom)` → `feed.xml`; фільтр-select «All plugins / <plugin>»; стрічка, згрупована за місяцем; елемент: `<plugin> v<version>` (→ сторінка плагіна), дата, тег (→ `/tree/<tag>`) або бейдж `untagged`, відрендерені нотатки (порожні → «No release notes»). `?release=<id>` прокручує й підсвічує елемент.
+**Layout:** `h1` What's new; on the right `Subscribe (Atom)` → `feed.xml`; a filter select "All plugins / <plugin>"; a feed grouped by month; an item: `<plugin> v<version>` (→ plugin page), date, tag (→ `/tree/<tag>`) or an `untagged` badge, rendered notes (empty → "No release notes"). `?release=<id>` scrolls to and highlights the item.
 
-**Стани:** loading, error, empty («No releases yet»).
+**States:** loading, error, empty ("No releases yet").
 
-### 6.7 Екран `/getting-started`
+### 6.7 The `/getting-started` screen
 
-**Призначення:** від нуля до встановленого плагіна. Статичний контент у коді (команди підставляються з `marketplace` в `index.json`). Розділи (кожна команда — CodeBlock з Copy, перемикач `In chat` / `In terminal` спільний з InstallBlock):
+**Purpose:** from zero to an installed plugin. Static content in code (commands are filled in from `marketplace` in `index.json`). Sections (each command is a CodeBlock with Copy, the `In chat` / `In terminal` switcher is shared with InstallBlock):
 
 1. **Add the marketplace** — `/plugin marketplace add artemmmon/test-ai-marketplace` | `claude plugin marketplace add artemmmon/test-ai-marketplace`.
-2. **Find a plugin** — посилання на `#/search`; пояснення: skills, agents, commands входять до плагінів; **встановлюється весь плагін, а не окремий skill**; namespaced імена `<plugin>:<name>`.
-3. **Install** — `/plugin install <plugin>@test-ai-marketplace` | `claude plugin install <plugin>@test-ai-marketplace --scope project|user`; коротко: `project` — для поточного проєкту, `user` — для всіх ваших проєктів.
+2. **Find a plugin** — a link to `#/search`; explanation: skills, agents, commands are part of plugins; **the whole plugin is installed, not an individual skill**; namespaced names `<plugin>:<name>`.
+3. **Install** — `/plugin install <plugin>@test-ai-marketplace` | `claude plugin install <plugin>@test-ai-marketplace --scope project|user`; briefly: `project` — for the current project, `user` — for all your projects.
 4. **Check what's installed** — `claude plugin list --json`.
-5. **Update** — `claude plugin marketplace update test-ai-marketplace` (або `/plugin marketplace update test-ai-marketplace` у чаті), потім `/reload-plugins`. Примітка (з README репо): auto-update для сторонніх marketplace за замовчуванням вимкнено і він ненадійний — оновлюйте вручну; нова версія приходить лише після bump `version` у плагіні.
-6. **Security** — hooks, MCP-сервери та `bin/` виконуються з вашими правами поза permission rules Claude; читайте їх на сторінці плагіна перед встановленням.
-7. **For agents** — посилання на `llms.txt` і `catalog.json`.
+5. **Update** — `claude plugin marketplace update test-ai-marketplace` (or `/plugin marketplace update test-ai-marketplace` in chat), then `/reload-plugins`. Note (from the repo README): auto-update for third-party marketplaces is disabled by default and unreliable — update manually; a new version arrives only after a `version` bump in the plugin.
+6. **Security** — hooks, MCP servers and `bin/` run with your permissions outside Claude's permission rules; read them on the plugin page before installing.
+7. **For agents** — links to `llms.txt` and `catalog.json`.
 
-### 6.8 404 і глобальні стани
+### 6.8 404 and global states
 
-- **FR-55. Порожній каталог** (`items.length === 0`, поточний реальний стан): на `/search` замість сітки — «The catalog is empty. No plugins have been published yet.» + посилання `Getting started` і `How to add a plugin` (README на GitHub). Фасети приховані; `/whats-new` — «No releases yet».
-- **FR-56. Помилка завантаження `index.json`:** повноекранний стан «Couldn't load the catalog» + `Retry` + посилання на репо; помилка логуються в console.
-- **FR-57. 404** для невідомого route: «Page not found» + посилання на Search; поле пошуку в header активне.
-- **FR-58. Loading:** skeleton-и, без спінерів на весь екран; `aria-busy="true"` на контейнері.
-- **FR-59. Копіювання:** `navigator.clipboard.writeText`; при помилці — показати команду у виділеному `readonly` полі (виділити текст) + toast `Couldn't copy — press Ctrl/Cmd+C`. Скопійований рядок MUST дорівнювати полю з `installCommands`/`addCommands` байт-у-байт.
-- **FR-60. Report an issue:** посилання `https://github.com/artemmmon/test-ai-marketplace/issues/new?title=<t>&labels=site-feedback&body=<b>` (усе через `encodeURIComponent`), `target="_blank" rel="noopener noreferrer"`. Title: глобально `[site] `, плагін `[<plugin>] `, артефакт `[<id>] `, запит плагіна `[request] <q>`. Body: URL сторінки, commit SHA каталогу, порожні розділи `What happened` / `Expected`. Label `site-feedback` бажано створити в репо (A-7, A-14).
+- **FR-55. Empty catalog** (`items.length === 0`, the current real state): on `/search`, instead of the grid — "The catalog is empty. No plugins have been published yet." + links `Getting started` and `How to add a plugin` (README on GitHub). Facets are hidden; `/whats-new` — "No releases yet".
+- **FR-56. `index.json` load error:** a full-screen state "Couldn't load the catalog" + `Retry` + a link to the repo; the error is logged to the console.
+- **FR-57. 404** for an unknown route: "Page not found" + a link to Search; the search field in the header is active.
+- **FR-58. Loading:** skeletons, no full-screen spinners; `aria-busy="true"` on the container.
+- **FR-59. Copying:** `navigator.clipboard.writeText`; on failure — show the command in a selected `readonly` field (select the text) + the toast `Couldn't copy — press Ctrl/Cmd+C`. The copied string MUST equal the `installCommands`/`addCommands` field byte for byte.
+- **FR-60. Report an issue:** a link `https://github.com/artemmmon/test-ai-marketplace/issues/new?title=<t>&labels=site-feedback&body=<b>` (everything through `encodeURIComponent`), `target="_blank" rel="noopener noreferrer"`. Title: global `[site] `, plugin `[<plugin>] `, artifact `[<id>] `, plugin request `[request] <q>`. Body: the page URL, the catalog commit SHA, empty sections `What happened` / `Expected`. The label `site-feedback` SHOULD be created in the repo (A-7, A-14).
 
-### 6.9 Рендеринг markdown
+### 6.9 Markdown rendering
 
-- **FR-61.** Markdown → HTML через `marked` (GFM), результат → `DOMPurify.sanitize` (дефолтний профіль, без `style`, без `<iframe>`/`<form>`), лише потім у DOM. `marked` і `DOMPurify` вантажаться окремим lazy-chunk (не потрібні для `/search`).
-- **FR-62.** Посилання: зовнішні (`http(s)://`) — `target="_blank" rel="noopener noreferrer"`; відносні (`./references/x.md`) — переписуються на `${repo.url}/blob/${commit}/<resolved path>`; якорі `#section` — на кліку `scrollIntoView` до заголовка з відповідним `id` (заголовки отримують slug-id), без зміни hash (hash зайнятий роутером); `javascript:` та інші схеми видаляються DOMPurify.
-- **FR-63.** Блоки коду — `<pre><code>` моноширинним шрифтом з горизонтальним скролом і кнопкою Copy; підсвітка синтаксису не входить у MVP.
-- **FR-64.** Відносні зображення → `https://raw.githubusercontent.com/artemmmon/test-ai-marketplace/<commit>/<path>`; `loading="lazy"`, `alt` з markdown.
-
----
-
-## 7. Нефункційні вимоги
-
-### 7.1 Доступність
-
-- **NFR-1.** WCAG 2.1 AA. Lighthouse Accessibility ≥ 95 на `/search`, `/plugin/<name>`, `/artifact/<id>` в обох темах (fixtures).
-- **NFR-2.** Контраст тексту ≥ 4.5:1 (великий текст і UI-компоненти, фокус-кільце ≥ 3:1) в обох темах, включно з `<mark>`, бейджами типів і warning-банерами.
-- **NFR-3.** Уся функціональність доступна з клавіатури; видимий фокус (`:focus-visible`), логічний порядок Tab; хоткей `/` (FR в §6.2); tabs/accordions за WAI-ARIA patterns; skip link.
-- **NFR-4.** Результати пошуку, toast і зміни стану завантаження анонсуються через `aria-live="polite"`; іконки-кнопки мають `aria-label`; декоративні іконки `aria-hidden`.
-- **NFR-5.** `prefers-reduced-motion: reduce` вимикає анімації переходів, skeleton-shimmer і плавний scroll.
-- **NFR-6.** Цілі для дотику ≥ 44×44 px на mobile.
-
-### 7.2 Тема
-
-- **NFR-10.** Dark-first: при першому візиті тема `dark` (A-5). Перемикач dark/light; вибір зберігається в `localStorage` ключ `tam-theme` (усі звернення в try/catch, без помилок у приватному режимі). Тема застосовується атрибутом `data-theme` на `<html>` до першого рендеру через зовнішній `public/theme-init.js` (без inline-скрипта, NFR-41), щоб не було спалаху.
-
-### 7.3 Адаптивність
-
-- **NFR-15.** Breakpoints: `sm` < 640, `md` 640–1023, `lg` 1024–1439, `xl` ≥ 1440. Mobile-first CSS. Без горизонтального скролу сторінки на ширині 320 px (крім `<pre>` і таблиць у власному скрол-контейнері). Бічні відступи 16 px на mobile.
-- Mobile-перелік: header зі згорнутою навігацією; фільтри — повноекранна панель з кнопкою `Show N results`; картки в 1 колонку; InstallBlock перед метаданими; tabs складу — горизонтальний скрол; frontmatter-таблиця → список.
-
-### 7.4 Продуктивність
-
-- **NFR-20.** Бюджети (gzip): початковий JS ≤ 150 KB (React, router, MiniSearch, застосунок); lazy-chunk markdown (marked + DOMPurify) ≤ 40 KB; CSS ≤ 30 KB; `index.json` ≤ 250 KB для 200 елементів (обмежує `searchText` ≤ 8000 символів, FR-25). Перевіряється в `check-dist.mjs` (warn при перевищенні JS/CSS, fail при > 1.5× бюджету).
-- **NFR-21.** `index.json` завантажується один раз за сесію (спільний Promise-кеш); тіла — на вимогу, кешуються в пам'яті; `releases.json` — лише на `/whats-new` і для changelog плагіна. Пошук ≤ 50 мс на запит при 500 документах.
-- **NFR-22.** Lighthouse Performance (mobile) ≥ 90 на `/search` з fixtures.
-- **NFR-23.** Підтримка: останні 2 версії Chrome, Edge, Firefox, Safari (desktop і mobile).
-
-### 7.5 Безпека
-
-- **NFR-40.** Будь-який HTML з даних проходить FR-61; текстові поля (`name`, `description`, frontmatter) рендеряться як текст React, без `dangerouslySetInnerHTML`. `dangerouslySetInnerHTML` дозволений лише для виходу DOMPurify.
-- **NFR-41.** Жодних inline-скриптів (ні з даних, ні в `index.html`). CSP через `<meta http-equiv="Content-Security-Policy">`: `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'`. (`frame-ancestors` через meta не працює — обмеження Pages.) Якщо бібліотека потребує послаблення — фіксується в Q-списку з обґрунтуванням.
-- **NFR-42.** Усі зовнішні посилання `rel="noopener noreferrer"`. Жодних сторонніх скриптів, шрифтів з CDN, трекерів.
-- **NFR-43.** Генератор не виконує код плагінів і не робить мережевих запитів; external плагіни не клонуються.
-
-### 7.6 SEO та i18n
-
-- **NFR-30.** Обмеження: вміст за `#/…` не індексується пошуковиками як окремі сторінки. Мінімум — статичні `<title>`, `<meta name="description">` в `index.html`; `document.title` оновлюється на кожному route (`<name> — test-ai-marketplace`). Prerender — future work.
-- **NFR-31.** UI-тексти англійською, зібрані в одному модулі `site/src/strings.ts`. Описи артефактів — англійською (рішення). Запити — UA/EN (§5).
+- **FR-61.** Markdown → HTML via `marked` (GFM), the result → `DOMPurify.sanitize` (default profile, without `style`, without `<iframe>`/`<form>`), and only then into the DOM. `marked` and `DOMPurify` are loaded as a separate lazy chunk (not needed for `/search`).
+- **FR-62.** Links: external (`http(s)://`) — `target="_blank" rel="noopener noreferrer"`; relative (`./references/x.md`) — rewritten to `${repo.url}/blob/${commit}/<resolved path>`; `#section` anchors — on click `scrollIntoView` to the heading with the matching `id` (headings get slug ids), without changing the hash (the hash is taken by the router); `javascript:` and other schemes are removed by DOMPurify.
+- **FR-63.** Code blocks — `<pre><code>` in a monospace font with horizontal scroll and a Copy button; syntax highlighting is not part of the MVP.
+- **FR-64.** Relative images → `https://raw.githubusercontent.com/artemmmon/test-ai-marketplace/<commit>/<path>`; `loading="lazy"`, `alt` from the markdown.
 
 ---
 
-## 8. Збірка й деплой
+## 7. Non-functional requirements
 
-### 8.1 npm-скрипти
+### 7.1 Accessibility
+
+- **NFR-1.** WCAG 2.1 AA. Lighthouse Accessibility ≥ 95 on `/search`, `/plugin/<name>`, `/artifact/<id>` in both themes (fixtures).
+- **NFR-2.** Text contrast ≥ 4.5:1 (large text and UI components, focus ring ≥ 3:1) in both themes, including `<mark>`, type badges and warning banners.
+- **NFR-3.** All functionality is available from the keyboard; visible focus (`:focus-visible`), logical Tab order; the `/` hotkey (FR in §6.2); tabs/accordions follow WAI-ARIA patterns; skip link.
+- **NFR-4.** Search results, the toast and loading state changes are announced via `aria-live="polite"`; icon buttons have `aria-label`; decorative icons are `aria-hidden`.
+- **NFR-5.** `prefers-reduced-motion: reduce` disables transition animations, the skeleton shimmer and smooth scrolling.
+- **NFR-6.** Touch targets ≥ 44×44 px on mobile.
+
+### 7.2 Theme
+
+- **NFR-10.** Dark-first: on the first visit the theme is `dark` (A-5). A dark/light switcher; the choice is stored in `localStorage` under the key `tam-theme` (all accesses in try/catch, no errors in private mode). The theme is applied via the `data-theme` attribute on `<html>` before the first render through the external `public/theme-init.js` (no inline script, NFR-41), to avoid a flash.
+
+### 7.3 Responsiveness
+
+- **NFR-15.** Breakpoints: `sm` < 640, `md` 640–1023, `lg` 1024–1439, `xl` ≥ 1440. Mobile-first CSS. No horizontal page scroll at a width of 320 px (except `<pre>` and tables in their own scroll container). Side padding is 16 px on mobile.
+- Mobile checklist: a header with collapsed navigation; filters as a full-screen panel with a `Show N results` button; cards in 1 column; InstallBlock before the metadata; the contents tabs scroll horizontally; the frontmatter table → a list.
+
+### 7.4 Performance
+
+- **NFR-20.** Budgets (gzip): initial JS ≤ 150 KB (React, router, MiniSearch, the application); the markdown lazy chunk (marked + DOMPurify) ≤ 40 KB; CSS ≤ 30 KB; `index.json` ≤ 250 KB for 200 items (limited by `searchText` ≤ 8000 characters, FR-25). Checked in `check-dist.mjs` (warn when JS/CSS is exceeded, fail at > 1.5× the budget).
+- **NFR-21.** `index.json` is loaded once per session (a shared Promise cache); bodies — on demand, cached in memory; `releases.json` — only on `/whats-new` and for a plugin's changelog. Search ≤ 50 ms per query at 500 documents.
+- **NFR-22.** Lighthouse Performance (mobile) ≥ 90 on `/search` with fixtures.
+- **NFR-23.** Support: the last 2 versions of Chrome, Edge, Firefox, Safari (desktop and mobile).
+
+### 7.5 Security
+
+- **NFR-40.** Any HTML from data goes through FR-61; text fields (`name`, `description`, frontmatter) are rendered as React text, without `dangerouslySetInnerHTML`. `dangerouslySetInnerHTML` is allowed only for the DOMPurify output.
+- **NFR-41.** No inline scripts (neither from data nor in `index.html`). CSP via `<meta http-equiv="Content-Security-Policy">`: `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'`. (`frame-ancestors` does not work via meta — a Pages limitation.) If a library requires relaxing it, this is recorded in the Q list with a justification.
+- **NFR-42.** All external links use `rel="noopener noreferrer"`. No third-party scripts, CDN fonts or trackers.
+- **NFR-43.** The generator does not execute plugin code and makes no network requests; external plugins are not cloned.
+
+### 7.6 SEO and i18n
+
+- **NFR-30.** Limitation: content behind `#/…` is not indexed by search engines as separate pages. At a minimum — static `<title>`, `<meta name="description">` in `index.html`; `document.title` is updated on every route (`<name> — test-ai-marketplace`). Prerender is future work.
+- **NFR-31.** UI texts are in English, collected in a single module `site/src/strings.ts`. Artifact descriptions are in English (a decision). Queries — UA/EN (§5).
+
+---
+
+## 8. Build and deploy
+
+### 8.1 npm scripts
 
 - **FR-70.**
 
-  Корінь (`package.json`, `"type": "module"`, `"private": true`, `"engines": {"node": ">=20"}`, без dependencies):
+  Root (`package.json`, `"type": "module"`, `"private": true`, `"engines": {"node": ">=20"}`, no dependencies):
 
-  | Скрипт | Команда |
+  | Script | Command |
   |---|---|
   | `check` | `node scripts/check-marketplace.mjs` |
   | `build:index` | `node scripts/build-index.mjs` |
@@ -759,170 +759,170 @@ Mobile — одна колонка, таблиця frontmatter стає спис
   | `test` | `node --test scripts/test/` |
   | `dev` | `npm run build:index && npm --prefix site run dev` |
 
-  `site/package.json` (dependencies: `react`, `react-dom`, `react-router`, `minisearch`, `marked`, `dompurify`, Porter-стемер; devDependencies: `vite`, `@vitejs/plugin-react`, `typescript`, `vitest`, `@playwright/test`):
+  `site/package.json` (dependencies: `react`, `react-dom`, `react-router`, `minisearch`, `marked`, `dompurify`, a Porter stemmer; devDependencies: `vite`, `@vitejs/plugin-react`, `typescript`, `vitest`, `@playwright/test`):
 
-  | Скрипт | Команда |
+  | Script | Command |
   |---|---|
   | `dev` | `vite` (http://localhost:5173/test-ai-marketplace/) |
   | `build` | `tsc -b && vite build && node scripts/check-dist.mjs` |
   | `preview` | `vite preview` (http://localhost:4173/test-ai-marketplace/) |
   | `test` | `vitest run` |
-  | `test:e2e` | `playwright test` (запускає `preview` через `webServer`) |
+  | `test:e2e` | `playwright test` (starts `preview` via `webServer`) |
   | `typecheck` | `tsc -b --noEmit` |
 
-  Локальна перевірка (як у лабі): `npm run build:index; cd site && npm ci && npm run build && npm run preview`. З порожнім реальним каталогом це дає FR-55; для демо — `npm run build:index:fixtures` замість `build:index`.
+  Local check (as in the lab): `npm run build:index; cd site && npm ci && npm run build && npm run preview`. With an empty real catalog this yields FR-55; for the demo — `npm run build:index:fixtures` instead of `build:index`.
 
-- **FR-71.** `vite.config.ts`: `base: '/test-ai-marketplace/'`. Усі fetch даних: `` `${import.meta.env.BASE_URL}index.json` `` тощо; жодних абсолютних шляхів `/…` у коді.
-- **FR-72.** `site/scripts/check-dist.mjs` після build перевіряє: (1) усі `src`/`href` у `dist/index.html` починаються з `/test-ai-marketplace/`; (2) у `dist/assets/*.js` немає `fetch("/` і `fetch('/`; (3) у `dist/` є `index.json`, `catalog.json`, `releases.json`, `stats.json`, `llms.txt`, `feed.xml`; (4) бюджети NFR-20; (5) якщо задано env `REQUIRE_REAL_DATA=1` — `index.json.fixture === false` (так fixtures ніколи не потраплять на Pages).
-- **FR-73.** `.gitignore` доповнюється: `site/dist/`, `site/public/index.json`, `site/public/catalog.json`, `site/public/releases.json`, `site/public/stats.json`, `site/public/llms.txt`, `site/public/feed.xml`, `site/public/bodies/`, `site/node_modules/`, `site/test-results/`, `site/playwright-report/`. CI-крок `git ls-files site/dist site/public/*.json site/public/bodies` має повертати порожній результат, інакше fail.
+- **FR-71.** `vite.config.ts`: `base: '/test-ai-marketplace/'`. All data fetches: `` `${import.meta.env.BASE_URL}index.json` `` and so on; no absolute `/…` paths in the code.
+- **FR-72.** `site/scripts/check-dist.mjs` checks after the build: (1) all `src`/`href` in `dist/index.html` start with `/test-ai-marketplace/`; (2) there is no `fetch("/` or `fetch('/` in `dist/assets/*.js`; (3) `dist/` contains `index.json`, `catalog.json`, `releases.json`, `stats.json`, `llms.txt`, `feed.xml`; (4) the NFR-20 budgets; (5) if the env `REQUIRE_REAL_DATA=1` is set — `index.json.fixture === false` (so fixtures never reach Pages).
+- **FR-73.** `.gitignore` is extended with: `site/dist/`, `site/public/index.json`, `site/public/catalog.json`, `site/public/releases.json`, `site/public/stats.json`, `site/public/llms.txt`, `site/public/feed.xml`, `site/public/bodies/`, `site/node_modules/`, `site/test-results/`, `site/playwright-report/`. The CI step `git ls-files site/dist site/public/*.json site/public/bodies` MUST return an empty result, otherwise fail.
 
 ### 8.2 Workflows
 
 - **FR-74. `.github/workflows/build.yml`** — reusable (`on: workflow_call`, input `deploy: boolean`), jobs:
-  1. **validate** — checkout; `actions/setup-node` (Node 22, `cache: npm`, `cache-dependency-path: site/package-lock.json`); `npm run check`; `npm test`; перевірка FR-73. (`claude plugin validate .` у CI не запускається, див. A-13; він лишається локальним кроком.)
-  2. **build-index** (`needs: validate`) — checkout з `fetch-depth: 0` (історія й теги для releases); `npm run build:index`; `actions/upload-artifact` → `site-data` (згенеровані файли з `site/public`).
-  3. **build-site** (`needs: build-index`) — checkout; setup-node з кешем; `actions/download-artifact` `site-data` → `site/public`; `cd site && npm ci && npm run typecheck && npm test && npm run build` з `REQUIRE_REAL_DATA=1`; якщо `deploy` — `actions/configure-pages` + `actions/upload-pages-artifact` (`path: site/dist`), інакше `actions/upload-artifact` `site-dist` (для ручного перегляду, retention 7 днів).
-  4. **e2e** (`needs: validate`, паралельно з build-index) — `npm run build:index:fixtures`; `cd site && npm ci && npx playwright install --with-deps chromium && npm run build && npm run test:e2e` (без `REQUIRE_REAL_DATA`).
-- **FR-75. `.github/workflows/ci.yml`** — `on: pull_request` (до `main`); `permissions: contents: read`; `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }`; `uses: ./.github/workflows/build.yml` з `deploy: false`.
-- **FR-76. `.github/workflows/pages.yml`** — `on: push` до `main`, `push` тегів `*--v*` (оновлює releases), `workflow_dispatch`; `concurrency: { group: pages, cancel-in-progress: false }`; job `build` → `uses: ./.github/workflows/build.yml` з `deploy: true` (`permissions: contents: read`); job **deploy** (`needs: build`, умова `github.ref == 'refs/heads/main'` або тег): `permissions: pages: write, id-token: write`; `environment: { name: github-pages, url: ${{ steps.deployment.outputs.page_url }} }`; `actions/deploy-pages` (`id: deployment`).
-- **FR-77.** Actions пінуються на мажорну версію, актуальну на момент реалізації. Будь-яка помилка в `validate`, `build-index`, `build-site` або `e2e` блокує deploy (deploy залежить від build, а build — від validate; e2e входить у `needs` deploy через reusable workflow).
+  1. **validate** — checkout; `actions/setup-node` (Node 22, `cache: npm`, `cache-dependency-path: site/package-lock.json`); `npm run check`; `npm test`; the FR-73 check. (`claude plugin validate .` is not run in CI, see A-13; it remains a local step.)
+  2. **build-index** (`needs: validate`) — checkout with `fetch-depth: 0` (history and tags for releases); `npm run build:index`; `actions/upload-artifact` → `site-data` (the generated files from `site/public`).
+  3. **build-site** (`needs: build-index`) — checkout; setup-node with cache; `actions/download-artifact` `site-data` → `site/public`; `cd site && npm ci && npm run typecheck && npm test && npm run build` with `REQUIRE_REAL_DATA=1`; if `deploy` — `actions/configure-pages` + `actions/upload-pages-artifact` (`path: site/dist`), otherwise `actions/upload-artifact` `site-dist` (for manual inspection, retention 7 days).
+  4. **e2e** (`needs: validate`, in parallel with build-index) — `npm run build:index:fixtures`; `cd site && npm ci && npx playwright install --with-deps chromium && npm run build && npm run test:e2e` (without `REQUIRE_REAL_DATA`).
+- **FR-75. `.github/workflows/ci.yml`** — `on: pull_request` (to `main`); `permissions: contents: read`; `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }`; `uses: ./.github/workflows/build.yml` with `deploy: false`.
+- **FR-76. `.github/workflows/pages.yml`** — `on: push` to `main`, `push` of tags `*--v*` (updates releases), `workflow_dispatch`; `concurrency: { group: pages, cancel-in-progress: false }`; job `build` → `uses: ./.github/workflows/build.yml` with `deploy: true` (`permissions: contents: read`); job **deploy** (`needs: build`, condition `github.ref == 'refs/heads/main'` or a tag): `permissions: pages: write, id-token: write`; `environment: { name: github-pages, url: ${{ steps.deployment.outputs.page_url }} }`; `actions/deploy-pages` (`id: deployment`).
+- **FR-77.** Actions are pinned to the major version current at implementation time. Any failure in `validate`, `build-index`, `build-site` or `e2e` blocks the deploy (deploy depends on build, and build on validate; e2e is included in the deploy `needs` through the reusable workflow).
 
 ---
 
-## 9. Тестування й acceptance
+## 9. Testing and acceptance
 
-### 9.1 Unit: генератор (`scripts/test/*.test.mjs`, `node:test`)
+### 9.1 Unit: generator (`scripts/test/*.test.mjs`, `node:test`)
 
-- **FR-80.** На `scripts/__fixtures__/repo` (структура §12.1) з `--now 2026-10-19T12:00:00Z --commit a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 --tags-file …`:
-  - вихідний `index.json` збігається зі збереженим golden-файлом `scripts/__fixtures__/expected/index.json` (детермінованість: однакові входи → байт-у-байт однаковий вихід);
-  - для кожного локального плагіна `version` і `dependencies` = значенням з `plugin.json`;
-  - `usedBy`, `resolvedVersion`, `executesCode`, `components` — як у §12.1;
-  - `stats.json` counts = фактичній кількості;
-  - `releases.json`: порядок, дати, `origin`; `feed.xml` — валідний XML (парситься), entries = релізам;
-  - `catalog.json` має `schemaVersion` і лише абсолютні URL;
-  - кожен `bodyRef` вказує на існуючий файл.
-- **FR-81.** Негативні кейси (кожен — окремий мінімальний fixture-каталог, очікується exit 1 і текст помилки): кожен рядок «fail» з таблиці FR-19; і одна перевірка на кожне «warn» (exit 0 + текст попередження).
-- **FR-82.** `check-marketplace.mjs` після рефакторингу дає той самий вихід на тих самих входах, що й до нього (регресійний тест на fixtures + на поточному порожньому `marketplace.json`: `marketplace invariants ok (0 plugins)`).
-- **FR-83.** `semver.mjs`: таблиця `satisfies(version, range)` для всіх форм FR-23; `changelog.mjs`: усі формати заголовків FR-26.
+- **FR-80.** On `scripts/__fixtures__/repo` (the structure from §12.1) with `--now 2026-10-19T12:00:00Z --commit a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 --tags-file …`:
+  - the output `index.json` matches the stored golden file `scripts/__fixtures__/expected/index.json` (determinism: identical inputs → byte-for-byte identical output);
+  - for every local plugin, `version` and `dependencies` equal the values from `plugin.json`;
+  - `usedBy`, `resolvedVersion`, `executesCode`, `components` — as in §12.1;
+  - `stats.json` counts = the actual counts;
+  - `releases.json`: order, dates, `origin`; `feed.xml` is valid XML (parses), entries = releases;
+  - `catalog.json` has `schemaVersion` and only absolute URLs;
+  - every `bodyRef` points to an existing file.
+- **FR-81.** Negative cases (each is a separate minimal fixture catalog, exit 1 and the error text are expected): every "fail" row of the FR-19 table; and one check for each "warn" (exit 0 + the warning text).
+- **FR-82.** After the refactoring `check-marketplace.mjs` produces the same output on the same inputs as before (a regression test on fixtures + on the current empty `marketplace.json`: `marketplace invariants ok (0 plugins)`).
+- **FR-83.** `semver.mjs`: a `satisfies(version, range)` table for all forms of FR-23; `changelog.mjs`: all heading formats of FR-26.
 
-### 9.2 Unit: пошук (`site/src/search/*.test.ts`, Vitest)
+### 9.2 Unit: search (`site/src/search/*.test.ts`, Vitest)
 
-- **FR-90.** `parseQuery`: шаблонні фрази, стоп-слова, апострофи, визначення типу, розширення синонімами (таблиця «вхід → `ParsedQuery`»).
-- **FR-91. Золотий набір** (на `site/src/fixtures/index.json` = копія golden з FR-80). «top-k ∋ X» означає, що X серед перших k:
+- **FR-90.** `parseQuery`: boilerplate phrases, stop words, apostrophes, type detection, synonym expansion (a table "input → `ParsedQuery`").
+- **FR-91. Golden set** (on `site/src/fixtures/index.json` = a copy of the golden file from FR-80). "top-k ∋ X" means that X is among the first k:
 
-  | # | Запит | Очікування |
+  | # | Query | Expectation |
   |---|---|---|
-  | 1 | `мені треба скіл для код-рев'ю` | top-1 = `engineering-paved-path:skill:code-review`; `detectedType = skill` |
+  | 1 | `мені треба скіл для код-рев'ю` ("I need a skill for code review") | top-1 = `engineering-paved-path:skill:code-review`; `detectedType = skill` |
   | 2 | `I need a skill for code review` | top-1 = `engineering-paved-path:skill:code-review` |
-  | 3 | `перевірка коду` | top-3 ∋ `engineering-paved-path:skill:code-review` |
+  | 3 | `перевірка коду` ("code check") | top-3 ∋ `engineering-paved-path:skill:code-review` |
   | 4 | `react` | top-1 = `engineering-paved-path:skill:react-best-practices` |
   | 5 | `engineering-paved-path:react-best-practices` | top-1 = `engineering-paved-path:skill:react-best-practices` (FR-41) |
-  | 6 | `агент для архітектури` | top-1 = `architecture-review:agent:architecture-reviewer` |
-  | 7 | `коміт` | top-1 = `engineering-paved-path:skill:commit-conventions` |
-  | 8 | `специфікація` | top-3 ∋ `sdd-engineering:skill:spec-writing` |
-  | 9 | `дослідження` | top-3 ∋ `research-tools` (плагін) або його skill `web-research` |
-  | 10 | `sdd` | top-3 ∋ `sdd-engineering` (плагін) |
-  | 11 | `architecture-review` | top-2 = {`architecture-review` (плагін), `architecture-review:skill:architecture-review`} |
-  | 12 | `reviw` (одна помилка) | top-3 ∋ `engineering-paved-path:skill:code-review` |
-  | 13 | `хуки` | фільтр `type=hook`; результати = лише `engineering-paved-path:hook:hooks` |
-  | 14 | `mcp` | фільтр `type=mcp`; результати = лише `research-tools:mcp:mcp-servers` |
-  | 15 | `kubernetes` | 0 результатів → стан FR-47 |
-  | 16 | `` (порожній) | усі 21 елементи, сортування `updated` |
+  | 6 | `агент для архітектури` ("an agent for architecture") | top-1 = `architecture-review:agent:architecture-reviewer` |
+  | 7 | `коміт` ("commit") | top-1 = `engineering-paved-path:skill:commit-conventions` |
+  | 8 | `специфікація` ("specification") | top-3 ∋ `sdd-engineering:skill:spec-writing` |
+  | 9 | `дослідження` ("research") | top-3 ∋ `research-tools` (plugin) or its skill `web-research` |
+  | 10 | `sdd` | top-3 ∋ `sdd-engineering` (plugin) |
+  | 11 | `architecture-review` | top-2 = {`architecture-review` (plugin), `architecture-review:skill:architecture-review`} |
+  | 12 | `reviw` (one typo) | top-3 ∋ `engineering-paved-path:skill:code-review` |
+  | 13 | `хуки` ("hooks") | filter `type=hook`; results = only `engineering-paved-path:hook:hooks` |
+  | 14 | `mcp` | filter `type=mcp`; results = only `research-tools:mcp:mcp-servers` |
+  | 15 | `kubernetes` | 0 results → the FR-47 state |
+  | 16 | `` (empty) | all 21 items, sorted by `updated` |
 
-### 9.3 E2E / smoke (Playwright, `site/e2e/smoke.spec.ts`, на `preview` з fixtures)
+### 9.3 E2E / smoke (Playwright, `site/e2e/smoke.spec.ts`, on `preview` with fixtures)
 
 - **FR-95.**
-  1. Відкрити `/test-ai-marketplace/#/search`, ввести `code review` → видно картку `engineering-paved-path:code-review`; ввести `sdd-engineering` → картка плагіна першою (плагін і вкладений skill знаходяться).
-  2. URL після введення містить `#/search?q=`; reload відновлює результати (US-5).
-  3. На картці `engineering-paved-path` натиснути Copy install → `navigator.clipboard.readText()` (з дозволом `clipboard-read`) === `/plugin install engineering-paved-path@test-ai-marketplace`; видно toast `Copied`.
-  4. `#/plugin/sdd-engineering`: відображена версія === `version` з `scripts/__fixtures__/repo/plugins/sdd-engineering/.claude-plugin/plugin.json` (тест читає файл); список залежностей === `dependencies` з того ж файлу (імена й ranges); перемкнути In terminal + `user` → Copy → `claude plugin install sdd-engineering@test-ai-marketplace --scope user`.
-  5. `#/artifact/engineering-paved-path:hook:hooks` — видно warning «runs on your machine» і JSON.
-  6. `#/nope` → 404; `#/plugin/unknown` → «Plugin "unknown" not found».
-  7. Клавіша `/` фокусує пошук; у консолі немає помилок; немає запитів поза origin (крім raw.githubusercontent.com).
-- **FR-96.** Ручна перевірка перед здачею: `npm run build:index` на реальному (порожньому) каталозі → `preview` показує FR-55 без помилок.
+  1. Open `/test-ai-marketplace/#/search`, type `code review` → the card `engineering-paved-path:code-review` is visible; type `sdd-engineering` → the plugin card is first (both the plugin and its nested skill are found).
+  2. After typing, the URL contains `#/search?q=`; a reload restores the results (US-5).
+  3. On the `engineering-paved-path` card click Copy install → `navigator.clipboard.readText()` (with the `clipboard-read` permission) === `/plugin install engineering-paved-path@test-ai-marketplace`; the toast `Copied` is visible.
+  4. `#/plugin/sdd-engineering`: the displayed version === `version` from `scripts/__fixtures__/repo/plugins/sdd-engineering/.claude-plugin/plugin.json` (the test reads the file); the dependency list === `dependencies` from the same file (names and ranges); switch to In terminal + `user` → Copy → `claude plugin install sdd-engineering@test-ai-marketplace --scope user`.
+  5. `#/artifact/engineering-paved-path:hook:hooks` — the warning "runs on your machine" and the JSON are visible.
+  6. `#/nope` → 404; `#/plugin/unknown` → "Plugin "unknown" not found".
+  7. The `/` key focuses the search; there are no errors in the console; there are no requests outside the origin (except raw.githubusercontent.com).
+- **FR-96.** Manual check before hand-in: `npm run build:index` on the real (empty) catalog → `preview` shows FR-55 without errors.
 
-### 9.4 Чек-лист лабораторної (крок 6)
+### 9.4 Lab checklist (step 6)
 
-| Вимога лаби | Де в специфікації | Перевірка |
+| Lab requirement | Where in the specification | Verification |
 |---|---|---|
-| CLI = встановлення, UI = discovery (знайти, прочитати, скопіювати) | §1.1, FR-51, FR-52 | US-1…US-4 |
-| Документ фіксує routes, поля індексу, пошук, detail page | FR-50, §4, §5, §6.4–6.5 | цей файл |
-| Без backend, ratings, download counter | §1.2 | — |
-| `scripts/build-index.mjs` читає marketplace.json, manifests, README, changelog, compatibility, frontmatter → `site/public/`: index.json, releases.json, stats.json, bodies/ | §3.4, §4 | FR-80 |
+| CLI = installation, UI = discovery (find, read, copy) | §1.1, FR-51, FR-52 | US-1…US-4 |
+| The document fixes routes, index fields, search, the detail page | FR-50, §4, §5, §6.4–6.5 | this file |
+| No backend, ratings, download counter | §1.2 | — |
+| `scripts/build-index.mjs` reads marketplace.json, manifests, README, changelog, compatibility, frontmatter → `site/public/`: index.json, releases.json, stats.json, bodies/ | §3.4, §4 | FR-80 |
 | React + TS + Vite, hash routes `/search`, `/plugin/<name>`, `/artifact/<id>`, `/whats-new`, `/getting-started` | FR-50, FR-70 | FR-95 |
-| MiniSearch по name, description, keywords, README, SKILL.md; marked + санітизація | FR-30, FR-31, FR-61 | FR-91 |
-| Сторінка плагіна: version, owner, compatibility, dependencies, склад, `/plugin install <plugin>@<marketplace>` (+ CLI `--scope`) | §6.4 | FR-95.4 |
-| Локально: `npm run build:index; cd site && npm ci && npm run build && npm run preview` | FR-70 | FR-96 |
-| Згенерований JSON і `site/dist/` не комітяться | FR-73 | CI-крок FR-73 |
-| PR workflow збирає index і frontend; `pages.yml` після merge публікує через upload-pages-artifact + deploy-pages, `pages: write`, `id-token: write`; окремий build job для індексу; base `/test-ai-marketplace/` | FR-74…FR-77, FR-71 | зелений CI, FR-72 |
-| Плагін і вкладені skills знаходяться; version/dependencies = manifest; Copy install — правильна команда | FR-91, FR-95 | FR-95.1–4 |
-| Dependencies (name + semver-range), namespaced компоненти, граф/список залежностей | FR-21, FR-23, FR-53 | FR-80, FR-95.4 |
-| Теги `<plugin>--v<semver>`, releases.json і /whats-new з CHANGELOG.md і тегів | FR-26, §6.6 | FR-80 |
+| MiniSearch over name, description, keywords, README, SKILL.md; marked + sanitization | FR-30, FR-31, FR-61 | FR-91 |
+| Plugin page: version, owner, compatibility, dependencies, composition, `/plugin install <plugin>@<marketplace>` (+ CLI `--scope`) | §6.4 | FR-95.4 |
+| Locally: `npm run build:index; cd site && npm ci && npm run build && npm run preview` | FR-70 | FR-96 |
+| Generated JSON and `site/dist/` are not committed | FR-73 | CI step of FR-73 |
+| The PR workflow builds the index and the frontend; `pages.yml` publishes after merge via upload-pages-artifact + deploy-pages, `pages: write`, `id-token: write`; a separate build job for the index; base `/test-ai-marketplace/` | FR-74…FR-77, FR-71 | green CI, FR-72 |
+| The plugin and its nested skills are found; version/dependencies = manifest; Copy install gives the correct command | FR-91, FR-95 | FR-95.1–4 |
+| Dependencies (name + semver range), namespaced components, dependency graph/list | FR-21, FR-23, FR-53 | FR-80, FR-95.4 |
+| Tags `<plugin>--v<semver>`, releases.json and /whats-new from CHANGELOG.md and tags | FR-26, §6.6 | FR-80 |
 
 ---
 
-## 10. Фазування
+## 10. Phasing
 
-**MVP** (усе з цієї специфікації): пошук + картки; фільтри type/plugin/tag + deep-link; сторінка плагіна з повним вмістом локальних плагінів; сторінка артефакту; `catalog.json` + `llms.txt`; changelog, `/whats-new`, `releases.json`, `feed.xml`; `stats.json`; `/getting-started`; dark/light тема; CI + Pages.
+**MVP** (everything in this specification): search + cards; type/plugin/tag filters + deep links; a plugin page with the full content of local plugins; an artifact page; `catalog.json` + `llms.txt`; changelog, `/whats-new`, `releases.json`, `feed.xml`; `stats.json`; `/getting-started`; dark/light theme; CI + Pages.
 
-**Future work (явно відкладено):**
+**Future work (explicitly deferred):**
 
-| Що | Чому не в MVP |
+| What | Why not in the MVP |
 |---|---|
-| Семантичний/embedding-пошук | при десятках артефактів MiniSearch + синоніми достатньо; можна додати пізніше як попередньо обчислені вектори в CI. |
-| Коментарі (giscus тощо) | суперечить «суто довідковому» сайту; потребує GitHub Discussions і стороннього скрипта (CSP). |
-| Рейтинги, лічильник встановлень | потрібен запис і зберігання стану (backend + автентифікація); Claude Code не повідомляє нам про встановлення, а статичний сайт не може рахувати. |
-| Аналітика | потрібен сторонній collector або власний backend; приватність. |
-| PWA / offline | невеликий виграш для довідкового сайту; service worker ускладнює інвалідацію даних після deploy. |
-| Порівняння плагінів | цінність з'являється при більшій кількості плагінів. |
-| Підсвітка синтаксису, prerender для SEO, UI-локалізація | не потрібні для acceptance лаби. |
+| Semantic/embedding search | with tens of artifacts, MiniSearch + synonyms is enough; can be added later as vectors precomputed in CI. |
+| Comments (giscus etc.) | contradicts a purely reference site; requires GitHub Discussions and a third-party script (CSP). |
+| Ratings, install counter | requires writes and state storage (backend + authentication); Claude Code does not report installs to us, and a static site cannot count them. |
+| Analytics | requires a third-party collector or our own backend; privacy. |
+| PWA / offline | small gain for a reference site; a service worker complicates data invalidation after a deploy. |
+| Plugin comparison | the value appears with a larger number of plugins. |
+| Syntax highlighting, prerender for SEO, UI localization | not needed for the lab acceptance. |
 
 ---
 
-## 11. Припущення й відкриті питання
+## 11. Assumptions and open questions
 
-### 11.1 Припущення (обрані дефолти)
+### 11.1 Assumptions (chosen defaults)
 
-- **A-1.** Ім'я marketplace для команд береться з `marketplace.json` `name` (`test-ai-marketplace`), а джерело для `marketplace add` — `owner/repo` з `GITHUB_REPOSITORY` або `git remote get-url origin` (`artemmmon/test-ai-marketplace`).
-- **A-2.** `dependencies` у `plugin.json` — масив `{name, version}` (як у тексті лаби); інші форми (об'єкт-мапа) → fail з поясненням.
-- **A-3.** Compatibility плагіна береться з `plugins/<p>/COMPATIBILITY.md` (так у лабі, крок 4: «У COMPATIBILITY.md фіксуємо Claude Code >=2.1.110»). Генератор витягує з нього мінімальну версію за шаблоном `Claude Code <range>` і кладе повний текст у `bodies/<plugin>/COMPATIBILITY.md` (схема `Compatibility`, §4.3); для skill додатково показується frontmatter-поле `compatibility`, якщо є.
-- **A-4.** Формат changelog — Keep a Changelog (FR-26).
-- **A-5.** Перший візит — темна тема незалежно від `prefers-color-scheme` (dark-first); вибір користувача зберігається.
-- **A-6.** Inline/кастомні шляхи компонентів у `plugin.json` у MVP не індексуються (warn), але `hooks`/`mcpServers` позначають плагін як `executesCode`.
-- **A-7.** Label для issues — `site-feedback`; GitHub може ігнорувати `labels` у URL для користувачів без прав triage, тому тип звернення продубльовано префіксом у title.
-- **A-8.** Copy install на картці копіює варіант «in chat» (`/plugin install …`), бо саме він є командою встановлення з тексту лаби; CLI-варіант доступний на сторінці плагіна.
-- **A-9.** Генератор zero-dep (FR-14), тому frontmatter обмежено підмножиною YAML (FR-16).
-- **A-10.** E2E — Playwright (Chromium) у CI; unit-тести фронтенду — Vitest.
-- **A-11.** URL сайту — дефолтний `https://artemmmon.github.io/test-ai-marketplace/`, без custom domain.
+- **A-1.** The marketplace name for commands is taken from `marketplace.json` `name` (`test-ai-marketplace`), and the source for `marketplace add` is `owner/repo` from `GITHUB_REPOSITORY` or `git remote get-url origin` (`artemmmon/test-ai-marketplace`).
+- **A-2.** `dependencies` in `plugin.json` is an array of `{name, version}` (as in the lab text); other forms (an object map) → fail with an explanation.
+- **A-3.** A plugin's compatibility is taken from `plugins/<p>/COMPATIBILITY.md` (as in the lab, step 4: "In COMPATIBILITY.md we record Claude Code >=2.1.110" — translated from the Ukrainian lab text). The generator extracts the minimum version from it by the template `Claude Code <range>` and puts the full text into `bodies/<plugin>/COMPATIBILITY.md` (the `Compatibility` schema, §4.3); for a skill, the frontmatter field `compatibility` is additionally shown, if present.
+- **A-4.** The changelog format is Keep a Changelog (FR-26).
+- **A-5.** The first visit gets the dark theme regardless of `prefers-color-scheme` (dark-first); the user's choice is stored.
+- **A-6.** Inline/custom component paths in `plugin.json` are not indexed in the MVP (warn), but `hooks`/`mcpServers` mark the plugin as `executesCode`.
+- **A-7.** The label for issues is `site-feedback`; GitHub may ignore `labels` in the URL for users without triage rights, so the type of the report is duplicated by a prefix in the title.
+- **A-8.** Copy install on a card copies the "in chat" variant (`/plugin install …`), because that is the install command from the lab text; the CLI variant is available on the plugin page.
+- **A-9.** The generator is zero-dep (FR-14), therefore frontmatter is limited to a YAML subset (FR-16).
+- **A-10.** E2E is Playwright (Chromium) in CI; frontend unit tests are Vitest.
+- **A-11.** The site URL is the default `https://artemmmon.github.io/test-ai-marketplace/`, without a custom domain.
 
-### 11.2 Питання, закриті за текстом лаби або прийняті за рекомендацією
+### 11.2 Questions closed by the lab text or accepted as recommended
 
-- **A-12 (було Q-2). Залежності встановлюються автоматично.** Лаба, крок 10: «Вбудований installer автоматично встановить dependencies і перелічить їх у результаті». Тому блок Install не просить встановлювати залежності вручну, а лише перелічує їх; перевірка — `claude plugin list --json` без `dependency-unsatisfied`, `range-conflict`, `no-matching-tag`.
-- **A-13 (було Q-3). `claude plugin validate .` у CI не запускаємо.** Лаба згадує команду як локальну перевірку (кроки 5 і 7), але не каже, що її треба ставити в runner; прапор `--strict` не існує. CI покладається на власний `scripts/lib/marketplace.mjs`. Додавання CLI в runner — future work. Прийнято за рекомендацією.
-- **A-14 (було Q-4). Label `site-feedback`.** Лаба цього не визначає; лишаємо `site-feedback` (A-7), префікс у title працює і без label. Створити label у репо має власник репо. Прийнято за рекомендацією.
-- **Q-1 закрито в A-3:** compatibility — окремий `COMPATIBILITY.md` у корені плагіна.
+- **A-12 (was Q-2). Dependencies are installed automatically.** Lab, step 10: "The built-in installer automatically installs dependencies and lists them in the result" (translated from the Ukrainian lab text). Therefore the Install block does not ask to install dependencies manually, but only lists them; verification is `claude plugin list --json` without `dependency-unsatisfied`, `range-conflict`, `no-matching-tag`.
+- **A-13 (was Q-3). `claude plugin validate .` is not run in CI.** The lab mentions the command as a local check (steps 5 and 7), but does not say that it must be installed on the runner; the `--strict` flag does not exist. CI relies on its own `scripts/lib/marketplace.mjs`. Adding the CLI to the runner is future work. Accepted as recommended.
+- **A-14 (was Q-4). The `site-feedback` label.** The lab does not define this; we keep `site-feedback` (A-7), the title prefix works even without the label. The label must be created in the repo by the repo owner. Accepted as recommended.
+- **Q-1 closed in A-3:** compatibility is a separate `COMPATIBILITY.md` in the plugin root.
 
-### 11.3 Відкриті питання
+### 11.3 Open questions
 
-Немає.
+None.
 ---
 
-## 12. Додатки
+## 12. Appendices
 
-### 12.1 Fixtures: приклад `index.json` (ФІКТИВНІ ДАНІ)
+### 12.1 Fixtures: example `index.json` (FICTITIOUS DATA)
 
-> **Це вигаданий приклад для дизайну й тестів.** У репо зараз немає жодного з цих плагінів. Дані відтворюють очікувану структуру реальних плагінів із лабораторної. Той самий каталог має існувати як файлове дерево `scripts/__fixtures__/repo/` (з цього дерева генерується golden-файл, FR-80), а копія результату — у `site/src/fixtures/index.json`. `searchText` скорочено.
+> **This is an invented example for design and tests.** The repo currently contains none of these plugins. The data reproduces the expected structure of the real plugins from the lab. The same catalog MUST exist as a file tree `scripts/__fixtures__/repo/` (the golden file is generated from this tree, FR-80), and a copy of the result in `site/src/fixtures/index.json`. `searchText` is abbreviated.
 
-Склад fixtures:
+Fixtures composition:
 
-| Плагін | Версія | Залежності | Компоненти | executesCode |
+| Plugin | Version | Dependencies | Components | executesCode |
 |---|---|---|---|---|
-| `engineering-paved-path` | 1.2.0 | — | skills `react-best-practices`, `code-review`, `commit-conventions`; agent `code-reviewer`; command `review-pr`; hooks (`PreToolUse`, `PostToolUse`) | так (hooks) |
-| `research-tools` | 1.0.1 | — | skills `web-research`, `literature-review`; agent `researcher`; MCP `docs-fetch` | так (MCP) |
-| `architecture-review` | 1.0.0 | `engineering-paved-path ^1.0.0` | skills `architecture-review`, `adr-writing`; agent `architecture-reviewer` | ні |
-| `sdd-engineering` | 1.0.0 | `engineering-paved-path ^1.0.0`, `research-tools ^1.0.0`, `architecture-review ^1.0.0` | skills `spec-writing`, `sdd-workflow`; agent `spec-reviewer`; command `spec` | ні (але залежності — так) |
+| `engineering-paved-path` | 1.2.0 | — | skills `react-best-practices`, `code-review`, `commit-conventions`; agent `code-reviewer`; command `review-pr`; hooks (`PreToolUse`, `PostToolUse`) | yes (hooks) |
+| `research-tools` | 1.0.1 | — | skills `web-research`, `literature-review`; agent `researcher`; MCP `docs-fetch` | yes (MCP) |
+| `architecture-review` | 1.0.0 | `engineering-paved-path ^1.0.0` | skills `architecture-review`, `adr-writing`; agent `architecture-reviewer` | no |
+| `sdd-engineering` | 1.0.0 | `engineering-paved-path ^1.0.0`, `research-tools ^1.0.0`, `architecture-review ^1.0.0` | skills `spec-writing`, `sdd-workflow`; agent `spec-reviewer`; command `spec` | no (but its dependencies do) |
 
-Фіктивні теги (`scripts/__fixtures__/tags.json`): `engineering-paved-path--v1.0.0` (2026-08-01), `engineering-paved-path--v1.2.0` (2026-09-30), `research-tools--v1.0.1` (2026-09-12), `architecture-review--v1.0.0` (2026-09-20), `sdd-engineering--v1.0.0` (2026-10-10).
+Fictitious tags (`scripts/__fixtures__/tags.json`): `engineering-paved-path--v1.0.0` (2026-08-01), `engineering-paved-path--v1.2.0` (2026-09-30), `research-tools--v1.0.1` (2026-09-12), `architecture-review--v1.0.0` (2026-09-20), `sdd-engineering--v1.0.0` (2026-10-10).
 
 ```json
 {
@@ -1286,7 +1286,7 @@ Mobile — одна колонка, таблиця frontmatter стає спис
 }
 ```
 
-Додатковий fixture для стану **External** (не входить у 21 елемент золотого набору; окремий файл `site/src/fixtures/index.external.json` для дизайну):
+An additional fixture for the **External** state (not part of the 21 items of the golden set; a separate file `site/src/fixtures/index.external.json` for design):
 
 ```json
 {
@@ -1304,7 +1304,7 @@ Mobile — одна колонка, таблиця frontmatter стає спис
 }
 ```
 
-Фрагменти відповідних `releases.json` і `stats.json` (fixtures):
+Fragments of the corresponding `releases.json` and `stats.json` (fixtures):
 
 ```json
 { "schemaVersion": "1.0", "generatedAt": "2026-10-19T12:00:00Z", "commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
@@ -1319,9 +1319,9 @@ Mobile — одна колонка, таблиця frontmatter стає спис
   "counts": { "plugins": 4, "pluginsLocal": 4, "pluginsExternal": 0, "skills": 9, "agents": 4, "commands": 2, "hooks": 1, "hookEvents": 2, "mcp": 1, "releases": 6 } }
 ```
 
-(6 релізів = 5 тегів + `engineering-paved-path` 1.1.0, що є лише в changelog, `origin: "changelog"`.)
+(6 releases = 5 tags + `engineering-paved-path` 1.1.0, which exists only in the changelog, `origin: "changelog"`.)
 
-### 12.2 Приклад `llms.txt` (fixtures)
+### 12.2 Example `llms.txt` (fixtures)
 
 ```markdown
 # test-ai-marketplace
@@ -1356,7 +1356,7 @@ Plugins marked "executes code" contain hooks, MCP servers or bin/ executables.
 - [feed.xml](https://artemmmon.github.io/test-ai-marketplace/feed.xml): Atom feed of releases
 ```
 
-(У реальному файлі «…» немає — перелічуються всі компоненти.)
+(The real file has no "…" — all components are listed.)
 
 ### 12.3 Wireframes (ASCII)
 
@@ -1392,7 +1392,7 @@ Plugins marked "executes code" contain hooks, MCP servers or bin/ executables.
 ├──────────────────────────────────────────────────────────────────────────────────┤
 │ Catalog generated 2026-10-19 from a1b2c3d · catalog.json · llms.txt · feed.xml · Report an issue │
 └──────────────────────────────────────────────────────────────────────────────────┘
-«…» = <mark>-підсвітка
+«…» = <mark> highlighting
 ```
 
 **`/search` — mobile (< 640)**
@@ -1440,7 +1440,7 @@ Plugins marked "executes code" contain hooks, MCP servers or bin/ executables.
 │    ┌───────────────────────────────────────┐ [Copy]   │           10-10 · tag ↗  │
 │    │ /plugin install sdd-engineering@test-…│          │ Keywords  #sdd #spec …   │
 │    └───────────────────────────────────────┘          │                          │
-│ Installs the whole plugin with all its components.    │ (*scope лише в terminal) │
+│ Installs the whole plugin with all its components.    │ (*scope: terminal only)  │
 │ ⚠ Dependencies execute code: engineering-paved-path   │                          │
 │   (hooks), research-tools (MCP)                       │                          │
 ├───────────────────────────────────────────────────────┤                          │
@@ -1470,7 +1470,7 @@ Plugins marked "executes code" contain hooks, MCP servers or bin/ executables.
 └───────────────────────────────────────────────────────┴──────────────────────────┘
 ```
 
-**`/artifact/<id>` — desktop (скорочено)**
+**`/artifact/<id>` — desktop (abridged)**
 
 ```
 Search › engineering-paved-path › Hooks › hooks
