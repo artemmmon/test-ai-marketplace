@@ -1,6 +1,35 @@
 {
   "name": "test-ai-marketplace",
   "owner": { "name": "artemmmon" },
-  "description": "Personal Claude Code plugin marketplace — plugins extracted from DevDigest",
-  "plugins": []
+  "description": "Personal Claude Code plugin marketplace: engineering skills and agents for spec-driven development",
+  "plugins": [
+    {
+      "name": "architecture-review",
+      "source": "./plugins/architecture-review",
+      "description": "Read-only architecture reviewer agent: audits a module, a package or a branch diff against onion-architecture and frontend-architecture rules and returns findings with evidence as JSON",
+      "keywords": ["architecture", "review", "agent", "read-only", "onion-architecture"],
+      "category": "code-review"
+    },
+    {
+      "name": "engineering-paved-path",
+      "source": "./plugins/engineering-paved-path",
+      "description": "Engineering knowledge skills for TypeScript web projects: Fastify, React, Next.js, React Testing Library, onion architecture, frontend architecture and security rules",
+      "keywords": ["fastify", "architecture", "onion-architecture", "frontend", "react", "nextjs", "testing", "security", "skills"],
+      "category": "development"
+    },
+    {
+      "name": "research-tools",
+      "source": "./plugins/research-tools",
+      "description": "Read-only researcher agent that answers one concrete question from a repository or from external sources and returns an evidence-backed report",
+      "keywords": ["research", "agent", "read-only", "investigation"],
+      "category": "research"
+    },
+    {
+      "name": "sdd-engineering",
+      "source": "./plugins/sdd-engineering",
+      "description": "Spec Driven Development: spec, options, plan, implementation and verification, with a run-plan entry point and a workflow retro. Installs engineering-paved-path, research-tools and architecture-review as dependencies",
+      "keywords": ["sdd", "spec-driven", "planning", "agents"],
+      "category": "workflow"
+    }
+  ]
 }
