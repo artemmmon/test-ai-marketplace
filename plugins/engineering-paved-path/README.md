@@ -49,7 +49,7 @@ could be established (NFR-2 of `docs/specs/sdd-plugins.md`):
 - `next-best-practices` - upstream `vercel-labs/next-skills` has no license file (GitHub reports none) and has
   since removed the skill and moved Next.js guidance into `vercel/next.js`.
 - `react-best-practices` and `react-testing-library` - the earliest public copy found is
-  `burnjohn/quick-blog` (`.claude/skills/`), which has no license; no other origin was found. Both can be
+  `burnjohn/quick-blog` (in its Claude skills folder), which has no license; no other origin was found. Both can be
   added in a later release once the author's permission or a license is confirmed.
 
 ## Links
