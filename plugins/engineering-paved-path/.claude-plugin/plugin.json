@@ -1,8 +1,8 @@
 {
   "name": "engineering-paved-path",
   "version": "1.0.0",
-  "description": "Engineering knowledge skills: Fastify, onion architecture, frontend architecture and security rules for TypeScript web projects",
+  "description": "Engineering knowledge skills for TypeScript web projects: Fastify, React, Next.js, React Testing Library, onion architecture, frontend architecture and security rules",
   "author": { "name": "artemmmon" },
   "license": "MIT",
-  "keywords": ["fastify", "architecture", "onion-architecture", "frontend", "security", "skills"]
+  "keywords": ["fastify", "architecture", "onion-architecture", "frontend", "react", "nextjs", "testing", "security", "skills"]
 }

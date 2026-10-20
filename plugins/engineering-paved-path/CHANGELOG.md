@@ -14,8 +14,12 @@ All notable changes to this plugin are documented here. The format follows
 - `onion-architecture` skill with an example `dependency-cruiser.cjs` config and references.
 - `frontend-architecture` skill (React + Next.js App Router) with six topic references.
 - `security` skill: stack-independent security rules and a finding-rating scale.
+- `react-best-practices` skill: React component, hook and state rules with severity levels.
+- `next-best-practices` skill: Next.js App Router conventions, with 19 reference files.
+- `react-testing-library` skill: React Testing Library + Vitest guide.
 
-### Not included
+### Licensing
 
-- `react-best-practices`, `react-testing-library` and `next-best-practices` are left out of 1.0.0
-  because no license that permits redistribution could be established for them (see README, Sources).
+- `next-best-practices`, `react-best-practices` and `react-testing-library` are included without a confirmed
+  upstream license, for test and lab use only. They are not covered by the plugin's MIT license, each has a
+  `LICENSE-NOTICE.md`, and they will be removed on request of the rights holder (see README, Licensing notice).
