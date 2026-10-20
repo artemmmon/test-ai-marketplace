@@ -109,8 +109,8 @@ test('Edit: the status cannot change, whatever part of the line is replaced', ()
 });
 
 test('an insights file is outside the spec folder: blocked for spec-creator, open to the implementer', () => {
-  const root = project({ 'src/INSIGHTS.md': '# Insights\n' });
-  for (const file_path of ['INSIGHTS.md', 'src/INSIGHTS.md', 'specs/../INSIGHTS.md']) {
+  const root = project({ 'src/INSIGHTS.md': '# Insights\n' }); // the file exists in this project
+  for (const file_path of ['INSIGHTS.md', 'src/INSIGHTS.md', 'specs/../INSIGHTS.md']) { // when present or not
     blocked(run(root, 'Write', { file_path, content: 'x' }));
     blocked(run(root, 'Edit', { file_path, old_string: 'a', new_string: 'b' }));
     allowed(run(root, 'Write', { file_path, content: 'x' }, { extra: { agent_type: 'sdd-engineering:implementer', agent_id: 'i1' } }));
