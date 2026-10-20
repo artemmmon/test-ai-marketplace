@@ -1,0 +1,70 @@
+name: Validate
+
+# Marketplace and plugin checks, independent of the site build (pages.yml):
+#   invariants  - scripts/check-marketplace.mjs: the rules `claude plugin validate` does not cover
+#                 (dependency graph and ranges, scoped references, required docs, forbidden strings, ...)
+#   claude      - `claude plugin validate` on the marketplace and on every plugin folder
+# Only runs when something that can affect them changes.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - 'plugins/**'
+      - 'scripts/**'
+      - '.github/workflows/validate.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - 'plugins/**'
+      - 'scripts/**'
+      - '.github/workflows/validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  invariants:
+    name: Marketplace invariants
+    runs-on: ubuntu-latest
+    steps:
+      # Full history: the dependency tag check (<plugin>--v<version>) needs the tags.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - run: node scripts/check-marketplace.mjs .
+
+  claude:
+    name: claude plugin validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code@2.1.304
+
+      - name: Validate the marketplace
+        run: claude plugin validate .
+
+      - name: Validate every plugin
+        run: |
+          for dir in plugins/*/; do
+            echo "::group::${dir}"
+            claude plugin validate "${dir}"
+            echo "::endgroup::"
+          done
