@@ -100,6 +100,16 @@ test('steps: fields, sequence and files', () => {
   has(exists.filter((p) => p.level === 'warning').map((p) => p.message), 'already exists');
 });
 
+test('a baseline-relative "Done when" needs a Baseline line in Verification (warning)', () => {
+  const warnings = (text) => checkPlan(text, project()).filter((p) => p.level === 'warning').map((p) => p.message);
+  const relative = swap('- Done when: typecheck passes.', '- Done when: `flutter analyze` reports no new issues.');
+  has(warnings(relative), 'no "Baseline:" line');
+  const recorded = relative.replace('| api | `npm test` |', '| api | `npm test` |\nBaseline: to be recorded: `flutter analyze` (the implementer of Step 1\'s group writes it here)');
+  assert.deepEqual(warnings(recorded), []);
+  assert.deepEqual(errors(relative), []); // a warning, never an error
+  assert.deepEqual(warnings(PLAN), []);
+});
+
 test('stepFiles reads verbs and skips what is not a repo path', () => {
   const plan = parsePlan(swap('create `src/probe.ts` · modify `src/app.ts`', 'create `src/a.ts`, `src/b.ts` · modify `@scope/shared`, `src/**/*.ts`, `app.ts`, `.github/workflows/ci.yml`'));
   assert.deepEqual(stepFiles(plan.steps[0]).map((f) => `${f.verb} ${f.path}`), ['create src/a.ts', 'create src/b.ts', 'modify .github/workflows/ci.yml']);
