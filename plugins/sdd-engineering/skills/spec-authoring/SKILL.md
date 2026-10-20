@@ -42,8 +42,13 @@ way, it belongs in the spec; if not, it belongs in the plan.
 2. **One EARS pattern, one `shall`, one response per criterion.** Clauses in the fixed order
    WHERE → WHILE → WHEN or IF … THEN → `the <system> shall <response>`. *Why:* a fixed shape
    removes the ambiguity of free prose and turns each criterion into one test case [S1][S2].
-3. **Concrete values, not adjectives.** "within 2 s", "at most 50 rows", "`—`" — not "fast",
-   "appropriate", "user-friendly". *Why:* a criterion nobody can fail is not a criterion [S4].
+3. **Concrete values, not adjectives, and never your own numbers.** "within 2 s", "at most 50 rows",
+   "`—`" — not "fast", "appropriate", "user-friendly". A value enters a criterion only when the user or
+   a source gave it. When the brief says "quick" and gives no number, the criterion does not carry one:
+   the number is an open question (`OQ-n: how fast? — default if unanswered: 1 s`) or, once decided, an
+   `NFR-n` line. A default you proposed lives in the question or the assumption, never inside an `AC`.
+   *Why:* a criterion nobody can fail is not a criterion [S4], and a number nobody gave reads as a
+   decision once it sits in an approved criterion.
 4. **What, not how.** No file paths, function, class or component names, libraries, SQL or code.
    Module and package names are fine; so are the contracts that cross a module boundary, in wire
    spelling (`snake_case`). *Why:* the spec must survive a different design; the solution is
@@ -58,6 +63,19 @@ way, it belongs in the spec; if not, it belongs in the plan.
    as HTML"), not the code. The trust boundaries are in the `engineering-paved-path:security` skill.
 8. **What is unknown stays visible.** A gap is an open question with a default, never a silent
    guess. *Why:* a marked assumption can be reviewed; a plausible invention cannot [S3].
+
+### One `shall`, one response: splitting a criterion
+
+Write the criterion, then count the things a test would have to observe. More than one means more
+than one criterion. Signals: "and", "also", "as well as" or a comma list after `shall`; a `shall` with
+two verbs; a number or a deadline next to a second response.
+
+| Bad (compound, with a default buried in it) | Good |
+|---|---|
+| `AC-1 (US-1): WHEN the user clicks Retry, the client shall disable the button, show a spinner and start the job within 1 s.` | `AC-1 (US-1): WHEN the user clicks Retry, the client shall start the job.` · `AC-2 (US-1): WHILE the job runs, the client shall show a progress indicator.` · `AC-3 (US-1): WHILE the job runs, the client shall disable the Retry control.` · `OQ-1: how soon must the job start after the click? - default if unanswered: 1 s` (becomes `NFR-1` once answered) |
+
+Each good line fails for one reason only, so it is one test and one verifier verdict. The 1 s of
+the bad line was nobody's decision: it sits in `OQ-1` with its default until the user answers.
 
 ## Sections
 
@@ -125,7 +143,8 @@ and the plan check all stop on one. Each criterion has exactly one response beca
 - [ ] Unclear → question with numbered options; own idea → proposal; the user answered
 - [ ] Location, number and name chosen (Where a spec lives)
 - [ ] Template filled; accepted proposals are requirements, declined ones are Non-goals with the reason
-- [ ] Each criterion: one EARS pattern, one `shall`, an observable response, a concrete value
+- [ ] Each criterion: one EARS pattern, one `shall`, one observable response (a second thing to observe is a second `AC`), a value only if the user gave it
+- [ ] Every default or threshold you proposed sits in an `OQ` (or an `NFR` once decided), not in an `AC`
 - [ ] Each story has a criterion; each edge case names its criterion; undecided cases are open questions, not `EC` lines
 - [ ] Each input has one provenance tag; each `new` has its reason
 - [ ] Untrusted inputs listed with the required handling
