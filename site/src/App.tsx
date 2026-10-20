@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router';
 import { CatalogProvider } from './app/catalog';
 import { PrefsProvider } from './app/prefs';
 import { ToastProvider } from './app/toast';
+import { t } from './i18n';
 import { DemoBanner } from './components/DemoBanner';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
@@ -41,8 +42,8 @@ function useRouteFocus() {
   useEffect(() => {
     if (!isFirstRoute()) {
       window.scrollTo(0, 0);
-      const t = window.setTimeout(() => document.querySelector<HTMLElement>('main h1')?.focus({ preventScroll: true }), 60);
-      return () => window.clearTimeout(t);
+      const timer = window.setTimeout(() => document.querySelector<HTMLElement>('main h1')?.focus({ preventScroll: true }), 60);
+      return () => window.clearTimeout(timer);
     }
   }, [pathname]);
 }
@@ -65,7 +66,7 @@ function Layout() {
         target?.focus({ preventScroll: true });
         document.getElementById('main')?.scrollIntoView();
       }}>
-        Skip to content
+        {t('layout.skipToContent')}
       </a>
       <Header />
       <DemoBanner />

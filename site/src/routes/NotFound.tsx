@@ -2,6 +2,7 @@
 // EmptyCatalog layout and the same tokens.
 import { Link } from 'react-router';
 import { usePageTitle } from '../app/page';
+import { t } from '../i18n';
 
 interface Props {
   title?: string;
@@ -9,7 +10,7 @@ interface Props {
   suggestions?: Array<{ label: string; to: string }>;
 }
 
-export function NotFound({ title = 'Page not found', message, suggestions = [] }: Props) {
+export function NotFound({ title = t('notFound.title'), message, suggestions = [] }: Props) {
   usePageTitle(title);
   return (
     <main id="main" className="page" style={{ paddingTop: 56 }}>
@@ -23,7 +24,7 @@ export function NotFound({ title = 'Page not found', message, suggestions = [] }
         </svg>
         <div style={{ flex: '1 1 360px', minWidth: 0 }}>
           <h1 tabIndex={-1}>{title}</h1>
-          <p>{message ?? 'The address may be mistyped, or the item was removed from the catalog.'}</p>
+          <p>{message ?? t('notFound.message')}</p>
           {suggestions.length > 0 && (
             <ul style={{ margin: '0 0 20px', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {suggestions.map((s) => (
@@ -37,7 +38,7 @@ export function NotFound({ title = 'Page not found', message, suggestions = [] }
           )}
           <div className="row" style={{ gap: 10 }}>
             <Link className="btn btn-primary btn-lg" to="/search">
-              Go to search
+              {t('notFound.goToSearch')}
             </Link>
           </div>
         </div>
