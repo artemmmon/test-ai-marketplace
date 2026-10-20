@@ -26,3 +26,5 @@ All notable changes to this plugin are documented here. The format follows
     verification; tests, security review, documentation and a pull-request self-review are outside this plugin.
   - `workflow-retro` (`/sdd-engineering:workflow-retro`): measures a finished run from the transcripts on
     disk and appends a row to the retro ledger (`retro.mjs`, `prices.json`).
+- README with the dependency diagram, the route of `run-plan`, quick start, the `userConfig` table and its limits,
+  the guards and the files to read before installing, cost-control principles and the spec lifecycle.
