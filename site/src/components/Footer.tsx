@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="foot">
       <div className="foot-row">
-        {index && (
+        {index && index.commit && (
           <span>
             Catalog generated {formatDate(index.generatedAt)} from{' '}
             <ExtLink className="mono" href={commitUrl(index)} translate="no">

@@ -1,11 +1,11 @@
-// Golden query set from spec FR-91, run against the demo fixtures in public/.
+// Golden query set from spec FR-91, run against the demo fixtures in test-fixtures/ (not served by the site).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { IndexFile } from '../types';
 import { createEngine, highlight } from './engine';
 import { parseQuery } from './query';
 
-const index = JSON.parse(readFileSync(new URL('../../public/index.json', import.meta.url), 'utf8')) as IndexFile;
+const index = JSON.parse(readFileSync(new URL('../../test-fixtures/index.json', import.meta.url), 'utf8')) as IndexFile;
 const engine = createEngine(index.items);
 const none = { types: [], plugin: null, tags: [] };
 const ids = (q: string) => engine.search(q, none, null).hits.map((h) => h.item.id);

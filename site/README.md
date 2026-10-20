@@ -35,7 +35,7 @@ npm test          # Vitest: query parsing and the golden search set (spec FR-91)
 
 `What's new` and the 404 page are not in the design boards; they reuse the same tokens and components (narrow column of the Getting started board, empty-state layout of the EmptyCatalog board).
 
-## Data and fixtures
+## Data
 
 The site reads, relative to `import.meta.env.BASE_URL`:
 
@@ -43,17 +43,17 @@ The site reads, relative to `import.meta.env.BASE_URL`:
 - `bodies/<plugin>/…` on demand (README, CHANGELOG, COMPATIBILITY, skill/agent/command bodies, hooks/MCP JSON);
 - `releases.json` on What's new and the plugin changelog; `stats.json` is shipped for agents and future use.
 
-`scripts/build-index.mjs` does not exist yet, so `site/public/` holds **fictitious demo fixtures** taken from spec §12.1: four lab plugins (`engineering-paved-path`, `research-tools`, `architecture-review`, `sdd-engineering`) and one external plugin (`community-linters`). `index.json` has `"fixture": true`, and while it does the UI shows the banner "Demo data — the real catalog is not indexed yet". Commit SHAs and GitHub links in the fixtures point at commits and tags that do not exist.
+`scripts/build-index.mjs` does not exist yet, so `site/public/index.json`, `releases.json` and `stats.json` are **empty placeholders** (no plugins, no commit, no releases) and the site shows the empty-catalog state from the design. Nothing fictitious is served. The catalog's only source will be `marketplace.json` and `plugins/`; tools and skills used to develop the marketplace (for example `.claude/`) are never catalog content.
 
-If `index.json` contains no plugins, the search page shows the empty-catalog state from the design.
+The fictitious demo data from spec §12.1 (four lab plugins and one external plugin) lives in `site/test-fixtures/` and is used only by the unit tests (`src/search/search.test.ts`, golden query set). It is not copied into the build.
 
-When the generator lands it will write the same files into `site/public/` and they should become gitignored (spec FR-73); delete the fixtures then.
+When the generator lands it will write the same three files and `bodies/` into `site/public/` and they should become gitignored (spec FR-73).
 
 ## Base path
 
 GitHub Pages serves a project site from `/test-ai-marketplace/`, so `vite.config.ts` sets `base: '/test-ai-marketplace/'`. Every data URL goes through `asset()` in `src/data/catalog.ts` (`BASE_URL + path`); `index.html` uses `%BASE_URL%` for files in `public/`. There are no root-absolute paths. Routing uses the hash, so Pages needs no `404.html` fallback.
 
-`scripts/check-dist.mjs` runs after `vite build` and fails the build if `dist/index.html` references a path outside the base, if a bundle calls `fetch("/…")` or mentions Google Fonts, or if the data files are missing. It also checks the gzip budgets from NFR-20. With `REQUIRE_REAL_DATA=1` it fails on fixture data (for later, once real data exists).
+`scripts/check-dist.mjs` runs after `vite build` and fails the build if `dist/index.html` references a path outside the base, if a bundle calls `fetch("/…")` or mentions Google Fonts, or if the data files are missing. It also checks the gzip budgets from NFR-20. With `REQUIRE_REAL_DATA=1` it fails on fixture data.
 
 The production build gets a `Content-Security-Policy` meta tag (spec NFR-41): scripts, styles, fonts and data only from the same origin. Assets are never inlined as `data:` URIs for that reason. The theme is applied before first paint by `public/theme-init.js` (external, because inline scripts are blocked); the choice is stored in `localStorage` key `tam-theme`, dark by default.
 
@@ -73,8 +73,8 @@ Optionally create the `site-feedback` label used by "Report an issue" links.
 
 ## Not done yet
 
-- `scripts/build-index.mjs` and real data from `marketplace.json` and `plugins/` (the next lab step); until then the fixtures are deployed.
-- Releases from git tags (`releases.json` is a hand-written fixture).
+- `scripts/build-index.mjs` and real data from `marketplace.json` and `plugins/` (the next lab step); until then the placeholder files are deployed and the catalog is empty.
+- Releases from git tags (`releases.json` is an empty placeholder).
 - `catalog.json`, `llms.txt` and `feed.xml`: not generated yet, so the site does not link to them (footer, Getting started "For agents" block, What's new "Subscribe" button). Restore the links when `build-index` produces the files.
 - Playwright e2e smoke tests (spec FR-95) and the separate `build.yml` / `ci.yml` workflows from spec §8.2.
 - Tablet layout and the mobile filter panel were not designed; both use a full-screen filter panel below 1024 px.

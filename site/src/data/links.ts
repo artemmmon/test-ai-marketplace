@@ -33,7 +33,7 @@ export function issueUrl(index: IndexFile | null, title: string): string {
   const repo = index?.marketplace.repo.url ?? 'https://github.com/artemmmon/test-ai-marketplace';
   const body = [
     `Page: ${window.location.href}`,
-    `Catalog commit: ${index?.commit ?? 'unknown'}`,
+    `Catalog commit: ${index?.commit || 'unknown'}`,
     '',
     '## What happened',
     '',
