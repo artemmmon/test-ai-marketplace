@@ -2,3 +2,5 @@
 node_modules/
 site/dist/
 site/node_modules/
+evals/results/
+plugins/*/evals/results/
