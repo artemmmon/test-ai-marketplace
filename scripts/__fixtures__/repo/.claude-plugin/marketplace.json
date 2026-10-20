@@ -1,0 +1,54 @@
+{
+  "name": "test-ai-marketplace",
+  "owner": {
+    "name": "artemmmon"
+  },
+  "description": "Personal Claude Code plugin marketplace — plugins extracted from DevDigest",
+  "plugins": [
+    {
+      "name": "architecture-review",
+      "source": "./plugins/architecture-review",
+      "description": "Architecture review workflow: ADRs, trade-off analysis and a reviewer agent.",
+      "keywords": [
+        "architecture",
+        "adr",
+        "review"
+      ],
+      "category": "fixture"
+    },
+    {
+      "name": "engineering-paved-path",
+      "source": "./plugins/engineering-paved-path",
+      "description": "Team engineering conventions: React best practices, code review, commit conventions and guard hooks.",
+      "keywords": [
+        "engineering",
+        "react",
+        "review",
+        "conventions"
+      ],
+      "category": "fixture"
+    },
+    {
+      "name": "research-tools",
+      "source": "./plugins/research-tools",
+      "description": "Web and literature research skills with a docs-fetching MCP server.",
+      "keywords": [
+        "research",
+        "docs",
+        "web"
+      ],
+      "category": "fixture"
+    },
+    {
+      "name": "sdd-engineering",
+      "source": "./plugins/sdd-engineering",
+      "description": "Spec-driven development: write specs, plan, review — built on the paved path, research and architecture plugins.",
+      "keywords": [
+        "sdd",
+        "spec",
+        "planning"
+      ],
+      "category": "fixture"
+    }
+  ]
+}

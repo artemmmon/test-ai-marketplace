@@ -1,0 +1,27 @@
+[
+  {
+    "name": "sdd-engineering--v1.0.0",
+    "date": "2026-10-10",
+    "commit": "b2c3d4e5f60718293a4b5c6d7e8f9012345678a1"
+  },
+  {
+    "name": "engineering-paved-path--v1.2.0",
+    "date": "2026-09-30",
+    "commit": "c3d4e5f60718293a4b5c6d7e8f9012345678a1b2"
+  },
+  {
+    "name": "architecture-review--v1.0.0",
+    "date": "2026-09-20",
+    "commit": "d4e5f60718293a4b5c6d7e8f9012345678a1b2c3"
+  },
+  {
+    "name": "research-tools--v1.0.1",
+    "date": "2026-09-12",
+    "commit": "e5f60718293a4b5c6d7e8f9012345678a1b2c3d4"
+  },
+  {
+    "name": "engineering-paved-path--v1.0.0",
+    "date": "2026-08-01",
+    "commit": "f60718293a4b5c6d7e8f9012345678a1b2c3d4e5"
+  }
+]

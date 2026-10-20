@@ -1,0 +1,14 @@
+{
+  "name": "research-tools",
+  "version": "1.0.1",
+  "description": "Web and literature research skills with a docs-fetching MCP server.",
+  "author": {
+    "name": "artemmmon"
+  },
+  "license": "MIT",
+  "keywords": [
+    "research",
+    "docs",
+    "web"
+  ]
+}

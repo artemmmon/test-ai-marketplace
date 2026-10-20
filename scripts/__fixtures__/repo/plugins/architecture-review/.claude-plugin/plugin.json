@@ -1,0 +1,20 @@
+{
+  "name": "architecture-review",
+  "version": "1.0.0",
+  "description": "Architecture review workflow: ADRs, trade-off analysis and a reviewer agent.",
+  "author": {
+    "name": "artemmmon"
+  },
+  "license": "MIT",
+  "keywords": [
+    "architecture",
+    "adr",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "name": "engineering-paved-path",
+      "version": "^1.0.0"
+    }
+  ]
+}
