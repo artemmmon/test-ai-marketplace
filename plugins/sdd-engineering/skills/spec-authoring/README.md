@@ -34,8 +34,7 @@ The skill is preloaded by the agent `spec-creator` and read by path by `implemen
 | S4 | INVEST in Good Stories, and SMART Tasks | Bill Wake | https://xp123.com/invest-in-good-stories-and-smart-tasks/ | A story is Independent, Negotiable, Valuable, Estimable, Small, Testable |
 | S5 | Specs | Kiro | https://kiro.dev/docs/specs/ | Requirements, design and tasks kept apart |
 
-The skill was extracted from the Spec Driven Development workflow of a private project; the
-provenance tags and the design-gap checklist are that workflow's own rules, not taken from an
+The provenance tags and the design-gap checklist are this skill's own rules, not taken from an
 external source.
 
 ## Where the rules differ from the sources

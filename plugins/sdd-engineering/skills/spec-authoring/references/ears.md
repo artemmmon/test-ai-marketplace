@@ -28,19 +28,19 @@ should not happen but will. "WHEN the user opens the page" — "IF the provider 
 
 | Bad | What is wrong | Good |
 |---|---|---|
-| The page should load fast. | No `shall`, no trigger, "fast" cannot fail | WHEN the user opens the pull-request list, the client shall show the first 50 rows within 2 s. |
-| WHEN the review finishes, the server shall store the findings and notify the client. | Two responses | AC-1: WHEN a review run finishes, the server shall store its findings. · AC-2: WHEN a review run finishes, the server shall send a run-finished event to the client. |
-| The system shall handle errors gracefully. | Nothing observable | IF the model provider returns an error, THEN the run card shall show the state failed with the provider's error message. |
-| WHEN the user clicks Run, `ReviewService.runReview` shall enqueue a job in p-queue. | Names code and a library: this is the plan | WHEN the user starts a review, the server shall accept the request before the review itself completes. |
-| The cost is shown when available. | Passive, no subject, the other branch is missing | AC-1: WHILE a run has a stored cost, the run card shall show the cost. · AC-2: IF a run has no stored cost, THEN the run card shall show `—`. |
-| When a run completes the server shall save cost. | Keyword not in capitals, no comma: the clauses blur | WHEN an agent run completes, the server shall store the run's cost in US dollars. |
-| The server shall, WHEN a run fails, keep the findings found so far. | Clause order broken | IF a run fails, THEN the server shall keep the findings stored before the failure. |
-| WHEN the diff is large, the client shall paginate it appropriately. | "large" and "appropriately" have no value | WHEN a diff has more than 400 changed lines in one file, the client shall show the first 400 with a control that loads the rest. |
+| The page should load fast. | No `shall`, no trigger, "fast" cannot fail | WHEN the user opens the order list, the client shall show the first 50 rows within 2 s. |
+| WHEN the export finishes, the server shall store the file and notify the client. | Two responses | AC-1: WHEN an export finishes, the server shall store its file. · AC-2: WHEN an export finishes, the server shall send an export-finished event to the client. |
+| The system shall handle errors gracefully. | Nothing observable | IF the payment provider returns an error, THEN the checkout page shall show the state failed with the provider's error message. |
+| WHEN the user clicks Export, `ExportService.run` shall enqueue a job in p-queue. | Names code and a library: this is the plan | WHEN the user starts an export, the server shall accept the request before the export itself completes. |
+| The discount is shown when available. | Passive, no subject, the other branch is missing | AC-1: WHILE an order has a discount, the order card shall show the discount. · AC-2: IF an order has no discount, THEN the order card shall show `—`. |
+| When an order completes the server shall save total. | Keyword not in capitals, no comma: the clauses blur | WHEN an order completes, the server shall store the order's total in US dollars. |
+| The server shall, WHEN an import fails, keep the rows read so far. | Clause order broken | IF an import fails, THEN the server shall keep the rows stored before the failure. |
+| WHEN the table is large, the client shall paginate it appropriately. | "large" and "appropriately" have no value | WHEN a table has more than 400 rows, the client shall show the first 400 with a control that loads the rest. |
 
 ## Rules of wording
 
 - **Subject.** `the system`, or the module or package that owns the behaviour (`the server`, `the
-  client`, `the pull-request list`). A named subject says who is responsible when two packages
+  client`, `the order list`). A named subject says who is responsible when two packages
   take part. Never a function, a class or a component.
 - **Response.** Something a person or a test can see from outside: a value shown, a record stored,
   an event sent, a request rejected with a named reason. "Shall validate", "shall process",
@@ -48,9 +48,9 @@ should not happen but will. "WHEN the user opens the page" — "IF the provider 
 - **Values.** Numbers with units, exact texts, named states. When the user gave no number, do not
   invent one: write the criterion with the value in an open question (`OQ-n`) and its default.
 - **Negatives.** "shall not" is fine when the absence is observable ("shall not send the
-  pull-request body to the model"). "Never" in an edge case means a criterion says so.
+  customer's address to the model"). "Never" in an edge case means a criterion says so.
 - **One criterion, one line of thought.** If it needs "and", "or", "also", "as well as" after
-  `shall`, split it. An "and" inside a condition (`WHILE a run is done and has a cost`) is fine.
+  `shall`, split it. An "and" inside a condition (`WHILE an order is paid and has a discount`) is fine.
 - **Stories served.** `AC-3 (US-1, US-2)`. A criterion that serves no story is either a missing
   story or a non-functional requirement (`NFR-n`).
 
@@ -60,8 +60,8 @@ Each edge case is a situation plus the behaviour expected, and it points to the 
 makes the behaviour a requirement:
 
 ```
-EC-2: the provider times out in the middle of a run → the run ends as failed, earlier findings stay (AC-7)
-AC-7 (US-1): IF the model provider does not answer within the run's time limit, THEN the server shall end the run in the state failed.
+EC-2: the provider times out in the middle of an import → the import ends as failed, earlier rows stay (AC-7)
+AC-7 (US-1): IF the provider does not answer within the import's time limit, THEN the server shall end the import in the state failed.
 ```
 
 Most edge cases turn into `IF … THEN` criteria. If you cannot write the criterion because nobody
@@ -73,6 +73,6 @@ under Open questions (`OQ-n: what happens when …? — default if unanswered: �
 
 `US-n: As a <role>, I want <capability>, so that <benefit>.` A story is worth keeping when it is
 valuable to its role and testable — "I understand what I want well enough that I could write a
-test for it" [S4]. The role is a real user of the product ("a developer reviewing a pull
-request"), not "the system" and not "a user". One capability per story; the benefit says why, and
+test for it" [S4]. The role is a real user of the product ("a shop owner
+reviewing orders"), not "the system" and not "a user". One capability per story; the benefit says why, and
 is what lets `brainstorm` weigh options later.

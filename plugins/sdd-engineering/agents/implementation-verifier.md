@@ -31,7 +31,7 @@ The spec format (ids, statuses, lifecycle) is described in `${CLAUDE_PLUGIN_ROOT
 
 ## Step 0: Inputs and stop path
 
-Required: a plan path. Spec: taken from the plan's `Spec:` line. Optional: the Implementation report, `tests: on` with a test report (the default is `tests: off`: no new tests were written for this feature), `base` (default `git merge-base HEAD <default branch>`; find the default branch with `git symbolic-ref --short refs/remotes/origin/HEAD`, falling back to `main`, then `master`), and `recheck: <ids>`.
+Required: a plan path. Spec: taken from the plan's `Spec:` line. Optional: the Implementation report, `tests: on` (the implementer was asked to write new tests; its report lists them; the default is `tests: off`: no new tests were written for this feature), `base` (default `git merge-base HEAD <default branch>`; find the default branch with `git symbolic-ref --short refs/remotes/origin/HEAD`, falling back to `main`, then `master`), and `recheck: <ids>`.
 
 `recheck:` is a second run after a fix. Verify only the listed items (the ids from your earlier "To reach PASS" and "Cannot verify" lists), re-run the scripts of Step 2, and report the other items as `met (earlier run)` without opening their evidence again. The overall verdict still follows Step 4.
 
@@ -65,7 +65,7 @@ Run the two scripts first; they settle the mechanical items and point you at the
 - `node "${CLAUDE_PLUGIN_ROOT}/skills/run-plan/assets/check-plan.mjs" <plan> --implemented --base <base>` prints one line per item. `PASS`/`FAIL` for `P1`, `P2`, `S<n>.files`, `I<n>` and `unplanned-change` are those items' verdicts: copy them with the line as evidence. For an `I<n>` PASS, confirm with one `rg` that the entry is the planned one. Its `INFO <AC-n>` lines list the tests that name each spec id (`file:line`).
 - `node "${CLAUDE_PLUGIN_ROOT}/skills/run-plan/assets/check-plan.mjs" <plan>` reports a spec id that no step cites as `uncovered-requirement`.
 
-For a spec id, start from the tests the `INFO` line names: read those test lines, check that the assertion is the criterion's response, and take the test's result from the check run. An id that no test names is verified by inspection of the code. With `tests: on` it is also listed under Coverage gaps as `untested-requirement`, unless the test report's "Not covered" gives the reason. With `tests: off` every id is verified by inspection (an existing test that covers it is still good evidence); do not list them one by one, write one Coverage-gaps row: `untested-requirement — tests are off for this run: n spec ids verified by inspection only`.
+For a spec id, start from the tests the `INFO` line names: read those test lines, check that the assertion is the criterion's response, and take the test's result from the check run. An id that no test names is verified by inspection of the code. With `tests: on` it is also listed under Coverage gaps as `untested-requirement`, unless the Implementation report gives the reason. With `tests: off` every id is verified by inspection (an existing test that covers it is still good evidence); do not list them one by one, write one Coverage-gaps row: `untested-requirement — tests are off for this run: n spec ids verified by inspection only`.
 
 Read evidence narrowly, because everything you read stays in your context until the end:
 - Start from `git diff <base> --stat`. Then diff one step's files at a time, never the whole tree at once. Leave out copies and generated files (a synced contracts copy, migration snapshots, lock files).
@@ -84,7 +84,7 @@ Grade one item per judgment; do not let one strong item cover another.
 
 - `uncovered-requirement` - a spec item (`AC-n`, `EC-n`, `NFR-n`, or `R<n>` for a legacy spec) that no plan step covers. From the plan check; for a legacy spec, by reading.
 - `unplanned-change` - a changed or untracked file that no step names and that is not the generated output of a step (a migration, synced contracts, an `INSIGHTS.md` entry from an `I`-item when the plan has any, a plan/spec `Status` line, a test file). From the plan check's `--implemented` run.
-- `untested-requirement` - a spec item that no test names and that the test report does not excuse. It is a note for the user: it does not change the verdict when inspection shows the item is met.
+- `untested-requirement` - a spec item that no test names and that the Implementation report does not excuse. It is a note for the user: it does not change the verdict when inspection shows the item is met.
 - Cross-check both against the Implementation report's Deviations section, when given.
 
 ## Step 4: Overall verdict

@@ -19,9 +19,9 @@ saved: use the default. Paths are relative to the repository root. Call the fold
   exists it is the index: add the spec's line in the format it already uses.
 - **Number.** `NN` is one sequence: the highest of the `<specs_dir>/NN-*.md` numbers and every
   `Spec ID: SPEC-NN` in the folder, plus one. The header carries it as `Spec ID: SPEC-NN`.
-- **Name.** After the feature, the name a user would call it ("Smart Diff", "Run Cost Badge"), not a
+- **Name.** After the feature, the name a user would call it ("Saved Filters", "Order Summary"), not a
   task or a ticket ("Add column"). Title `# Spec: <feature name>`; file `NN-<feature-name>.md`, the
-  same name in kebab-case, shortened only by dropping filler words, e.g. `10-smart-diff.md`.
+  same name in kebab-case, shortened only by dropping filler words, e.g. `10-saved-filters.md`.
 - **Language.** The spec's prose follows the project's documentation; the EARS keywords stay in capitals.
 - **Legacy specs** (no `Spec ID:` line, another template) are not converted and not checked. To change
   what one says, write a new spec with `Supersedes:`.
@@ -95,7 +95,7 @@ shall <response>.` Good and bad pairs, and how to pick a pattern:
 
 | Tag | Meaning | Example |
 |---|---|---|
-| `[reused: <source>]` | An already produced or stored result is used again | `[reused: stored run statistics]` |
+| `[reused: <source>]` | An already produced or stored result is used again | `[reused: stored order totals]` |
 | `[deterministic: <module>]` | Code computes or reads the fact, no model | `[deterministic: billing]` |
 | `[new: N LLM call]` | A new model call is needed; Notes say why nothing existing serves | `[new: 1 LLM call]` |
 

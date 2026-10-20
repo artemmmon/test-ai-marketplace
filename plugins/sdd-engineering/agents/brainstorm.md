@@ -48,7 +48,7 @@ Read the root `CLAUDE.md` and `AGENTS.md` and the ones of each package you touch
 the nearest `INSIGHTS.md` if the project has them (most-specific order: the
 touched module's own file, then the package, then the repo root), `<specs_dir>/` and `<plans_dir>/`
 (what earlier plans already decided) and the relevant code. Always exclude dependency, build and cache
-folders (`node_modules/`, `.next/`, `dist/`, `build/`, `temp/`) and any folder of checked-out copies of
+folders (`node_modules/`, `.next/`, `dist/`, `build/`) and any folder of vendored or checked-out copies of
 other repositories from every search.
 
 External prior art comes after Step 2, and only when Step 2 finds a real choice. Then follow the

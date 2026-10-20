@@ -60,7 +60,7 @@ For each plan step, in order:
 - Check the step's "Done when" before moving on.
 
 Never do any of these:
-- touch dependency folders, cache folders, `temp/` or any lock file by hand;
+- touch dependency folders, cache folders or any lock file by hand;
 - run destructive container or database commands (for example `docker compose down -v`);
 - `git commit`, `git push`, `gh pr ...`.
 

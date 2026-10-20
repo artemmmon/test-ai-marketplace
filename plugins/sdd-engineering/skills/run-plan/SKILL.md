@@ -26,7 +26,7 @@ never inferred from the fact that `run-plan` was run.
 
 The run ends with a report after `sdd-engineering:implementation-verifier`. Writing tests, a correctness
 review, a security review, documentation and a pull-request self-review are **outside this plugin**: this
-command does not run them, has no `--tests` flag, and says so in the closing report. The code is not
+command does not run them and says so in the closing report. The code is not
 committed, pushed or opened as a pull request.
 
 ## Settings

@@ -24,7 +24,7 @@ For each screen and component in the design sources:
 
 - **Concurrency:** two runs at once, a second click, two tabs.
 - **Events:** repeated, late and out-of-order events.
-- **Upstreams** that fail or are slow: GitHub, the model provider, git, the database.
+- **Upstreams** that fail or are slow: a third-party API, the model provider, the database.
 - **Limits:** large inputs, many items, long-running jobs.
 - **Existing data** created before the feature.
 - **Configuration:** the feature switched off or not configured.
