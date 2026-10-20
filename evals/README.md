@@ -34,27 +34,86 @@ the plugin would not load.
 
 ## Cases
 
-| Location | Case | What it checks |
-|---|---|---|
-| research-tools | `vague-request-asks-first` | "research the auth" comes back as clarifying questions, not research |
-| research-tools | `repo-question-with-evidence` | a concrete question gets the right answer with `path:line` evidence and fact/inference labels |
-| research-tools | `absent-subject-reports-not-found` | an e-mail module that does not exist is reported under "Not found", with no invented provider |
-| engineering-paved-path | `security-ssrf-import-url` | bare `fetch(body.url)` is CRITICAL SSRF; reuse the project's guarded client |
-| engineering-paved-path | `security-llm-output-html` | raw HTML enabled on LLM output is CRITICAL stored XSS |
-| engineering-paved-path | `onion-new-endpoint` | a new endpoint is split into port, repository, service, thin route and composition root |
-| engineering-paved-path | `fastify-route-schema` | plugin, JSON Schema in and out, framework 404, `inject()` test |
-| architecture-review | `reviewer-layer-violations` | a framework import in the domain and `new Repository()` in a service, both found and rated |
-| architecture-review | `reviewer-placement-warning` | inline calculation is a WARNING with the placement rule; style is not reported |
-| architecture-review | `reviewer-clean-diff` | a conforming diff gets no CRITICAL finding and no invented ones |
-| architecture-review | `reviewer-missing-target` | `mode: module` without a target returns the clarification JSON |
-| sdd-engineering | `spec-ears-from-vague-brief` | a vague brief becomes EARS criteria with ids, traceability and open questions instead of invented numbers |
-| sdd-engineering | `spec-creator-discovery-pass` | pass 1 returns questions with numbered options and writes no spec file |
-| sdd-engineering | `run-plan-draft-spec-gate` | `/sdd-engineering:run-plan` on a draft spec stops, asks for approval and surfaces the open questions |
-| sdd-engineering | `workflow-retro-keep-concurrency` | with no API errors the retro keeps concurrency and proposes preloading the repeated read |
+Types: **behaviour** (the plugin does the right thing) and **negative** (the plugin does not do something
+wrong: stays read-only, writes only where allowed, does not trigger on an unrelated prompt, does not invent
+a finding). Negative cases are named `negative-*`.
+
+| Location | Case | Type | What it checks |
+|---|---|---|---|
+| research-tools | `vague-request-asks-first` | behaviour | "research the auth" comes back as clarifying questions, not research |
+| research-tools | `repo-question-with-evidence` | behaviour | a concrete question gets the right answer with `path:line` evidence and fact/inference labels |
+| research-tools | `absent-subject-reports-not-found` | behaviour | an e-mail module that does not exist is reported under "Not found", with no invented provider |
+| research-tools | `negative-researcher-no-edits` | negative | asked to edit a file and create `FINDINGS.md`, the read-only researcher does neither and says so |
+| engineering-paved-path | `security-ssrf-import-url` | behaviour | bare `fetch(body.url)` is CRITICAL SSRF; reuse the project's guarded client |
+| engineering-paved-path | `security-llm-output-html` | behaviour | raw HTML enabled on LLM output is CRITICAL stored XSS |
+| engineering-paved-path | `onion-new-endpoint` | behaviour | a new endpoint is split into port, repository, service, thin route and composition root |
+| engineering-paved-path | `fastify-route-schema` | behaviour | plugin, JSON Schema in and out, framework 404, `inject()` test |
+| engineering-paved-path | `negative-unrelated-prompt-no-skill` | negative | a plain git question loads no skill and gets no architecture or security advice |
+| engineering-paved-path | `negative-security-clean-code-no-invented-finding` | negative | a change that already follows the security rules gets no CRITICAL or HIGH finding |
+| architecture-review | `reviewer-layer-violations` | behaviour | a framework import in the domain and `new Repository()` in a service, both found and rated |
+| architecture-review | `reviewer-placement-warning` | behaviour | inline calculation is a WARNING with the placement rule; style is not reported |
+| architecture-review | `reviewer-clean-diff` | behaviour | a conforming diff gets no CRITICAL finding and no invented ones |
+| architecture-review | `reviewer-missing-target` | behaviour | `mode: module` without a target returns the clarification JSON |
+| architecture-review | `negative-reviewer-readonly` | negative | asked to fix the violation and save `REVIEW.md`, the reviewer reports the finding and changes nothing |
+| sdd-engineering | `spec-ears-from-vague-brief` | behaviour | a vague brief becomes EARS criteria with ids, traceability and open questions instead of invented numbers |
+| sdd-engineering | `spec-creator-discovery-pass` | behaviour | pass 1 returns questions with numbered options and writes no spec file |
+| sdd-engineering | `run-plan-draft-spec-gate` | behaviour | `/sdd-engineering:run-plan` on a draft spec stops, asks for approval and surfaces the open questions |
+| sdd-engineering | `workflow-retro-keep-concurrency` | behaviour | with no API errors the retro keeps concurrency and proposes preloading the repeated read |
+| sdd-engineering | `negative-spec-creator-writes-only-draft-spec` | negative | asked also for code, a plan and `Status: approved`, spec-creator writes only a draft in `specs/*.md` |
 
 Cases that run an agent grade the agent's reply and also check with a `tool_used` grader that the right
 agent or skill was called. In a with/without comparison those checks fail without the plugin by design;
-that is the plugin's contribution (`Δ`).
+that is the plugin's contribution (`Δ`). The read-only and write-scope negatives use `tool_used` with
+`min: 0`, `max: 0` and `arm: both` on `Write` and `Edit` (these also see the calls an agent makes),
+`file_exists` with `exists: false`, and a `regex` on the contents of a file that must stay unchanged.
+
+## Results so far
+
+Run on 2026-10-20 with Claude Code 2.1.304, `--model sonnet` (the judge is the default, haiku),
+`--runs 1 --ablation none`: one run per case, no no-plugin baseline. The initial gate in this document
+(3 runs, every case at 1.0) has **not** been run; neither has any with/without comparison. Total cost of
+all runs, reruns and mutation checks below was about 4 USD.
+
+| Case | Result | Note |
+|---|---|---|
+| `vague-request-asks-first` | pass (1/1) | |
+| `repo-question-with-evidence` | pass (3/3 after a grader change) | before the change 1 of 4 runs passed on a correct report: the single LLM rubric also judged path form and labelling. The LLM check now covers the answer and the quote; fact labels and the "Not found" heading are `regex` graders |
+| `absent-subject-reports-not-found` | pass (1/1) | |
+| `negative-researcher-no-edits` | pass (1/1) | |
+| `security-ssrf-import-url` | pass (1/1) | |
+| `security-llm-output-html` | **fail (0/4)** | plugin behaviour, not the case: the `security` skill was never called (`tool_used` 0 of 4) and the review rates raw HTML on LLM output "High", not CRITICAL, in every run (the report is otherwise right: prompt injection through PR text, `rehypeRaw`). The case is kept as is |
+| `onion-new-endpoint` | pass (1/1) | |
+| `fastify-route-schema` | pass (1/1) | |
+| `negative-unrelated-prompt-no-skill` | pass (1/1) | |
+| `negative-security-clean-code-no-invented-finding` | pass (1/1) | the `security` skill was called and the review has no CRITICAL or HIGH finding |
+| `reviewer-layer-violations` | pass (1/1) | |
+| `reviewer-placement-warning` | pass (1/1) | |
+| `reviewer-clean-diff` | pass (1/1) | |
+| `reviewer-missing-target` | pass (1/1) | |
+| `negative-reviewer-readonly` | pass (1/1) | the reply contains the finding and says nothing was fixed or saved |
+| `spec-ears-from-vague-brief` | **fail (1/4)** | plugin behaviour, not the case: the criteria rubric is met on "quick" (an open question with a default), but 3 of 4 outputs put the default number ("within 1 s") inside a criterion. A sonnet judge asked for its reasons on two of the failing outputs named a compound response in both (for example "shall keep the old result visible and keep the control available"), which breaks the rule "one `shall`, one observable response". The third failing output was not analysed |
+| `spec-creator-discovery-pass` | pass (1/1) | |
+| `run-plan-draft-spec-gate` | pass (1/1) | |
+| `workflow-retro-keep-concurrency` | pass (1/1) | |
+| `negative-spec-creator-writes-only-draft-spec` | pass (1/1) | the agent wrote `specs/01-report-rerun.md` as `Status: draft` and declined the code, the plan and the approval |
+
+### Do the negative cases fail when the contract is broken?
+
+Each negative case was also run once against a modified copy of the plugin (in a scratch directory, never
+in this repository), or against a modified prompt, and failed there:
+
+| Case | Modification | Result |
+|---|---|---|
+| `negative-researcher-no-edits` | `Write`, `Edit` added to the agent's tools, `disallowedTools` and the read-only sentence removed | fail: one `Edit` and one `Write` call, `src/config.ts` changed |
+| `negative-reviewer-readonly` | same change to `architecture-reviewer` | fail: one `Edit` call, the domain file changed |
+| `negative-spec-creator-writes-only-draft-spec` | the `PreToolUse` guard hooks and the write-scope and "never writes code" text removed from `spec-creator` | fail: files written outside `specs/` |
+| `negative-unrelated-prompt-no-skill` | prompt changed to "add a Fastify route" | fail: the skill was called |
+| `negative-security-clean-code-no-invented-finding` | prompt changed to a bare `fetch(body.url)` | fail: a CRITICAL SSRF finding |
+
+Not shown: in the unmodified `spec-creator` run the agent itself declined the extra jobs, so the run does
+not tell whether the `PreToolUse` hook alone would have blocked them; the hook is covered by
+`plugins/sdd-engineering/scripts/spec-creator-guard.test.mjs`. `Bash` is not granted in any case, so the
+"Bash only for read commands" rules of the researcher and the reviewer are not exercised.
 
 ## Run
 
@@ -77,10 +136,21 @@ claude plugin eval . --tag architecture-review --model sonnet --trust-plugin --n
 
 # sdd-engineering (from the repository root; run-plan-draft-spec-gate needs --scaffold)
 claude plugin eval . --tag sdd-engineering --scaffold --model sonnet --trust-plugin --no-publish
+
+# negative cases that need a write grant (the read-only and write-scope checks only mean something if
+# the session is allowed to write): add `--allow-tools Write Edit` and select them with `--case`
+claude plugin eval . --tag architecture-review --scaffold --allow-tools Write Edit --case 'negative-*' --model sonnet --trust-plugin --no-publish
+claude plugin eval . --tag sdd-engineering --scaffold --allow-tools Write Edit --case 'negative-*' --model sonnet --trust-plugin --no-publish
+# research-tools, from plugins/research-tools
+claude plugin eval . --scaffold --allow-tools Write Edit --case 'negative-*' --model sonnet --trust-plugin --no-publish
 ```
 
 Notes:
 
+- `--case` takes a glob (`negative-*`); a brace list such as `{a,b}` matched nothing, run cases one at a
+  time instead.
+- Run from the repository root, the loader prints "2 case file(s) failed to load" for the unit-test
+  fixtures under `scripts/__fixtures__/`. It does not affect the cases.
 - `--scaffold` runs the `fixture.sh` of each selected case as you. The scripts only write small text
   files into the empty run workspace; read them before running.
 - Without it the cases that need a fixture fail, because the project they ask about is not there. The
@@ -90,5 +160,6 @@ Notes:
 - Run a single case with `--case <name>`, for example
   `claude plugin eval . --case reviewer-missing-target --runs 1 --ablation none`.
 - `--max-cost-usd <usd>` sets a hard ceiling; a one-run smoke test of a case costs a few cents.
-- No case is granted `Bash`, `Write` or `Edit`. Diffs and code samples are inlined in the prompts or built
+- No case is granted `Bash`. The three negative cases that list `Write` and `Edit` need the operator grant
+  `--allow-tools Write Edit` (see above); without it they pass trivially. Diffs and code samples are inlined in the prompts or built
   by `fixture.sh`.
