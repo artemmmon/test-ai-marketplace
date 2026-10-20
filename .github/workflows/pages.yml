@@ -4,25 +4,16 @@ name: Pages
 #   checks  - typecheck, unit tests of the site and of the indexer scripts (the verification harness)
 #   build   - generate the catalog index, vite build and the dist checks (does the site build at all)
 #   deploy  - publish to GitHub Pages, only after both of the above succeed
-# Pull requests into main run checks and build. Push to main, a pushed release tag or a manual run also deploys.
+# Pull requests into main run checks and build. Push to main or a manual run also deploys.
 #
 # The catalog data (site/public/index.json, releases.json, bodies/, ...) is not committed. The build job
 # generates it with scripts/build-index.mjs, which reads marketplace.json, plugins/ and the git tags, so it
 # checks out the full history (fetch-depth: 0) to have every tag.
-#
-# A pushed release tag <plugin>--v<version> only exists to refresh the releases list. The site always shows
-# the state of main, so for a tag (pushed or picked as the ref of a manual run) both jobs check out `main`,
-# never the tagged commit: an old or misplaced tag must not publish a stale site. A tag on a commit that is
-# not on main therefore just republishes main (and lists the tag with empty notes if main's CHANGELOG.md
-# has no section for it). Pull requests keep using the merge commit, push and dispatch use the pushed commit.
-# Deploying from a tag run needs the github-pages environment to allow tags matching *--v*
-# (Settings > Environments > github-pages > Deployment branches and tags).
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
-    tags: ['*--v*']
   workflow_dispatch:
 
 permissions:
@@ -42,8 +33,6 @@ jobs:
         working-directory: site
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.ref_type == 'tag' && 'main' || github.sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -78,7 +67,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref_type == 'tag' && 'main' || github.sha }}
           fetch-depth: 0 # all history and tags: releases.json is built from CHANGELOG.md and git tags
 
       - uses: actions/setup-node@v7
