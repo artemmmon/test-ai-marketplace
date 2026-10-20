@@ -6,6 +6,18 @@ All notable changes to this plugin are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-20
+
+### Fixed
+
+- Skill `security`: the `description` now names the cases where it must trigger on a review of a change that
+  renders LLM-generated or other untrusted text as markdown or HTML (`rehype-raw`, `dangerouslySetInnerHTML`,
+  `innerHTML`, a markdown renderer with raw HTML enabled) and prompt injection that turns into XSS. Before,
+  the skill was not called for "review this React change" and the finding was rated below CRITICAL.
+- Skill `security`: rule 8 and the rating table now say that raw HTML on LLM-influenced or user-written text is
+  CRITICAL stored XSS, that "High" in the table is a confidence level and not a severity, and that each finding
+  names the rule it breaks (number, name and OWASP id).
+
 ## [1.0.0] - 2026-10-20
 
 ### Added

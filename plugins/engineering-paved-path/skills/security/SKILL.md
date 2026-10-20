@@ -1,6 +1,6 @@
 ---
 name: security
-description: Stack-independent application security rules - where attacker-controlled data enters, how to handle it, and how to rate a finding. Covers request input and access control, outbound HTTP (SSRF), SQL, child processes and file paths, secrets and logs, error responses, CI workflows and dependencies, and handling of LLM prompts and LLM output. Use whenever writing or reviewing code that handles request input, outbound HTTP calls, filesystem paths, shell or child processes, SQL, LLM prompts or LLM output, markdown/HTML rendering, secrets, logs, error responses, CI workflows or third-party dependencies, or when asked to review a change for vulnerabilities - even if the word "security" is never used. Not for general code quality or for architecture (see onion-architecture, frontend-architecture).
+description: Stack-independent application security rules - where attacker-controlled data enters, how to handle it, and how to rate a finding (CRITICAL / WARNING). Covers request input and access control, outbound HTTP (SSRF), SQL, child processes and file paths, secrets and logs, error responses, CI workflows and dependencies, and LLM prompts and LLM output. Use whenever writing or reviewing code or a pull request that handles request input, outbound HTTP calls, filesystem paths, shell or child processes, SQL, secrets, logs, error responses, CI workflows or third-party dependencies - and whenever a change renders LLM-generated or other untrusted text as markdown or HTML (ReactMarkdown, rehype-raw / rehypeRaw, dangerouslySetInnerHTML, innerHTML, v-html, a markdown renderer with raw HTML enabled), puts untrusted text into an LLM prompt, or lets an LLM choose a command, URL or query: prompt injection becomes XSS there. Also use when asked to review a change for vulnerabilities, even if the word "security" is never used. Not for general code quality or for architecture (see onion-architecture, frontend-architecture).
 ---
 
 # Security
@@ -57,6 +57,11 @@ Trusted: server config, constants, committed workflow files, secrets-manager val
    markdown renderer that does not allow raw HTML, never `innerHTML`/`dangerouslySetInnerHTML`, sanitise
    link schemes, and never let it choose a command, path, URL or SQL. Give agents the least privilege
    they need. *Why:* LLM05 Improper Output Handling, LLM06 Excessive Agency [S3][S20].
+   Enabling raw HTML on LLM-influenced or other untrusted text (`rehype-raw` / `rehypeRaw` on `ReactMarkdown`,
+   `dangerouslySetInnerHTML`, `innerHTML`) is a stored-XSS finding and is rated CRITICAL: prompt injection
+   through text anyone can write (a pull-request title, a comment) makes the model echo `<img onerror=...>`.
+   A tag denylist is not a fix; keep the renderer that has no raw HTML (the project's shared one, `remark-gfm`
+   already renders tables) [S3][S20].
 9. **Secrets come from a secrets manager or the environment**, never from source, the database, a
    response, a log line, or a variable inlined into the browser bundle (`NEXT_PUBLIC_*`, `VITE_*`).
    Map provider errors before they reach the client. *Why:* A04, secrets management [S13][S19].
@@ -78,9 +83,11 @@ Trusted: server config, constants, committed workflow files, secrets-manager val
 
 Report only what you traced.
 
+Name the rule each finding breaks, by number and name, with its OWASP id when the rule has one (for example "rule 8, LLM output is data, not markup - LLM05 Improper Output Handling"), so the reader can check it.
+
 | Confidence | You have | Report as |
 |---|---|---|
-| **High** | Vulnerable pattern + attacker-controlled input + a reachable path you can state | CRITICAL `security-vuln: <detail>`, naming the input that triggers it |
+| **High** (confidence) | Vulnerable pattern + attacker-controlled input + a reachable path you can state | CRITICAL `security-vuln: <detail>`, naming the input that triggers it. "High" is a confidence level, not a severity: the severities are CRITICAL and WARNING. Raw HTML on LLM or user-written text always lands here |
 | **Medium** | Vulnerable pattern with an unclear input source, or a hardening rule above broken without a proven path | WARNING, "verify manually" |
 | **Low** | Theoretical, or best practice with no path | Don't report |
 
