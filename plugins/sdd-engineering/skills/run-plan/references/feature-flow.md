@@ -25,8 +25,10 @@ a diff or a report into a prompt, and never skips a gate the user owns.
 3. **Requirements trace by id.** A spec id (`AC-n`, `EC-n`, `NFR-n`) appears on a plan step's `Covers`
    line and in the verifier's matrix. Coverage becomes a search, not a judgement, and a missing id is
    caught by a script before any code exists.
-4. **New tests are off.** `sdd-engineering:implementer` only repairs the tests its change breaks. Writing
-   the feature's tests is not part of this plugin; say so in the closing report.
+4. **New tests are off unless the user asks.** By default `sdd-engineering:implementer` only repairs the tests
+   its change breaks, and the closing report says so. When the user asks for tests, the main session passes
+   `tests: on` to every implementer and to the verifier, in `multi-agent` and `single-agent` runs alike: the
+   implementer of a step's group writes that step's `Tests (new)`. There is no test-writing stage.
 5. **Architecture is reviewed, fixed and rechecked.** `architecture-review:architecture-reviewer` reads the
    diff; its findings go to one fix-mode `implementer` per round, and the reviewer then rechecks only what
    the fix touched. An architecture fix moves code between layers, which is where new violations appear.
@@ -47,9 +49,9 @@ a diff or a report into a prompt, and never skips a gate the user owns.
 | 4 | Build | `sdd-engineering:implementer`, one per step group | plan path · `group: G<n>` · the previous group's handoff | every group reports its checks |
 | 5 | Review | `architecture-review:architecture-reviewer` | `mode: diff` · `base` · plan path · `checks:` | - |
 | 6 | Review loop | one `implementer` in fix mode, then the reviewer with `recheck:`; up to 3 rounds | the fix list; then what is still open | no open CRITICAL or WARNING; the checks pass |
-| 7 | Verify | `sdd-engineering:implementation-verifier` | plan path · `base` · `tests: off` | **PASS** |
+| 7 | Verify | `sdd-engineering:implementation-verifier` | plan path · `base` · `tests: off` (`tests: on` when the user asked for tests) | **PASS** |
 
-The run ends with the closing report after stage 7. Test writing, a correctness review, a security
+The run ends with the closing report after stage 7. A correctness review, a security
 review, documentation and a pull-request self-review are not stages of this plugin.
 
 `single-agent` plans skip stages 5-7: one `implementer` does group `G1` with its own checks, and the
@@ -85,7 +87,9 @@ A fix or a small feature with no spec starts at stage 2 or 3 with the request as
 | Plan | `draft` -> `approved` -> `in progress` -> `implemented` or `partial` | `implementation-planner` · the main session on the user's word · `implementer` |
 
 Hooks of the plugin keep the spec a draft in `spec-creator`'s hands and let the planner and `brainstorm`
-write only their own draft file. `check-plan.mjs` fails a plan whose spec is not approved.
+write only their own draft file. `check-plan.mjs` fails a plan whose spec is not approved, and (`--implemented`, `P2`) a
+finished plan whose spec is not `implemented`. The implementer of the last group sets both the plan and the spec
+status; the main session never does, and no plan step does.
 
 ## Workflow (copy and tick off)
 
@@ -166,7 +170,7 @@ for its mechanical items. Both check form and traceability only. The folders com
 
 ## Closing report
 
-In the user's language: what was built (spec id, plan path) · that no new tests were written · the
+In the user's language: what was built (spec id, plan path) · the new tests written (`tests: on`) or that none were (default) · the
 verifier's verdict line · the findings that were not fixed (warnings, `in_change: false`,
 `untested-requirement`) · what was not run and why · that tests, correctness and security review,
 documentation and the pull-request step are outside this plugin, and that `/sdd-engineering:workflow-retro`

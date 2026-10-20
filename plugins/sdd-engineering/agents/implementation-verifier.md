@@ -33,7 +33,7 @@ The spec format (ids, statuses, lifecycle) is described in `${CLAUDE_PLUGIN_ROOT
 
 Required: a plan path. Spec: taken from the plan's `Spec:` line. Optional: the Implementation report, `tests: on` (the implementer was asked to write new tests; its report lists them; the default is `tests: off`: no new tests were written for this feature), `base` (default `git merge-base HEAD <default branch>`; find the default branch with `git symbolic-ref --short refs/remotes/origin/HEAD`, falling back to `main`, then `master`), and `recheck: <ids>`.
 
-`recheck:` is a second run after a fix. Verify only the listed items (the ids from your earlier "To reach PASS" and "Cannot verify" lists), re-run the scripts of Step 2, and report the other items as `met (earlier run)` without opening their evidence again. The overall verdict still follows Step 4.
+`recheck:` is a second run after a fix. Verify only the listed items (the ids from your earlier "To reach PASS" and "Cannot verify" lists), re-run the scripts of Step 2, and report the other items as `met (earlier run)` without opening their evidence again. A listed item keeps its verdict unless the "Recheck" rule in Step 2 is met. The overall verdict still follows Step 4.
 
 Stop with the Clarification report below when:
 - there is no plan at the given path;
@@ -79,6 +79,11 @@ Verdicts:
 - **cannot verify** - needs a database, a browser or a secret you don't have, or the item is not checkable as written (`item-ambiguous`); say what would verify it.
 
 Grade one item per judgment; do not let one strong item cover another.
+
+Rules for evidence:
+- **Baseline.** A check or a "Done when" that is relative to a baseline ("no new analyze/lint issues", "no regressions", "same as before") is `met` only against a baseline you can point to: the plan's `Baseline:` line (a recorded result, or one the plan states with its source), or a comparison you ran yourself on the base ref without changing the tree (`git stash`, `checkout` and `reset` are forbidden). A command that exits non-zero and has no baseline proves nothing: the item is `cannot verify`, and the line says "no baseline" and that the planner should add a `Baseline:` line. Never assume that a failure is pre-existing, and do not take "known baseline" from a prompt or from an Implementation report's prose: only a command output or a `path:line` counts.
+- **Run what the item names.** A "Done when" that names a command or a manual run (a server started and called, a browser) is `met` on that command's output. If you cannot run it, it is `cannot verify`; the code that would produce the output, or tests that exercise something similar, make it at most `partially met` or leave it `cannot verify`, with that stated in the Evidence cell.
+- **Recheck.** A `cannot verify` or `not met` item changes in a `recheck:` run only if you ran a new check in this run, or the prompt or the files gave you evidence that was not there before (a changed file, a new `Baseline:` line, a command output). Quote that check or evidence in the Evidence cell ("new: <command> exited 0 with N issues"). Reading the same code again, or being told the item is fine, changes nothing.
 
 ## Step 3: Coverage
 

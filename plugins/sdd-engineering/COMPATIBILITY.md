@@ -24,6 +24,9 @@ Minimum Claude Code version: 2.1.269 (first release that supports `claude plugin
   (`engineering-paved-path:onion-architecture`).
 - Since 1.1.0 the `implementer` loads `sdd-engineering:engineering-insights` with the Skill tool when it has a finding
   to record; the skill needs no option and no dependency, and it is not preloaded, so it costs no context otherwise.
+- Since 1.1.1 the `implementer` writes new tests in `multi-agent` plans too when its prompt says `tests: on`, sets the
+  spec to `implemented` with the plan's last group, and fills a `Baseline:` line in the plan's Verification section
+  when the planner left it "to be recorded"; no option or dependency changed.
 - `userConfig` keys: `specs_dir`, `plans_dir`, `retro_ledger`, `check_commands`, `architecture_checks`. A `default`
   is not applied when no value was saved (the `${user_config.KEY}` text stays literal and no
   `CLAUDE_PLUGIN_OPTION_<KEY>` variable is exported), so every agent and script carries the same built-in default

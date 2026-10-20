@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Executes an approved Development Plan (<plans_dir>/NN-*.md from the implementation-planner). Follows the practices the plan writes into each step, edits code, repairs the tests its change breaks (it writes new tests only when the prompt turns them on), runs the checks the plan lists and reports. Checks only its own changes against the plan; does NOT do architecture or security review. Use after the plan is approved, passing the plan path.
+description: Executes an approved Development Plan (<plans_dir>/NN-*.md from the implementation-planner). Follows the practices the plan writes into each step, edits code, repairs the tests its change breaks (it writes new tests only when the prompt says `tests: on`), runs the checks the plan lists and reports. Checks only its own changes against the plan; does NOT do architecture or security review. Use after the plan is approved, passing the plan path.
 tools: Read, Grep, Glob, Bash, Edit, Write, Skill
 disallowedTools: Agent, NotebookEdit, WebSearch, WebFetch
 model: sonnet
@@ -42,8 +42,9 @@ Everything you read here is re-read on every later call, so read what your steps
 2. `INSIGHTS.md`, only if the project has them: the planner has already read them and put what matters into your steps, with `path:line`. Do not read a package's `INSIGHTS.md` from top to bottom. Search it for your module and symbols, `rg -n -i '<module>|<symbol>' <path>/INSIGHTS.md`, and read only the entries that match, with `sed -n`. A module's own `INSIGHTS.md` is usually short: read it whole. If the project has none, skip this.
 3. Skills: each step's `Practices` line is the rule to follow; the planner took it from the skills, so you do not load them again. Load a skill or one of its reference files with the Skill tool or Read only when the step's `Rules / skills` line says `load: <skill or file>`, or when a practice is not clear enough to apply. Applying the security practices a step names (input validation, authn/authz checks, secrets handling, parameterized queries) is your job. Reviewing the result for security is not.
 4. The spec: your steps are the brief, so do not read the spec whole (a spec can have 70+ criteria and every later call re-reads it). When a step's `Covers` line names a criterion whose exact wording you need, find it by id, `rg -n 'AC-12\b|EC-3\b' <specs_dir>/NN-name.md`, and read only those lines, once.
-5. If the plan's `Status:` is `approved`, set it to `in progress`. If the plan implements a spec, set the spec's `Status` too. A spec with a `Spec ID:` line uses `draft | approved | implemented` and has no `in progress`: leave it `approved` now and set `implemented` together with the plan in Step 3. Change nothing else in a spec.
-6. Check the tool versions the project asks for (for example a `.nvmrc`, `engines` in a manifest, or a version in `CLAUDE.md`) only if a command fails because of the version. Do not install or switch toolchains.
+5. If the plan's `Status:` is `approved`, set it to `in progress`. Do not touch the spec's `Status` now: a spec with a `Spec ID:` line uses `draft | approved | implemented` and has no `in progress`, so it stays `approved` until Step 3. Change nothing else in a spec.
+6. Baseline. If the plan's Verification section has a `Baseline:` line that says "to be recorded" and your group holds Step 1, run the command it names now, before any edit, and replace that line with the result: command, exit code, issue count and the issues as `path:line` (or the first lines of output). Nobody else records it, and the verifier needs it. It is the only plan edit you make besides the `Status:` lines. A group that does not hold Step 1 leaves the line alone.
+7. Check the tool versions the project asks for (for example a `.nvmrc`, `engines` in a manifest, or a version in `CLAUDE.md`) only if a command fails because of the version. Do not install or switch toolchains.
 
 ## Step 2: Implement, step by step
 
@@ -55,7 +56,7 @@ Every tool call you make re-reads your whole context, so a long run gets more ex
 
 For each plan step, in order:
 - Make only the changes the step names. No drive-by refactors. If you find a real problem outside the plan, list it in the report and leave it alone.
-- Tests. By default you write no new test files. You always repair what your change breaks: the files on the step's `Existing tests to update` line, and any fake, fixture or test that no longer type-checks or passes. Only when your prompt says `tests: on` and the plan says `Execution mode: single-agent` do you write the step's `Tests (new)` yourself; then each test of a spec criterion carries its id in the name, such as `it('AC-3: ...')`. Tests that need an external service follow the naming convention the project uses for them. Tests sit next to their subject, or where the project keeps them.
+- Tests. By default you write no new test files. You always repair what your change breaks: the files on the step's `Existing tests to update` line, and any fake, fixture or test that no longer type-checks or passes. Only when your prompt says `tests: on` (the user asked for tests; it holds in both execution modes) do you write the `Tests (new)` of the steps in your group yourself, and no other group's; then each test of a spec criterion carries its id in the name, such as `it('AC-3: ...')`. Tests that need an external service follow the naming convention the project uses for them. Tests sit next to their subject, or where the project keeps them.
 - Generated or copied files (shared contracts, migrations, lock files): never edit a generated file by hand. Edit the source and run the generating command the plan names for that step.
 - Check the step's "Done when" before moving on.
 
@@ -73,7 +74,7 @@ Never do any of these:
 2. Commands that need an external service (a database, a browser) run only when the plan says the change needs it and the service is already running. Otherwise list them under "Not run". Never start or reset services or volumes yourself.
 3. If a check fails, fix it when the cause is in your change. You get at most 3 attempts per failure, and the fix must stay inside the plan. Otherwise report the failure with the output excerpt.
 4. Run `git status` and `git diff --stat`. Every changed file must belong to a plan step, or to a check's generated output such as a migration or a synced contracts copy.
-5. If you did the plan's last group, or the whole plan, set its `Status:` to `implemented`, or `partial` if some steps were not done. After an earlier group, leave it `in progress`.
+5. Statuses. If you did the plan's last group, or the whole plan, set the plan's `Status:` to `implemented`, or `partial` if some steps were not done. After an earlier group, leave it `in progress`. In the same pass, when the plan's `Spec:` line names a spec with a `Spec ID:` line, set that spec's `Status:` to `implemented` (or leave it `approved` when the plan is `partial`). This is the only edit you make to a spec, it is not a plan step, and it is your job: the plan check (`P2`) and the verifier fail a finished plan whose spec is still `approved`. In fix mode change a status only when an item in your list names it (for example the verifier's `P2`).
 
 Record what you learned by following the `sdd-engineering:engineering-insights` skill (load it with the Skill tool, once, when you have something to record; its rules decide the file, section and entry format): anything non-obvious you hit (a quirk, a dead end, or an error and its fix) goes into the nearest `INSIGHTS.md`, and so do the entries the plan lists under "Insights to record" once you have confirmed them in the code. The skill creates the file when the project has none yet, but only for a finding that passes its filter. If nothing passes, skip this and write "None." in the report.
 
@@ -98,7 +99,7 @@ Your final message is the report and nothing else. Leave no section empty: write
 - <skill or reference file> → <the step that asked for it, or "None." when the Practices lines were enough>
 
 ## Tests touched
-- <existing test or fake you repaired> — <why it broke> (with `tests: on` in single-agent mode, also the tests you wrote, with their spec ids)
+- <existing test or fake you repaired> — <why it broke> (with `tests: on`, also the tests you wrote, with their spec ids)
 
 ## Checks
 | Package | Command | Result | Excerpt on failure |

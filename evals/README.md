@@ -81,7 +81,7 @@ all runs, reruns and mutation checks below was about 4 USD.
 | `absent-subject-reports-not-found` | pass (1/1) | |
 | `negative-researcher-no-edits` | pass (1/1) | |
 | `security-ssrf-import-url` | pass (1/1) | |
-| `security-llm-output-html` | **fail (0/4)** | plugin behaviour, not the case: the `security` skill was never called (`tool_used` 0 of 4) and the review rates raw HTML on LLM output "High", not CRITICAL, in every run (the report is otherwise right: prompt injection through PR text, `rehypeRaw`). The case is kept as is |
+| `security-llm-output-html` | pass (3/3 on rerun; first run 0/4) | first run: the `security` skill was never called and the review rated raw HTML on LLM output "High". After `engineering-paved-path` 1.0.1 (a `description` that names raw HTML plugins and `dangerouslySetInnerHTML` on LLM output, an explicit CRITICAL rule, and "name the rule" in the rating section) the skill is called and the finding is CRITICAL. One intermediate run, with the first two of those three changes, still failed on the criterion that asks to cite the rule on LLM output handling; the grader was not changed |
 | `onion-new-endpoint` | pass (1/1) | |
 | `fastify-route-schema` | pass (1/1) | |
 | `negative-unrelated-prompt-no-skill` | pass (1/1) | |
@@ -91,11 +91,26 @@ all runs, reruns and mutation checks below was about 4 USD.
 | `reviewer-clean-diff` | pass (1/1) | |
 | `reviewer-missing-target` | pass (1/1) | |
 | `negative-reviewer-readonly` | pass (1/1) | the reply contains the finding and says nothing was fixed or saved |
-| `spec-ears-from-vague-brief` | **fail (1/4)** | plugin behaviour, not the case: the criteria rubric is met on "quick" (an open question with a default), but 3 of 4 outputs put the default number ("within 1 s") inside a criterion. A sonnet judge asked for its reasons on two of the failing outputs named a compound response in both (for example "shall keep the old result visible and keep the control available"), which breaks the rule "one `shall`, one observable response". The third failing output was not analysed |
+| `spec-ears-from-vague-brief` | pass (4/4 on rerun, 1/1 in the later full `sdd-engineering` run; first run 1/4) | first run: 3 of 4 outputs put the default number ("within 1 s") inside a criterion, and a sonnet judge named compound responses in two of them. After `sdd-engineering` 1.1.1 (a good and a bad example, defaults only in an open question or an `NFR`, and the same rule in `spec-creator`) all four outputs passed |
 | `spec-creator-discovery-pass` | pass (1/1) | |
 | `run-plan-draft-spec-gate` | pass (1/1) | |
 | `workflow-retro-keep-concurrency` | pass (1/1) | |
 | `negative-spec-creator-writes-only-draft-spec` | pass (1/1) | the agent wrote `specs/01-report-rerun.md` as `Status: draft` and declined the code, the plan and the approval |
+
+Reruns after the fixes (2026-10-20, same model and flags, branch `fix/sdd-contract-1.1.1`):
+
+| Case | Runs | Result |
+|---|---|---|
+| `security-llm-output-html` | 1 (twice, between the changes), then 3 | 0/1, 1/1, then 3/3 |
+| `security-ssrf-import-url` | 3, then 4 | 2/3 (one judge FAIL on the criteria; not analysed), then 4/4 |
+| `negative-security-clean-code-no-invented-finding` | 3 | 3/3 |
+| `negative-unrelated-prompt-no-skill` | 3 | 3/3 |
+| `spec-ears-from-vague-brief` | 4, then 1 | 4/4, then 1/1 |
+| `negative-spec-creator-writes-only-draft-spec`, `run-plan-draft-spec-gate`, `spec-creator-discovery-pass`, `workflow-retro-keep-concurrency` | 1 each | pass (1/1) |
+
+The rerun cost was about 2.4 USD. Still unrun: the `research-tools` and `architecture-review` cases after
+these changes (those plugins were not touched), the initial gate (every case, 3 runs, score 1.0) and any
+with/without comparison. The `ssrf` miss shows that a single passing run is weak evidence.
 
 ### Do the negative cases fail when the contract is broken?
 

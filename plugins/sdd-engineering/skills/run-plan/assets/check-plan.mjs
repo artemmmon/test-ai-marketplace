@@ -33,6 +33,9 @@ const BEFORE_CODE = ['draft', 'approved', 'in progress'];
 const MODES = ['multi-agent', 'single-agent'];
 const BRIEF_SECTIONS = ['Goal', 'Step groups', 'Steps', 'Verification'];
 const STEP_FIELDS = ['Files', 'Change', 'Done when'];
+// A "Done when" that is relative to a baseline needs the Verification section's `Baseline:` line.
+const BASELINE_WORDS = /\bno new\b|\bno regress|\bnot worse\b|\bno additional\b|\bsame as before\b|\bbaseline\b/i;
+const BASELINE_LINE = /^\s*(?:[-*]\s+)?Baseline:\s*\S/m;
 const SPEC_ITEM = /^\s*(?:[-*]\s+)?\**((?:AC|EC|NFR)-\d+)\b/;
 const ID = /\b(?:AC|EC|NFR)-\d+\b/g;
 export const DEFAULT_PLANS_DIR = 'docs/plans';
@@ -195,6 +198,18 @@ export function checkPlan(text, root, specsDir = DEFAULT_SPECS_DIR) {
       if (file.verb === 'create') created.add(file.path);
     }
   });
+
+  // A baseline-relative "Done when" says where the baseline comes from, or the verifier can only say "cannot verify".
+  const verification = plan.sections.find((s) => s.name === 'Verification');
+  const hasBaseline = BASELINE_LINE.test((verification?.lines ?? []).map((l) => l.text).join('\n'));
+  if (!hasBaseline) {
+    for (const step of plan.steps) {
+      const done = field(step, 'Done when');
+      if (done && BASELINE_WORDS.test(done.text)) {
+        warning(done.line, `Step ${step.n}: "Done when" is relative to a baseline, but the Verification section has no "Baseline:" line (known baseline, "to be recorded: <command>" or "none needed").`);
+      }
+    }
+  }
 
   // Coverage: every AC/EC/NFR of a current-template spec is cited by a step, and nothing else is.
   const spec = readSpec(root, plan, specsDir);

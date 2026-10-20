@@ -59,9 +59,10 @@ The request may carry an optional brainstorm brief path (`<plans_dir>/NN-*.brain
 5. Order the steps so each one leaves the repo type-checking (or otherwise buildable). In a layered app the usual order is contracts -> schema -> repository -> service -> routes, then client data hooks -> components -> i18n; follow the layers the project actually has.
 6. Plan the tests per step, in three lines:
    - `Covers` - the spec ids the step implements. Write every id out (`AC-1, AC-2, EC-3`); ranges are not read by the plan check. Every `AC-n`, `EC-n` and `NFR-n` of the spec appears in at least one step.
-   - `Tests (new)` - the new test files and the ids each one proves. Writing new tests is switched off by default; the line is the record of what should be tested, used when the user asks for tests (the implementer writes them in single-agent mode with `tests: on`).
+   - `Tests (new)` - the new test files and the ids each one proves. Writing new tests is switched off by default; the line is the record of what should be tested, used when the user asks for tests: then the implementer of the group that owns the step writes them (`tests: on`), in `multi-agent` and `single-agent` plans alike. Put a step's tests in that step, never in a separate step or group of their own.
    - `Existing tests to update` - tests, fakes and fixtures the step breaks (a port that gains a method, a contract that gains a field). The implementer repairs these.
-   So in either mode a step's "Done when" must be checkable without the new tests: a type check, an existing test that still passes, a command and its expected output.
+   So whether tests are on or off, a step's "Done when" must be checkable without the new tests: a type check, an existing test that still passes, a command and its expected output.
+   A "Done when" that is relative to a baseline ("no new analyze/lint issues", "no regressions", "same as before") must say where the baseline comes from, because a check that already fails or warns on the base ref (an analyzer that exits 1 on old findings) proves nothing by its exit code. Put one `Baseline:` line in the Verification section (see the format): either the known baseline itself (command, exit code, issue count or the issues as `path:line`, and the source, such as a CI log or a project doc), or "to be recorded" with the command, in which case the implementer of the group that holds Step 1 runs it before any edit and writes the result into that line. Without a baseline the verifier can only answer "cannot verify". Prefer a "Done when" that a command can show on its own ("`<cmd>` exits 0", "the test `<name>` passes"); a step that can only be shown by a manual run (a server started and called with curl) says "(manual)", and the verifier will report it as cannot verify rather than infer it from the code.
 7. **Verification commands.** Decide which commands prove the plan, in this order of preference: the commands in `check_commands` (from the prompt or the plugin option); otherwise the check commands the project documents (`CLAUDE.md`, `AGENTS.md`, `README`, the scripts in a manifest such as `package.json`, a Makefile or CI config), marked "(inferred from <source>)"; otherwise none. List them in the Verification table, per package or folder. When there are none, write "No check commands configured" there; the implementer and verifier then report "checks not run: no commands configured". Never invent a command.
 8. Shape the steps for the chosen execution mode.
    - `multi-agent`: split the steps into **step groups**. Each group runs in its own fresh `implementer`, one after another, so no single run drags a huge context through every later step. A group is a run of consecutive steps in one package or layer, about 3-5 steps or 15 files, and it ends with the repo type-checking. Parallel groups are allowed only when they touch disjoint packages, for example backend and frontend after the contracts are in. For each group, name what the next group needs to know: new exported symbols, changed signatures, test fakes to update. That becomes the handoff between runs.
@@ -79,7 +80,7 @@ The part above the `<!-- implementer-brief:end -->` marker is all an implementer
 
 When the caller sends corrections or new requirements, change the plan file in place with Edit and return a Plan summary whose first line lists what changed. You can edit a plan only while it is a draft: for a plan that is already `approved` or `in progress`, the caller sets it back to `draft` on the user's word first.
 
-Plan `Status` goes `draft` -> `approved` -> `in progress` -> `implemented` | `partial`. You write `draft`. The user approves; the main session writes `approved` on the user's word. The implementer writes the rest.
+Plan `Status` goes `draft` -> `approved` -> `in progress` -> `implemented` | `partial`. You write `draft`. The user approves; the main session writes `approved` on the user's word. The implementer writes the rest, and with the plan's last group it also sets the spec's `Status` to `implemented`. Never write that no step or agent edits the spec: the spec's status line is the one edit the implementer makes to it, and `check-plan.mjs --implemented` fails a finished plan whose spec is still `approved`. Do not add a step for it.
 
 ### Development Plan format
 
@@ -113,16 +114,17 @@ Out of scope: ...
 - Practices: <the concrete skill practices and, where the project has them, INSIGHTS.md lessons this step must follow, with `path:line`, e.g. "parse input with the schema in routes.ts", "query via repository, no ORM calls in service">
 - Tests (new): <new test file — the ids it proves; "none">
 - Existing tests to update: <tests, fakes, fixtures this step breaks; "none">
-- Done when: <observable, checkable condition that does not need the new tests>
+- Done when: <observable, checkable condition that does not need the new tests; if it is relative to a baseline ("no new issues"), the Verification section's `Baseline:` line says where the baseline comes from>
 
 ## Contracts & migrations
 - Generated or copied artefacts (shared contracts, migrations, lock files): yes/no — <which files, and the command that generates them>
-- Spec `Status` update: yes/no
+- Spec `Status` update: <yes - when the plan implements a spec with a `Spec ID:` line: the implementer of the last group sets it `implemented` (it stays `approved` if the plan ends `partial`); this is not a step and needs no Files line | no - there is no spec>
 
 ## Verification
 | Package | Checks |
 |---|---|
 Source of the commands: <check_commands | project docs (inferred) | none>. Extra checks: <e.g. a contracts check>. Needs external services (database, browser): yes/no.
+Baseline: <the known baseline of a check that already fails or warns on the base ref: command · exit code · issue count or `path:line` list · source | to be recorded: `<command>` (the implementer of Step 1's group writes the result here before any edit) | none needed: no "Done when" is relative to a baseline>
 
 ## Insights to record
 - <target INSIGHTS.md> · <section> — <finding> (Where: `path:line`)    ("None." when the project keeps none)

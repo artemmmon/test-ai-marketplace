@@ -46,11 +46,13 @@ should not happen but will. "WHEN the user opens the page" — "IF the provider 
   an event sent, a request rejected with a named reason. "Shall validate", "shall process",
   "shall handle" are not responses until they say what comes out.
 - **Values.** Numbers with units, exact texts, named states. When the user gave no number, do not
-  invent one: write the criterion with the value in an open question (`OQ-n`) and its default.
+  invent one and do not put a default into the criterion: the criterion names no value, and the question
+  (`OQ-n: how fast? - default if unanswered: 1 s`) carries the default until the user answers; then it
+  becomes an `NFR-n` line. A "quick" in the brief is a question, not a number.
 - **Negatives.** "shall not" is fine when the absence is observable ("shall not send the
   customer's address to the model"). "Never" in an edge case means a criterion says so.
-- **One criterion, one line of thought.** If it needs "and", "or", "also", "as well as" after
-  `shall`, split it. An "and" inside a condition (`WHILE an order is paid and has a discount`) is fine.
+- **One criterion, one line of thought.** If it needs "and", "or", "also", "as well as" or a comma list after
+  `shall`, or a second verb, or a deadline next to a second response, split it: one thing to observe, one `AC`. An "and" inside a condition (`WHILE an order is paid and has a discount`) is fine.
 - **Stories served.** `AC-3 (US-1, US-2)`. A criterion that serves no story is either a missing
   story or a non-functional requirement (`NFR-n`).
 

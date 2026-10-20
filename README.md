@@ -7,8 +7,8 @@ engineering skills and agents for spec-driven development.
 
 | Plugin | Role | What it provides | Depends on | Version |
 |---|---|---|---|---|
-| [`sdd-engineering`](plugins/sdd-engineering/README.md) | Spec Driven Development workflow | `/sdd-engineering:run-plan` (spec, brainstorm, plan, build, review loop, verification), 5 agents (`spec-creator`, `brainstorm`, `implementation-planner`, `implementer`, `implementation-verifier`), skills `spec-authoring` and `workflow-retro`, guard hooks | `engineering-paved-path`, `research-tools`, `architecture-review` | 1.0.0 |
-| [`engineering-paved-path`](plugins/engineering-paved-path/README.md) | Engineering rules for TypeScript web projects | 7 skills: Fastify, React, Next.js, React Testing Library, onion architecture, frontend architecture, security | none | 1.0.0 |
+| [`sdd-engineering`](plugins/sdd-engineering/README.md) | Spec Driven Development workflow | `/sdd-engineering:run-plan` (spec, brainstorm, plan, build, review loop, verification), 5 agents (`spec-creator`, `brainstorm`, `implementation-planner`, `implementer`, `implementation-verifier`), skills `spec-authoring` and `workflow-retro`, guard hooks | `engineering-paved-path`, `research-tools`, `architecture-review` | 1.1.1 |
+| [`engineering-paved-path`](plugins/engineering-paved-path/README.md) | Engineering rules for TypeScript web projects | 7 skills: Fastify, React, Next.js, React Testing Library, onion architecture, frontend architecture, security | none | 1.0.1 |
 | [`research-tools`](plugins/research-tools/README.md) | Evidence-backed research | Read-only `researcher` agent: one question, from the repository or from external sources, with a "Not found" list | none | 1.0.0 |
 | [`architecture-review`](plugins/architecture-review/README.md) | Architecture audit | Read-only `architecture-reviewer` agent: a module, a package or a branch diff checked against the architecture rules, findings with evidence as JSON | `engineering-paved-path` | 1.0.0 |
 
