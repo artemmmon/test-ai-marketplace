@@ -6,6 +6,29 @@ All notable changes to this plugin are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-20
+
+### Added
+
+- `spec-creator` does not finish a spec until every requirement of the brief has a criterion. Pass 2 gets a coverage
+  pass: it lists every requirement the brief and the user's answers state (the small ones too: an error or empty
+  state, a permission rule, a limit), finds the story and the `AC` that carries each, and for a gap either adds the
+  criterion or raises an open question with a default. The Spec report has a new section, "Brief coverage"
+  (requirement, story, criteria), between "Decisions applied" and "Counts"; amendments list
+  the amended requirement there too. `spec-authoring` gets principle 6 ("Every requirement is covered"), a "Coverage
+  pass" section and a line in its checklist.
+- Eval `spec-every-story-has-criterion` (three requirements in the brief, one of them an easy-to-forget denied-state
+  rule). See `evals/README.md` for the result on 1.2.0 and on 1.1.1.
+
+### Notes
+
+- Backward compatible: the spec format, the ids, the section list and `check-spec.mjs` are unchanged, and the Spec
+  report only gains a section, so the consumers (`run-plan`, the planner, the verifier) read specs and reports as
+  before. Minor, because the agent's output grows (RELEASES.md: "add fields to an agent's output").
+- `check-spec.mjs` already fails a story with no criterion and an edge case with no covering criterion (tests exist),
+  and the spec format has no other list of requirements, so no new rule was added: a requirement that never became a
+  story is invisible to a form check. That gap is what the coverage pass and its table close.
+
 ## [1.1.1] - 2026-10-20
 
 ### Fixed

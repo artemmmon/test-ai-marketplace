@@ -56,12 +56,17 @@ way, it belongs in the spec; if not, it belongs in the plan.
 5. **Everything traces.** A story has at least one criterion; a criterion names its stories; an
    edge case names the criterion that covers it. Ids never change once the spec is approved.
    *Why:* plans and the verification matrix cite `AC-n` — a renumbered id breaks them [S2].
-6. **Every input has exactly one provenance tag; prefer what already exists.** A new model call
+6. **Every requirement is covered.** Every requirement the brief states has a story and at least one
+   criterion before the spec is handed over, the small ones included: an error or empty state, a
+   permission rule, a limit. Uncovered and undecided means an open question with a default, not silence.
+   *Why:* the planner and the verifier see only the spec; a requirement with no `AC` is never planned,
+   built or checked, and nobody notices it is gone [S2][S4]. See "Coverage pass" below.
+7. **Every input has exactly one provenance tag; prefer what already exists.** A new model call
    needs a line on why nothing existing can serve. *Why:* where a feature calls a model, its cost is
    mostly those calls, and the spec is the last cheap place to remove one.
-7. **Third-party data gets a required handling.** State the requirement ("rendered as text, never
+8. **Third-party data gets a required handling.** State the requirement ("rendered as text, never
    as HTML"), not the code. The trust boundaries are in the `engineering-paved-path:security` skill.
-8. **What is unknown stays visible.** A gap is an open question with a default, never a silent
+9. **What is unknown stays visible.** A gap is an open question with a default, never a silent
    guess. *Why:* a marked assumption can be reviewed; a plausible invention cannot [S3].
 
 ### One `shall`, one response: splitting a criterion
@@ -76,6 +81,23 @@ two verbs; a number or a deadline next to a second response.
 
 Each good line fails for one reason only, so it is one test and one verifier verdict. The 1 s of
 the bad line was nobody's decision: it sits in `OQ-1` with its default until the user answers.
+
+### Coverage pass: no requirement without a criterion
+
+Before a spec is handed over, list every requirement the brief and the user's answers state, one line
+each (behaviour, error, empty or denied state, permission rule, limit, accepted proposal), and find the
+`AC` that makes it observable. The Spec report prints the result as the "Brief coverage" table.
+
+| A requirement has… | Do this |
+|---|---|
+| a story and an `AC` that says it | Covered; list both ids |
+| no `AC` and the sources settle the behaviour | Add the criterion (and the story, if none carries it) |
+| no `AC` and the behaviour is undecided | Add an open question with a default; list the `OQ` in the table. The spec stays a draft |
+| only an edge case or an `NFR` | Add the `AC` for the behaviour; the edge case or `NFR` refines it, it does not replace it |
+
+The spec check already fails a story with no criterion and an edge case with no covering criterion.
+It cannot see a requirement that never became a story, so this pass is the author's, and the table is
+how a reviewer sees that it was done.
 
 ## Sections
 
@@ -146,6 +168,7 @@ and the plan check all stop on one. Each criterion has exactly one response beca
 - [ ] Each criterion: one EARS pattern, one `shall`, one observable response (a second thing to observe is a second `AC`), a value only if the user gave it
 - [ ] Every default or threshold you proposed sits in an `OQ` (or an `NFR` once decided), not in an `AC`
 - [ ] Each story has a criterion; each edge case names its criterion; undecided cases are open questions, not `EC` lines
+- [ ] Coverage pass: every requirement of the brief and the answers has an `AC` (or an `OQ` with a default), listed in the Brief coverage table
 - [ ] Each input has one provenance tag; each `new` has its reason
 - [ ] Untrusted inputs listed with the required handling
 - [ ] No paths, names of functions or components, libraries, SQL or code
@@ -164,7 +187,7 @@ node "${CLAUDE_SKILL_DIR}/assets/check-spec.mjs" --specs-dir docs/specs
 The folder is the `--specs-dir` argument, else the plugin option (`CLAUDE_PLUGIN_OPTION_specs_dir`),
 else `specs`. It checks form: header, sections, ids, EARS shape, traceability, provenance tags, code
 paths. Errors fail the check; warnings (a vague word, an "and" after `shall`) ask for a second look.
-Whether a requirement is the right one is still a human's call. Legacy specs are skipped.
+Whether a requirement is the right one, and whether every requirement of the brief reached a criterion (the coverage pass), is still the author's and a human's call. Legacy specs are skipped.
 `sdd-engineering:spec-creator` has no shell: a PostToolUse hook runs the check with `--hook` after
 each Write or Edit of a spec and hands the errors back.
 
