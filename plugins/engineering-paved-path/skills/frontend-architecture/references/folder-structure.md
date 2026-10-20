@@ -28,7 +28,7 @@ src/
   components/     # shared UI with no domain knowledge (buttons, modals, layout chrome)
   config/         # env + global configuration
   features/
-    reviews/
+    orders/
       api/        # endpoint functions + queryOptions for this feature
       components/ # UI that only this feature uses
       hooks/      # glue hooks for this feature
@@ -57,7 +57,7 @@ below it. Each layer is split into **slices** (business domains) and each slice 
 **segments** (`ui`, `api`, `model`, `lib`, `config`).
 
 - A block used by a single page stays in that page; it becomes a feature only if it is reused [S3].
-- `entities` are business concepts (user, pull request) with their schema, API and UI.
+- `entities` are business concepts (user, order) with their schema, API and UI.
 - `shared` has no business logic: `shared/ui`, `shared/api`, `shared/lib`, `shared/config`.
 - With Next.js: keep Next's routing `app/` at the root and FSD layers in `src/`; rename
   FSD's own `app`/`pages` layers (e.g. `_app`, `_pages`) and re-export pages into routes [S8].
@@ -70,7 +70,7 @@ Next.js does not prescribe a structure [S7]. What it gives you:
 - **Safe colocation.** Only `page.tsx` and `route.ts` make a segment public, so other
   files inside `app/` are not routable.
 - **Private folders `_name`** opt a folder out of routing entirely. Use them for
-  route-local components (`app/pulls/_components/`) so intent is explicit.
+  route-local components (`app/orders/_components/`) so intent is explicit.
 - **Route groups `(name)`** group routes (and give them a shared layout) without changing the URL.
 - **`src/` is optional**; it separates app code from config files at the root.
 - Three documented strategies: (a) project files outside `app/`, `app/` for routing only;

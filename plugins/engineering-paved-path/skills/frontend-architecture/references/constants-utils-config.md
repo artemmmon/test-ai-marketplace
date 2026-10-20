@@ -7,12 +7,12 @@ Sources: [S1] bulletproof-react, [S2][S3] FSD segments, [S4] Colocation, [S6] Co
 
 | Folder / file | Holds | Example |
 |---|---|---|
-| `constants.ts` | Fixed values: enums-as-objects, limits, option lists, key names | `SEVERITY_ORDER`, `PAGE_SIZE` |
-| `helpers.ts` | Pure functions specific to **this project / feature** | `formatRunCost(run)` |
+| `constants.ts` | Fixed values: enums-as-objects, limits, option lists, key names | `STATUS_ORDER`, `PAGE_SIZE` |
+| `helpers.ts` | Pure functions specific to **this project / feature** | `formatPrice(order)` |
 | `utils/` or `utils.ts` | Pure, generic functions that would fit **any project** | `clamp`, `groupBy`, `sleep` |
 | `lib/` | **Configured third-party libraries** and app-wide infrastructure | API client, query client, i18n setup |
 | `config/` | Environment + global configuration, read and validated in one place | `config/env.ts` |
-| `types.ts` / `types/` | Types without a runtime; shared ones at the root | `ReviewRow` |
+| `types.ts` / `types/` | Types without a runtime; shared ones at the root | `OrderRow` |
 
 Comeau's split of `helpers` (project-specific) vs `utils` (generic) [S6] and bulletproof's
 `lib` (preconfigured libraries) vs `utils` (shared helpers) [S1] fit together without
@@ -42,7 +42,7 @@ conflict. FSD calls the same things segments: `lib`, `config`, `api` inside a sl
 - Pure: input → output, no React, no I/O. That makes them testable with plain unit tests
   (put the test next to it).
 - If a helper needs hooks, it is a hook; if it calls the API, it belongs to the API layer.
-- Avoid a single giant `utils.ts`; split by topic (`format-date.ts`, `github-urls.ts`).
+- Avoid a single giant `utils.ts`; split by topic (`format-date.ts`, `product-urls.ts`).
 
 ## Environment and config (Next.js)
 

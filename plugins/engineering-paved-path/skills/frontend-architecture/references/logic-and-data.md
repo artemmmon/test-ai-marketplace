@@ -26,7 +26,7 @@ Domain / model         → plain TS: business rules, calculations, validations, 
 Gateway / API          → network calls through one API client; DTO ↔ domain mapping
 ```
 
-- Business rules (how a verdict is computed, which findings count as blocking, how cost is
+- Business rules (how a discount is computed, which orders count as overdue, how a total is
   summed) are **plain functions** — no React, no fetch. They are easy to unit test and to
   reuse on server and client.
 - Replace scattered `if (type === ...)` branches with a lookup object / strategy map in the
@@ -72,17 +72,17 @@ Rules:
 The 2024 guidance supersedes "one custom hook per query" [S34][S35]:
 
 ```ts
-// features/reviews/api/queries.ts
-export const reviewQueries = {
-  all: () => ["reviews"] as const,
-  byPr: (prId: string) =>
+// features/orders/api/queries.ts
+export const orderQueries = {
+  all: () => ["orders"] as const,
+  byCustomer: (customerId: string) =>
     queryOptions({
-      queryKey: [...reviewQueries.all(), "pr", prId],
-      queryFn: () => api.get<Review[]>(`/pulls/${prId}/reviews`),
+      queryKey: [...orderQueries.all(), "customer", customerId],
+      queryFn: () => api.get<Order[]>(`/customers/${customerId}/orders`),
     }),
 };
 
-// usage: useQuery(reviewQueries.byPr(id)), queryClient.invalidateQueries({ queryKey: reviewQueries.all() })
+// usage: useQuery(orderQueries.byCustomer(id)), queryClient.invalidateQueries({ queryKey: orderQueries.all() })
 ```
 
 - Keep key and `queryFn` together; the same object works with `useQuery`,

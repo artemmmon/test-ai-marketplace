@@ -17,17 +17,17 @@ don't paste blindly.
 8. Service test with in-memory fakes
 9. Before → after: `modules/orders/routes.ts`
 
-## 1. Port (core) — `modules/repos/ports.ts` [S7][S11]
+## 1. Port (core) — `modules/invoices/ports.ts` [S7][S11]
 
 ```ts
-import type { Repo } from '@app/shared';
+import type { Invoice } from '@app/shared';
 
-export interface NewRepo { workspaceId: string; owner: string; name: string; createdBy: string }
+export interface NewInvoice { tenantId: string; customerId: string; number: string; createdBy: string }
 
-export interface RepoStore {
-  findByFullName(workspaceId: string, fullName: string): Promise<Repo | undefined>;
-  insert(input: NewRepo): Promise<Repo>;
-  setClonePath(repoId: string, path: string): Promise<void>;
+export interface InvoiceStore {
+  findByNumber(tenantId: string, number: string): Promise<Invoice | undefined>;
+  insert(input: NewInvoice): Promise<Invoice>;
+  setPdfPath(invoiceId: string, path: string): Promise<void>;
 }
 
 /** Types used only by this port live beside it; shared entities go in domain.ts / the shared contracts. */
@@ -40,42 +40,42 @@ export interface JobQueue { enqueue(kind: string, payload: unknown): Promise<{ i
 
 ```ts
 import { and, eq } from 'drizzle-orm';
-import type { Repo } from '@app/shared';
+import type { Invoice } from '@app/shared';
 import type { Db } from '../../db/client.js';
 import * as t from '../../db/schema.js';
-import type { NewRepo, RepoStore } from './ports.js';
+import type { NewInvoice, InvoiceStore } from './ports.js';
 
-type RepoRow = typeof t.repos.$inferSelect; // not exported
+type InvoiceRow = typeof t.invoices.$inferSelect; // not exported
 
-const toDomain = (r: RepoRow): Repo => ({ id: r.id, owner: r.owner, name: r.name, /* … */ });
+const toDomain = (r: InvoiceRow): Invoice => ({ id: r.id, customerId: r.customerId, number: r.number, /* … */ });
 
-export class DrizzleRepoStore implements RepoStore {
+export class DrizzleInvoiceStore implements InvoiceStore {
   constructor(private db: Db) {}
 
-  async findByFullName(workspaceId: string, fullName: string) {
-    const [row] = await this.db.select().from(t.repos)
-      .where(and(eq(t.repos.workspaceId, workspaceId), eq(t.repos.fullName, fullName)));
+  async findByNumber(tenantId: string, number: string) {
+    const [row] = await this.db.select().from(t.invoices)
+      .where(and(eq(t.invoices.tenantId, tenantId), eq(t.invoices.number, number)));
     return row && toDomain(row);
   }
-  // insert / setClonePath …
+  // insert / setPdfPath …
 }
 ```
 
 ## 3. Service (application) — ports in, domain out [S9]
 
 ```ts
-import type { GitClient, SecretsProvider } from '@app/shared';
+import type { PdfRenderer, SecretsProvider } from '@app/shared';
 import { NotFoundError } from '../../platform/errors.js';
-import type { JobQueue, RepoStore } from './ports.js';
+import type { JobQueue, InvoiceStore } from './ports.js';
 
-export interface RepoServiceDeps { repos: RepoStore; git: GitClient; secrets: SecretsProvider; jobs: JobQueue }
+export interface InvoiceServiceDeps { invoices: InvoiceStore; renderer: PdfRenderer; secrets: SecretsProvider; jobs: JobQueue }
 
-export class RepoService {
-  constructor(private deps: RepoServiceDeps) {}
+export class InvoiceService {
+  constructor(private deps: InvoiceServiceDeps) {}
 
-  async runCloneJob(p: CloneJobPayload): Promise<void> {
-    const { path } = await this.deps.git.clone({ owner: p.owner, name: p.name }, p.url, { depth: 1 });
-    await this.deps.repos.setClonePath(p.repoId, path);
+  async runExportJob(p: ExportJobPayload): Promise<void> {
+    const { path } = await this.deps.renderer.render({ number: p.number }, { format: 'pdf' });
+    await this.deps.invoices.setPdfPath(p.invoiceId, path);
   }
 }
 ```
@@ -84,21 +84,21 @@ export class RepoService {
 
 ```ts
 // platform/container.ts
-get reposStore(): RepoStore { return (this._reposStore ??= new DrizzleRepoStore(this.db)); }
+get invoiceStore(): InvoiceStore { return (this._invoiceStore ??= new DrizzleInvoiceStore(this.db)); }
 
-// modules/repos/routes.ts — the only module file that sees the Container
+// modules/invoices/routes.ts — the only module file that sees the Container
 const c = app.container;
-const service = new RepoService({ repos: c.reposStore, git: c.git, secrets: c.secrets, jobs: c.jobs });
-c.jobs.register(CLONE_JOB_KIND, (p) => service.runCloneJob(CloneJobPayload.parse(p)));
+const service = new InvoiceService({ invoices: c.invoiceStore, renderer: c.renderer, secrets: c.secrets, jobs: c.jobs });
+c.jobs.register(EXPORT_JOB_KIND, (p) => service.runExportJob(ExportJobPayload.parse(p)));
 ```
 
 ## 5. Thin route (driving adapter) [S12]
 
 ```ts
-app.post('/repos', { schema: { body: RepoInput, response: { 200: Repo, 201: Repo } } }, async (req, reply) => {
-  const { workspaceId, userId } = await getContext(app.container, req);
-  const { repo, created } = await service.add(workspaceId, userId, req.body.url);
-  return reply.status(created ? 201 : 200).send(repo);
+app.post('/invoices', { schema: { body: InvoiceInput, response: { 200: Invoice, 201: Invoice } } }, async (req, reply) => {
+  const { tenantId, userId } = await getContext(app.container, req);
+  const { invoice, created } = await service.add(tenantId, userId, req.body);
+  return reply.status(created ? 201 : 200).send(invoice);
 });
 ```
 
@@ -106,19 +106,19 @@ app.post('/repos', { schema: { body: RepoInput, response: { 200: Repo, 201: Repo
 
 ```ts
 // ports.ts (core)
-export interface ReviewStores { reviews: ReviewStore; findings: FindingStore }
-export interface UnitOfWork { run<T>(work: (s: ReviewStores) => Promise<T>): Promise<T> }
+export interface InvoiceStores { invoices: InvoiceStore; lines: LineStore }
+export interface UnitOfWork { run<T>(work: (s: InvoiceStores) => Promise<T>): Promise<T> }
 
 // repository/uow.ts (outer)
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 export class DrizzleUnitOfWork implements UnitOfWork {
   constructor(private db: Db) {}
-  run<T>(work: (s: ReviewStores) => Promise<T>) {
+  run<T>(work: (s: InvoiceStores) => Promise<T>) {
     return this.db.transaction((tx: Tx) =>
-      work({ reviews: new DrizzleReviewStore(tx), findings: new DrizzleFindingStore(tx) }));
+      work({ invoices: new DrizzleInvoiceStore(tx), lines: new DrizzleLineStore(tx) }));
   }
 }
-// service: await this.deps.uow.run(async ({ reviews, findings }) => { … });
+// service: await this.deps.uow.run(async ({ invoices, lines }) => { … });
 ```
 
 Stores take `Db | Tx` in the constructor, so the same class works inside and outside a transaction.
@@ -126,13 +126,13 @@ Stores take `Db | Tx` in the constructor, so the same class works inside and out
 ## 7. Anti-corruption adapter for an SDK [S21]
 
 ```ts
-// adapters/github/octokit.ts — Octokit types stop here
-async listPullRequests(repo: RepoRef): Promise<PrMeta[]> {
+// adapters/payments/client.ts — the payment SDK's types stop here
+async listCharges(customer: CustomerRef): Promise<ChargeMeta[]> {
   try {
-    const res = await withRetry(() => this.octokit.rest.pulls.list({ owner: repo.owner, repo: repo.name, state: 'all' }));
-    return res.data.map((pr) => ({ number: pr.number, title: pr.title, status: mapStatus(pr.state, !!pr.merged_at), /* … */ }));
+    const res = await withRetry(() => this.sdk.charges.list({ customer: customer.externalId, limit: 100 }));
+    return res.data.map((c) => ({ id: c.id, amount: c.amount, status: mapStatus(c.status, !!c.refunded), /* … */ }));
   } catch (err) {
-    throw new ExternalServiceError('GitHub: list pull requests failed', { cause: String(err) });
+    throw new ExternalServiceError('Payments: list charges failed', { cause: String(err) });
   }
 }
 ```
@@ -140,13 +140,13 @@ async listPullRequests(repo: RepoRef): Promise<PrMeta[]> {
 ## 8. Service test with in-memory fakes [S11]
 
 ```ts
-class InMemoryRepoStore implements RepoStore { rows = new Map<string, Repo>(); /* … */ }
+class InMemoryInvoiceStore implements InvoiceStore { rows = new Map<string, Invoice>(); /* … */ }
 
-it('persists the clone path', async () => {
-  const repos = new InMemoryRepoStore();
-  const service = new RepoService({ repos, git: new MockGitClient(), secrets: new MockSecretsProvider(), jobs: { enqueue: async () => ({ id: 'j1' }) } });
-  await service.runCloneJob({ repoId: 'r1', owner: 'o', name: 'n', url: 'https://github.com/o/n' });
-  expect(repos.rows.get('r1')?.clone_path).toBeDefined();
+it('persists the PDF path', async () => {
+  const invoices = new InMemoryInvoiceStore();
+  const service = new InvoiceService({ invoices, renderer: new FakePdfRenderer(), secrets: new FakeSecretsProvider(), jobs: { enqueue: async () => ({ id: 'j1' }) } });
+  await service.runExportJob({ invoiceId: 'i1', number: 'INV-1' });
+  expect(invoices.rows.get('i1')?.pdfPath).toBeDefined();
 });
 ```
 

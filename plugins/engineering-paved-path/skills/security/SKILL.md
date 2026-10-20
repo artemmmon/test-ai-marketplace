@@ -24,7 +24,7 @@ it enters to where it is used before rating anything. `fetch(config.apiBase)` is
 |---|---|---|
 | HTTP requests: body, query, headers, cookies, path params, uploaded files | Anyone who can reach the port, or any web page in a user's browser | every route, SQL, fs, outbound calls |
 | User-supplied URLs, webhooks, import links | Can point at internal hosts or cloud metadata | outbound HTTP |
-| Third-party content: cloned repos, uploaded or downloaded files, scraped pages, issue/PR text | The author is the attacker | fs reads, command args, parsers, LLM prompts |
+| Third-party content: uploaded or downloaded files, checked-out third-party code, scraped pages, user-written text (comments, tickets, messages) | The author is the attacker | fs reads, command args, parsers, LLM prompts |
 | LLM output | Steerable by any untrusted text in the prompt (prompt injection) [S3] | DB, UI markdown, links, commands, CI comments |
 | Message-queue payloads, JSON columns, env set by users | Shape and origin not guaranteed | handlers, parsers |
 

@@ -49,7 +49,7 @@ There is no official standard beyond hooks [S11]; consistency matters more than 
 - Pick one file-name case per kind and keep it: common choices are `PascalCase.tsx` for a
   component file and `kebab-case.ts` for everything else [S6][S5].
 - Folder of a component matches its component name; singular domain names
-  (`features/review`, not `features/reviews-stuff`) [S5].
+  (`features/order`, not `features/orders-stuff`) [S5].
 - Consistent suffixes: `*.test.ts(x)`, `*.helpers.ts` / `helpers.ts`, `constants.ts`,
   `types.ts`, `queries.ts`, `actions.ts`.
-- Name by domain meaning, not by technical role: `FindingCard`, not `ItemWrapper2`.
+- Name by domain meaning, not by technical role: `OrderCard`, not `ItemWrapper2`.

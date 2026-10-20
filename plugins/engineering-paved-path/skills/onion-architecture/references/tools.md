@@ -41,13 +41,13 @@ any equivalent tool (Express/Hono, Prisma/Kysely, Valibot, another SDK).
   or the table schema for that module [S18][S19].
 - Map at the boundary: `toDomain(row)` / `toRow(entity)` live in the repository. Row types
   (`typeof t.x.$inferSelect`) do not appear in port signatures.
-- Every query takes the tenancy key (for example `workspaceId`), plus a user id for per-user
+- Every query takes the tenancy key (for example `tenantId`), plus a user id for per-user
   tables. Enforce it in the port signature.
 - A repository may **read** other modules' tables for a read model (joins, aggregates). It
   **writes** only its own module's tables. Writes elsewhere go through that module's port.
 - **Transactions:** `db.transaction(async (tx) => ...)` [S16]. The service decides the
   boundary and the repository never commits on its own [S17]. S17 passes `tx` down through
-  use cases. The alternative used here builds repositories over an executor (`Db | Tx`) and
+  use cases. The alternative builds repositories over an executor (`Db | Tx`) and
   exposes a unit-of-work port whose callback receives transaction-bound repositories. That keeps
   ORM types out of application code (patterns.md section 6).
 - Translate driver errors (unique violation `23505`, FK `23503`) into `AppError`
@@ -64,12 +64,12 @@ any equivalent tool (Express/Hono, Prisma/Kysely, Valibot, another SDK).
 - Branded/refined types (`z.string().uuid()`, enums) make illegal states unrepresentable
   in the core instead of `if` checks in services.
 
-## 4. Third-party SDKs (GitHub, LLM, git, Slack, ...) - outer ring (ACL)
+## 4. Third-party SDKs (payments, LLM, git host, chat, ...) - outer ring (ACL)
 
 - Each SDK is imported **only** in `src/adapters/<name>/` [S21][S22].
 - The adapter is three things in one file: protocol (auth, pagination, retry, timeouts),
   translator (SDK payload -> shared contract, for example a `mapStatus` function), facade
-  (methods named in your language: `listPullRequests`, not `pulls.list`).
+  (methods named in your language: `listCharges`, not `charges.list`).
 - Construction from secrets happens in the container, never in a service. Secrets (tokens)
   come only via a `SecretsProvider` port; non-secret settings (a channel id, a base URL) go in
   the app config.
@@ -85,17 +85,17 @@ any equivalent tool (Express/Hono, Prisma/Kysely, Valibot, another SDK).
 
 - The queue implementation (an in-process queue plus a `jobs` table, an SSE bus, a broker client)
   is an outer-ring driven adapter.
-- The service exposes the job's *work* as a plain method (`runCloneJob(payload)`) and
+- The service exposes the job's *work* as a plain method (`runExportJob(payload)`) and
   enqueues through a narrow `JobQueue` port (`enqueue(kind, payload)`); registering the
-  handler (`jobs.register(kind, p => service.runCloneJob(p))`) is wiring - do it in the
+  handler (`jobs.register(kind, p => service.runExportJob(p))`) is wiring - do it in the
   routes plugin or container, not inside the service.
 - Payloads crossing the queue are parsed back with the schema library in the handler (they come from JSON).
 - An in-memory concurrency limiter inside a pure pipeline is fine; the durable queue is not.
 
 ## 6. Shared domain libraries - application/core
 
-A workspace package that holds pure domain logic (for example a review engine) is imported
-as application/core code. It receives its I/O (an LLM provider, a git client) as ports and
+A workspace package that holds pure domain logic (for example a pricing engine) is imported
+as application/core code. It receives its I/O (an LLM provider, a payment client) as ports and
 returns values; persisting the result is the repository's job.
 
 ## 7. Test runner and test containers - outer ring (tests may import anything)
