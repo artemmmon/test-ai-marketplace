@@ -98,6 +98,9 @@ the user, not into another round.
 A round is: fix-mode `implementer` with the verifier's "To reach PASS" list as it stands, then the
 verifier again with `recheck:` and the ids of that list and of "Cannot verify". Count the rounds. After the
 second failed round, stop and ask the user.
+The recheck prompt carries ids and nothing else: no claims such as "known baseline: ...". A fact the verifier
+needs goes into a file (the plan's `Baseline:` line, written by the implementer), or the verifier runs the check
+itself; the verifier flips an item only on a new check or new evidence it quotes.
 
 ## Closing report to the user
 
