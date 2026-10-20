@@ -23,3 +23,7 @@ All notable changes to this plugin are documented here. The format follows
 - `next-best-practices`, `react-best-practices` and `react-testing-library` are included without a confirmed
   upstream license, for test and lab use only. They are not covered by the plugin's MIT license, each has a
   `LICENSE-NOTICE.md`, and they will be removed on request of the rights holder (see README, Licensing notice).
+
+### Documentation
+
+- README with the skill table, usage examples, the example architecture check and the licensing notice.
