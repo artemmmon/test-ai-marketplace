@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-10-19T12:00:00Z",
+  "commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+  "releases": [
+    {
+      "id": "sdd-engineering@1.0.0",
+      "plugin": "sdd-engineering",
+      "version": "1.0.0",
+      "date": "2026-10-10",
+      "tag": "sdd-engineering--v1.0.0",
+      "commit": "b2c3d4e5f60718293a4b5c6d7e8f9012345678a1",
+      "notesMarkdown": "### Added\n- Initial release: spec-writing, sdd-workflow, spec-reviewer, /spec.",
+      "origin": "changelog+tag"
+    },
+    {
+      "id": "engineering-paved-path@1.2.0",
+      "plugin": "engineering-paved-path",
+      "version": "1.2.0",
+      "date": "2026-09-30",
+      "tag": "engineering-paved-path--v1.2.0",
+      "commit": "c3d4e5f60718293a4b5c6d7e8f9012345678a1b2",
+      "notesMarkdown": "### Added\n- `commit-conventions` skill.\n\n### Changed\n- `code-review` checklist covers security.",
+      "origin": "changelog+tag"
+    },
+    {
+      "id": "architecture-review@1.0.0",
+      "plugin": "architecture-review",
+      "version": "1.0.0",
+      "date": "2026-09-20",
+      "tag": "architecture-review--v1.0.0",
+      "commit": "d4e5f60718293a4b5c6d7e8f9012345678a1b2c3",
+      "notesMarkdown": "### Added\n- Initial release: `architecture-review` and `adr-writing` skills, `architecture-reviewer` agent.",
+      "origin": "changelog+tag"
+    },
+    {
+      "id": "research-tools@1.0.1",
+      "plugin": "research-tools",
+      "version": "1.0.1",
+      "date": "2026-09-12",
+      "tag": "research-tools--v1.0.1",
+      "commit": "e5f60718293a4b5c6d7e8f9012345678a1b2c3d4",
+      "notesMarkdown": "### Fixed\n- `docs-fetch` follows redirects.",
+      "origin": "changelog+tag"
+    },
+    {
+      "id": "engineering-paved-path@1.1.0",
+      "plugin": "engineering-paved-path",
+      "version": "1.1.0",
+      "date": "2026-08-20",
+      "tag": null,
+      "commit": null,
+      "notesMarkdown": "### Added\n- `/review-pr` command.",
+      "origin": "changelog"
+    },
+    {
+      "id": "engineering-paved-path@1.0.0",
+      "plugin": "engineering-paved-path",
+      "version": "1.0.0",
+      "date": "2026-08-01",
+      "tag": "engineering-paved-path--v1.0.0",
+      "commit": "f60718293a4b5c6d7e8f9012345678a1b2c3d4e5",
+      "notesMarkdown": "### Added\n- Initial release: `react-best-practices`, `code-review`, `code-reviewer` agent and guard hooks.",
+      "origin": "changelog+tag"
+    }
+  ]
+}

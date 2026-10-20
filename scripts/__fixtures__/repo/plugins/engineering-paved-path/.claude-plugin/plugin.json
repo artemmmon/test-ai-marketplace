@@ -1,0 +1,15 @@
+{
+  "name": "engineering-paved-path",
+  "version": "1.2.0",
+  "description": "Team engineering conventions: React best practices, code review, commit conventions and guard hooks.",
+  "author": {
+    "name": "artemmmon"
+  },
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "react",
+    "review",
+    "conventions"
+  ]
+}

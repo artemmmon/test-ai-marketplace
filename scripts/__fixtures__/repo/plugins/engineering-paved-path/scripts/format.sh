@@ -1,0 +1,3 @@
+#!/bin/sh
+# FIXTURE-PLUGIN-SCRIPT-MARKER
+exit 0

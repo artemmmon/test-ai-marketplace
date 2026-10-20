@@ -1,0 +1,28 @@
+{
+  "name": "sdd-engineering",
+  "version": "1.0.0",
+  "description": "Spec-driven development: write specs, plan, review — built on the paved path, research and architecture plugins.",
+  "author": {
+    "name": "artemmmon"
+  },
+  "license": "MIT",
+  "keywords": [
+    "sdd",
+    "spec",
+    "planning"
+  ],
+  "dependencies": [
+    {
+      "name": "engineering-paved-path",
+      "version": "^1.0.0"
+    },
+    {
+      "name": "research-tools",
+      "version": "^1.0.0"
+    },
+    {
+      "name": "architecture-review",
+      "version": "^1.0.0"
+    }
+  ]
+}
