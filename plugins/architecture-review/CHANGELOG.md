@@ -14,3 +14,4 @@ All notable changes to this plugin are documented here. The format follows
   `onion-architecture` and `frontend-architecture` skills of `engineering-paved-path`. Mechanical checks come
   from the optional `checks` input (empty by default); the result is one JSON object, with a `recheck:` mode for
   verifying fixes.
+- README with usage examples for diff, module and recheck runs, the input table and the output schema.
