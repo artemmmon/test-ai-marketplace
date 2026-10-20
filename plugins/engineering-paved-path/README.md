@@ -27,8 +27,10 @@ them removed, contact the marketplace maintainer and it will be removed on reque
 
 ## How to call them
 
-- **Users:** type `/engineering-paved-path:<skill>`, for example `/engineering-paved-path:security`.
-  Claude also loads a skill by itself when the task matches its description.
+- **Users:** type `/engineering-paved-path:<skill>` for every skill except `next-best-practices`, for example
+  `/engineering-paved-path:security`. Claude also loads these skills by itself when the task matches their description.
+- **`next-best-practices`** has `user-invocable: false`: it is not a `/` command and is not in the `/` menu. Claude
+  loads it by itself when the task matches (it is a Next.js task), and agents load it through the Skill tool.
 - **Agents and other skills:** refer to the scoped name `engineering-paved-path:<skill>`
   (for example `engineering-paved-path:onion-architecture`), because plugin components are namespaced.
 
