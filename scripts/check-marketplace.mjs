@@ -140,11 +140,13 @@ function stringsIn(value, out = []) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// FR-28 forbidden strings. "DevDigest" is allowed only inside a README.md "Sources" section.
+// FR-28 forbidden strings. The plugins are public and must not be tied to the project they were
+// extracted from: its name is banned in every text file, README "Sources" sections included.
+// This marketplace's own install command (artemmmon/test-ai-marketplace) does not match any rule.
 // ---------------------------------------------------------------------------------------------
 const CONDITIONAL_RE = /\b(if|when|where|whether|exists?|present|optional|optionally|any|unless)\b/i;
 const FORBIDDEN = [
-  { re: /devdigest/gi, label: '"DevDigest"', allowedInSources: true },
+  { re: /dev[ -]?digest/gi, label: '"DevDigest" / "dev-digest" / "dev digest" (the source project must not be named)' },
   { re: /(?<![\w./@#-])server\//g, label: 'path "server/"' },
   { re: /(?<![\w./@#-])client\//g, label: 'path "client/"' },
   { re: /reviewer-core/g, label: '"reviewer-core"' },
@@ -162,24 +164,11 @@ function scanForbidden(pluginName, dir) {
     const buffer = readFileSync(path);
     if (buffer.includes(0)) return;
     const rel = relative(dir, path);
-    const isReadme = /(^|\/)README\.md$/.test(rel.split('\\').join('/'));
     const lines = buffer.toString('utf8').split(/\r?\n/);
-    let inSources = false;
-    let sourcesLevel = 0;
     lines.forEach((line, i) => {
-      const heading = isReadme ? /^(#{1,6})\s+(.*?)\s*$/.exec(line) : null;
-      if (heading) {
-        const level = heading[1].length;
-        if (/^sources\b/i.test(heading[2])) {
-          inSources = true;
-          sourcesLevel = level;
-        } else if (inSources && level <= sourcesLevel) inSources = false;
-      }
-      for (const { re, label, allowedInSources } of FORBIDDEN) {
-        for (const m of line.matchAll(re)) {
-          if (allowedInSources && inSources && m[0] === 'DevDigest') continue;
-          fail(`"${pluginName}": ${rel}:${i + 1}: forbidden ${label}`);
-        }
+      for (const { re, label } of FORBIDDEN) {
+        if (re.test(line)) fail(`"${pluginName}": ${rel}:${i + 1}: forbidden ${label}`);
+        re.lastIndex = 0;
       }
       if (/\b(INSIGHTS|AGENTS)\.md\b/.test(line) && !CONDITIONAL_RE.test(line)) {
         fail(`"${pluginName}": ${rel}:${i + 1}: INSIGHTS.md/AGENTS.md must be optional ("if it exists"), not required`);
@@ -354,6 +343,43 @@ function visit(node) {
   state.set(node, 2);
 }
 for (const name of graph.keys()) visit(name);
+
+// ---------------------------------------------------------------------------------------------
+// Dependency consistency: a scoped reference "<other-plugin>:<component>" in a plugin's agents,
+// skills, hooks, scripts or README needs that plugin in `dependencies`, and a declared dependency
+// should be referenced somewhere (a warning only: a dependency may be needed without a scoped name).
+// ---------------------------------------------------------------------------------------------
+const SCOPED_FILE_RE = /^(agents\/.+\.md|skills\/.+\.md|hooks\/[^/]+\.json|scripts\/[^/]+\.mjs|README\.md)$/;
+const escapeRe = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const allPluginNames = [...new Set([...plugins.map((p) => p.name), ...names])].filter(Boolean);
+
+for (const { name, dir, manifest } of plugins) {
+  const others = allPluginNames.filter((n) => n !== name);
+  if (!others.length) continue;
+  const declared = new Set((Array.isArray(manifest.dependencies) ? manifest.dependencies : []).map((d) => (typeof d === 'string' ? d : d?.name)));
+  const scoped = new RegExp(`(?<![\\w-])(${others.map(escapeRe).join('|')}):([A-Za-z][\\w-]*)`, 'g');
+  const used = new Set();
+  const reported = new Set();
+  walk(dir, (path, d) => {
+    if (!d.isFile()) return;
+    const rel = relative(dir, path).split('\\').join('/');
+    if (!SCOPED_FILE_RE.test(rel)) return;
+    const buffer = readFileSync(path);
+    if (buffer.includes(0)) return;
+    buffer.toString('utf8').split(/\r?\n/).forEach((line, i) => {
+      for (const m of line.matchAll(scoped)) {
+        used.add(m[1]);
+        const ref = `${m[1]}:${m[2]}`;
+        if (declared.has(m[1]) || reported.has(ref)) continue;
+        reported.add(ref);
+        fail(`"${name}": uses ${ref} but ${m[1]} is not in dependencies (${rel}:${i + 1})`);
+      }
+    });
+  });
+  for (const depName of declared) {
+    if (depName && !used.has(depName)) warn(`"${name}": dependency "${depName}" is declared but never referenced as ${depName}:<component>`);
+  }
+}
 
 // Tags: <plugin>--v<version> for every plugin that something depends on. Warning until the first
 // release, error with --require-tags. Skipped outside a git repository.

@@ -289,20 +289,81 @@ test('forbidden strings: harmless look-alikes pass', () => {
   check({ plugins: { plug: { files: { 'skills/x/SKILL.md': fine } } } }, (r) => assert.equal(r.code, 0, r.err));
 });
 
-test('DevDigest is allowed only in a README.md Sources section', () => {
-  const readme = '# p\n\nExtracted from DevDigest.\n\n## Sources\n\nOrigin: DevDigest.\n\n### Details\n\nStill DevDigest.\n\n## Other\n\nDevDigest again.\n';
+test('the source project must not be named anywhere, README Sources sections included', () => {
+  const readme = '# p\n\nExtracted from DevDigest.\n\n## Sources\n\nOrigin: DevDigest.\n\n## Other\n\nfine\n';
   check({ plugins: { plug: { files: { 'README.md': readme } } } }, (r) => {
     assert.equal(r.code, 1);
     assert.match(r.err, /README\.md:3: forbidden "DevDigest"/);
-    assert.doesNotMatch(r.err, /README\.md:7:/);
+    assert.match(r.err, /README\.md:7: forbidden "DevDigest"/, 'no Sources exemption any more');
     assert.doesNotMatch(r.err, /README\.md:11:/);
-    assert.match(r.err, /README\.md:15: forbidden "DevDigest"/);
   });
-  // lowercase or in another file stays forbidden even inside Sources
-  check({ plugins: { plug: { files: { 'README.md': '# p\n\n## Sources\n\nfrom devdigest\n', 'skills/x/notes.md': '## Sources\n\nDevDigest\n' } } } }, (r) => {
+});
+
+test('every spelling of the source project is banned in every text file type', () => {
+  const files = {
+    'skills/x/SKILL.md': '---\nname: x\n---\nok\nthe dev-digest repo\n',
+    'agents/a.md': '---\nname: a\n---\nA Dev Digest example\n',
+    'hooks/hooks.json': '{ "note": "DEVDIGEST" }\n',
+    'scripts/s.mjs': "// see https://github.com/artemmmon/dev-digest/blob/main/x\n",
+    'CHANGELOG.md': '# Changelog\n\n## [Unreleased]\n\n## [1.0.0] - 2026-10-20\n\n- Extracted from devdigest.\n',
+    'skills/x/data.txt': 'line one\nDev  Digest\n',
+  };
+  check({ plugins: { plug: { files } } }, (r) => {
     assert.equal(r.code, 1);
-    assert.match(r.err, /README\.md:5: forbidden "DevDigest"/);
-    assert.match(r.err, /notes\.md:3: forbidden "DevDigest"/);
+    for (const where of ['SKILL\\.md:5', 'a\\.md:4', 'hooks\\.json:1', 's\\.mjs:1', 'CHANGELOG\\.md:7']) {
+      assert.match(r.err, new RegExp(`${where}: forbidden "DevDigest"`), where);
+    }
+    assert.doesNotMatch(r.err, /data\.txt/, 'two spaces is not one of the listed spellings');
+  });
+});
+
+test("this marketplace's own install command is allowed", () => {
+  const readme = '# p\n\n```\nclaude plugin marketplace add artemmmon/test-ai-marketplace\nclaude plugin install p@test-ai-marketplace\n```\n';
+  check({ plugins: { plug: { files: { 'README.md': readme } } } }, (r) => assert.equal(r.code, 0, r.err));
+});
+
+test('dependencies: a scoped reference to another plugin needs a dependency', () => {
+  const files = {
+    'agents/a.md': '---\nname: a\n---\nCall `lib:helper` and also lib:helper again, plus other-lib:thing.\n',
+    'skills/s/SKILL.md': '---\nname: s\n---\nLoad lib:rules first.\n',
+    'hooks/hooks.json': '{ "command": "lib:hook" }\n',
+    'scripts/run.mjs': "// calls lib:script\n",
+    'README.md': '# app\n\nUses `lib:readme`.\n',
+  };
+  check({ plugins: { app: { files }, lib: {}, 'other-lib': {} } }, (r) => {
+    assert.equal(r.code, 1);
+    for (const ref of ['lib:helper', 'lib:rules', 'lib:hook', 'lib:script', 'lib:readme', 'other-lib:thing']) {
+      assert.match(r.err, new RegExp(`"app": uses ${ref} but ${ref.split(':')[0]} is not in dependencies`), ref);
+    }
+    assert.equal(r.err.split('uses lib:helper').length, 2, 'a repeated reference is reported once');
+  });
+});
+
+test('dependencies: a declared dependency satisfies scoped references; own name and look-alikes are ignored', () => {
+  const files = {
+    'agents/a.md': '---\nname: a\n---\nCall `lib:helper`. Own: app:thing. Not scoped: lib: helper, mylib:x, lib-extra:y, http://lib:8080 is a port.\n',
+  };
+  check({ plugins: { app: { files, manifest: dep('lib', '^1.0.0') }, lib: {} } }, (r) => {
+    assert.equal(r.code, 0, r.err);
+    assert.doesNotMatch(r.err, /never referenced/);
+  });
+});
+
+test('dependencies: files outside agents, skills, hooks, scripts and README are not scanned', () => {
+  check({ plugins: { app: { files: { 'COMPATIBILITY.md': 'Needs lib:helper.\n', 'skills/s/SKILL.md': '---\nname: s\n---\nplain\n', 'skills/s/assets/x.mjs': '// lib:helper\n', 'docs/n.md': 'lib:helper\n' } }, lib: {} } }, (r) => assert.equal(r.code, 0, r.err));
+});
+
+test('dependencies: a declared but never referenced dependency is only a warning', () => {
+  check({ plugins: { app: { manifest: dep('lib', '^1.0.0'), files: { 'README.md': '# app\n\nMentions lib without a scope.\n' } }, lib: {} } }, (r) => {
+    assert.equal(r.code, 0, r.err);
+    assert.match(r.err, /"app": dependency "lib" is declared but never referenced as lib:<component>/);
+  });
+});
+
+test('dependencies: a string dependency entry also counts', () => {
+  check({ plugins: { app: { manifest: { dependencies: ['lib'] }, files: { 'agents/a.md': '---\nname: a\n---\nlib:helper\n' } }, lib: {} } }, (r) => {
+    assert.equal(r.code, 0, r.err);
+    assert.doesNotMatch(r.err, /uses lib:helper/);
   });
 });
 
