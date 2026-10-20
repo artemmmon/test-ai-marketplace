@@ -7,7 +7,7 @@ verification trace to, provenance tags for inputs, required handling for untrust
 reports); this skill holds the rules, so the planner, the verifier and a human reviewer read the same
 ones. Choosing a solution and planning the work are out of scope.
 
-The skill is preloaded by the agents `spec-creator`, `implementation-planner` and
+The skill is preloaded by the agent `spec-creator` and read by path by `implementation-planner` and
 `implementation-verifier`, so it has no `disable-model-invocation` flag.
 
 ## File map
