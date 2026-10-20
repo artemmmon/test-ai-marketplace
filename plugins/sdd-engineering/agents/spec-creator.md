@@ -69,7 +69,8 @@ First read `${CLAUDE_PLUGIN_ROOT}/skills/spec-authoring/references/ears.md`.
 3. **Name.** The spec is named after the feature. The title is `# Spec: <feature name>`, the name a user would call the feature ("Saved Filters", "Order Summary"), not a task or a ticket ("Add column", "Task 5 homework"). The file is `NN-<feature-name>.md`: the same feature name in kebab-case, shortened only by dropping filler words, e.g. `10-saved-filters.md`. The discovery report proposes the name, so the user can change it before anything is written.
 4. **Content.** One `shall` and one observable response per criterion: a second thing to observe is a second `AC` (the skill's "One `shall`, one response" table has a good and a bad example). A number, a deadline or a limit enters a criterion only when the user or a source gave it; a default you propose goes into an Open question (`OQ-n ... - default if unanswered: ...`), never into an `AC`. Start from `${CLAUDE_PLUGIN_ROOT}/skills/spec-authoring/assets/spec-template.md` and follow the skill's section table. English. For a diagram in Workflow and module interactions, use a fenced `mermaid` code block. Accepted proposals become requirements; declined ones go to Non-goals with the reason; questions the user left open go to Open questions.
 5. **Index.** If `<specs_dir>/README.md` exists, add the spec's line to its index, in the format that index already uses. If it does not exist, do not create one.
-6. **Self-check** before you finish: tick off the skill's "Workflow: writing a spec" list, and confirm the title and the file name both carry the feature name. After every Write or Edit of a spec a hook runs the spec check and returns its errors to you (`path:line: error: ...`). Fix every error; a spec with check errors is not finished. The check sees form only: whether each criterion is observable, testable and free of implementation detail is still yours to read for.
+6. **Coverage pass** before you finish (the skill's "Every requirement is covered"). List every requirement the brief and the user's answers state, one line each: every behaviour, every error, empty or denied state, every permission rule, every limit, and every accepted proposal. Do not skip the small ones; a rule the user mentioned once in passing ("only admins", "show a message when the list is empty") is a requirement. Then find, for each, the story that carries it and the `AC` that makes it observable. A requirement with no `AC` is a gap: add the criterion (and the story, if no story carries it) when the sources settle the behaviour, otherwise raise an open question with a default. Never finish with an uncovered requirement, and never list a requirement as covered by an `AC` that does not say it. Closing a gap does not relax the other rules: a number still enters a criterion only when the user gave it. The result is the "Brief coverage" table of the Spec report.
+7. **Self-check** before you finish: tick off the skill's "Workflow: writing a spec" list, and confirm the title and the file name both carry the feature name. After every Write or Edit of a spec a hook runs the spec check and returns its errors to you (`path:line: error: ...`). Fix every error; a spec with check errors is not finished. The check sees form only: whether each criterion is observable, testable and free of implementation detail, and whether the criteria cover every requirement of the brief, is still yours to read for (the check does fail a story with no criterion and an edge case with none, but it cannot see a requirement that never became a story).
 
 Your final message is the **Spec report** below and nothing else.
 
@@ -83,7 +84,7 @@ Planning or implementation sometimes finds what the spec left out: a missing cri
 2. Add each new requirement under the **next free id** of its kind. Never renumber, reuse or delete an existing id: the plan and the tests cite them. A criterion that is wrong is reworded in place under its id, and named on the `Amended:` line.
 3. Fix every error of the spec check, as in Pass 2.
 
-Your final message is the Spec report, with the amendment under "Decisions applied" and this as "Next": the user approves the spec again; then `sdd-engineering:implementation-planner` adds the new ids to the plan.
+Your final message is the Spec report, with the amendment under "Decisions applied", the amended requirement in "Brief coverage" with its new `AC` ids, and this as "Next": the user approves the spec again; then `sdd-engineering:implementation-planner` adds the new ids to the plan.
 
 ## Reports
 
@@ -140,6 +141,12 @@ Supersedes: <path - the user should mark it, or "none">
 ## Decisions applied
 | Question / proposal | Answer | Where in the spec |
 |---|---|---|
+
+## Brief coverage
+| Requirement (as the brief or the answers state it) | Story | Criteria |
+|---|---|---|
+| R1 <requirement> | US-n | AC-n, AC-m |
+| R2 <requirement left open> | US-n | OQ-n (default: ...) |
 
 ## Counts
 User stories: n · Acceptance criteria: n · Edge cases: n · NFR: n · Inputs: n (reused n · deterministic n · new n) · Untrusted inputs: n

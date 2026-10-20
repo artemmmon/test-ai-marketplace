@@ -17,8 +17,8 @@ How a plugin version is chosen, released and, if needed, rolled back. Contributo
   `## [Unreleased]` on top. The newest version in the changelog must equal `plugin.json` `version`
   (`check-marketplace.mjs` fails otherwise).
 
-`engineering-paved-path`, `research-tools` and `architecture-review` are at `1.0.0`, `sdd-engineering` is at `1.1.0`, and
-each released version has its `<plugin>--v<version>` tag on the remote.
+`research-tools` and `architecture-review` are at `1.0.0`, `engineering-paved-path` is at `1.0.1`,
+`sdd-engineering` is at `1.2.0`, and each released version has its `<plugin>--v<version>` tag on the remote.
 
 ## Semver rules for plugins
 
@@ -160,6 +160,41 @@ Not verified:
   dependencies.
 - Loading a tagged checkout for one session (`git worktree add ../rollback <tag>` and `claude --plugin-dir ../rollback/plugins/<name>`)
   is documented by Claude Code for `--plugin-dir`, but was not run here.
+
+### Stable channel
+
+A team that wants new releases only after it has checked them keeps its project on a **stable channel**: the marketplace
+pinned to the tag of the last verified release, declared in the project's settings so that everyone who opens the
+project gets the same versions. Moving the pin to a newer tag is the promotion; moving it back to an older tag is the
+rollback. Rehearse both once before relying on them.
+
+```sh
+# in the project, once: declare the marketplace pinned, then install
+claude plugin marketplace add --scope project 'artemmmon/test-ai-marketplace#sdd-engineering--v1.1.1'
+claude plugin install sdd-engineering@test-ai-marketplace --scope project
+git add .claude/settings.json && git commit -m "chore: pin the marketplace to sdd-engineering--v1.1.1"
+```
+
+`--scope project` writes the pin to `.claude/settings.json` (`extraKnownMarketplaces.test-ai-marketplace.source.ref`) and
+enables the plugins there, so the commit is the record of what the team runs. To promote or to roll back, change `ref` to
+the other tag, or run `claude plugin marketplace remove test-ai-marketplace` and add it again with the other `#<tag>`
+(the plugins have to be installed again after a remove). The tags are listed by `git ls-remote --tags origin`.
+
+Verified with Claude Code 2.1.304 and a throw-away `CLAUDE_CONFIG_DIR` and project directory: the command above creates
+exactly that `ref` entry, `claude plugin list` then shows `sdd-engineering` `1.1.1` at scope `project` (with the
+dependencies `engineering-paved-path` `1.0.1`, `research-tools` `1.0.0`, `architecture-review` `1.0.0`), and
+`marketplace list` shows `artemmmon/test-ai-marketplace@sdd-engineering--v1.1.1`.
+
+Not possible, and not verified beyond that:
+
+- **A second marketplace name for the stable channel.** `claude plugin marketplace add` has no option to choose a local
+  name; the name is the `name` field of the repository's `marketplace.json` (`test-ai-marketplace`). Adding the same
+  repository again, with or without a ref, replaces the earlier entry ("was already added ... and now points at ..."), so a
+  pinned and a floating copy cannot be registered side by side under this name. A separate name would need a fork or a
+  second repository with another `marketplace.json` `name`; this was not tried.
+- Whether a teammate whose user-scope settings declare the same marketplace unpinned wins over the project's pin (the
+  scopes were not compared here). Tell the team to keep only the project entry.
+- How plugin dependencies resolve while the marketplace is pinned, see "Not verified" above.
 
 ### Roll back a bad release as the maintainer
 

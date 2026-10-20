@@ -59,6 +59,7 @@ a finding). Negative cases are named `negative-*`.
 | sdd-engineering | `spec-creator-discovery-pass` | behaviour | pass 1 returns questions with numbered options and writes no spec file |
 | sdd-engineering | `run-plan-draft-spec-gate` | behaviour | `/sdd-engineering:run-plan` on a draft spec stops, asks for approval and surfaces the open questions |
 | sdd-engineering | `workflow-retro-keep-concurrency` | behaviour | with no API errors the retro keeps concurrency and proposes preloading the repeated read |
+| sdd-engineering | `spec-every-story-has-criterion` | behaviour | pass 2 on a brief with three requirements (invite by e-mail, a duplicate-member message, a rule that regular members cannot invite) writes a draft in which each has its own criterion naming an existing story, and the report ends with a "Brief coverage" table |
 | sdd-engineering | `negative-spec-creator-writes-only-draft-spec` | negative | asked also for code, a plan and `Status: approved`, spec-creator writes only a draft in `specs/*.md` |
 
 Cases that run an agent grade the agent's reply and also check with a `tool_used` grader that the right
@@ -72,7 +73,7 @@ that is the plugin's contribution (`Δ`). The read-only and write-scope negative
 Run on 2026-10-20 with Claude Code 2.1.304, `--model sonnet` (the judge is the default, haiku),
 `--runs 1 --ablation none`: one run per case, no no-plugin baseline. The initial gate in this document
 (3 runs, every case at 1.0) has **not** been run; neither has any with/without comparison. Total cost of
-all runs, reruns and mutation checks below was about 4 USD.
+all runs, reruns and mutation checks below was about 4 USD (the section on `spec-every-story-has-criterion` and the 1.2.0 reruns below add about 3.9 USD).
 
 | Case | Result | Note |
 |---|---|---|
@@ -110,7 +111,30 @@ Reruns after the fixes (2026-10-20, same model and flags, branch `fix/sdd-contra
 
 The rerun cost was about 2.4 USD. Still unrun: the `research-tools` and `architecture-review` cases after
 these changes (those plugins were not touched), the initial gate (every case, 3 runs, score 1.0) and any
-with/without comparison. The `ssrf` miss shows that a single passing run is weak evidence.
+with/without comparison. Of the other `sdd-engineering` cases, `negative-spec-creator-writes-only-draft-spec`, `spec-ears-from-vague-brief` and `spec-creator-discovery-pass` were rerun once on 1.2.0 (the files `spec-creator` changed in): all pass (1/1, about 0.7 USD); `run-plan-draft-spec-gate` and `workflow-retro-keep-concurrency` were not rerun. The `ssrf` miss shows that a single passing run is weak evidence.
+
+### `spec-every-story-has-criterion` (`sdd-engineering` 1.2.0, 2026-10-20)
+
+Same model and flags as above (`--allow-tools Write Edit --model sonnet --ablation none`), run from the repository root
+for 1.2.0 and from a scratch copy of `origin/main` (`sdd-engineering` 1.1.1, outside this repository) for 1.1.1. The
+`spec-creator` does not have a shell, so no `tool_used` grader can show that the spec check ran (a hook runs it); the
+deterministic graders are `file_exists`, `regex` for `AC-3` in the spec, `Status: draft`, and the "Brief coverage" table
+in the final report, plus one `llm` grader on the spec file for the three requirements and their story references.
+
+| Plugin version | Runs | Result | Cost |
+|---|---|---|---|
+| 1.2.0 | 1, then 3 | 1/1, then 3/3 (all six graders) | about 1.5 USD |
+| 1.1.1 | 3 | 0/3: five graders pass, `report-has-coverage-table` fails in every run | about 1.0 USD |
+| 1.1.1, brief with two more requirements (pending-invitations empty state, cancel an invitation) | 2 | 0/2, same grader | about 0.7 USD (one-off check, not kept as a case) |
+
+What this shows and what it does not. The 1.1.1 `spec-creator` already wrote a criterion for every requirement of this
+brief, the small ones too (both the duplicate message and the non-admin rule, and in the longer brief also the empty state
+and the cancel); the `llm` grader passed in all five runs on 1.1.1. So the case does **not** show a rise in coverage on
+a brief like this; the form check (`check-spec.mjs`) already failed a story or an edge case without a criterion. What
+differs is the new contract: the coverage pass leaves a "Brief coverage" table in the report, which 1.1.1 never prints.
+A brief on which 1.1.1 drops a requirement was not found within the budget. The case stays useful as a regression gate
+(a later change that makes the agent skip the small requirements, or the table, fails it). One judge, one model and
+one brief: weak evidence.
 
 ### Do the negative cases fail when the contract is broken?
 
