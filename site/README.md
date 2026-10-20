@@ -18,7 +18,7 @@ npm ci
 npm run dev       # http://localhost:5173/test-ai-marketplace/
 npm run build     # typecheck + vite build + scripts/check-dist.mjs → site/dist/
 npm run preview   # http://localhost:4173/test-ai-marketplace/ (serves site/dist)
-npm test          # Vitest: query parsing and the golden search set (spec FR-91)
+npm test          # Vitest: query parsing, the golden search set (spec FR-91) and the i18n guards
 ```
 
 ## Routes
@@ -56,6 +56,23 @@ GitHub Pages serves a project site from `/test-ai-marketplace/`, so `vite.config
 `scripts/check-dist.mjs` runs after `vite build` and fails the build if `dist/index.html` references a path outside the base, if a bundle calls `fetch("/…")` or mentions Google Fonts, or if the data files are missing. It also checks the gzip budgets from NFR-20. With `REQUIRE_REAL_DATA=1` it fails on fixture data.
 
 The production build gets a `Content-Security-Policy` meta tag (spec NFR-41): scripts, styles, fonts and data only from the same origin. Assets are never inlined as `data:` URIs for that reason. The theme is applied before first paint by `public/theme-init.js` (external, because inline scripts are blocked); the choice is stored in `localStorage` key `tam-theme`, dark by default.
+
+## Translations
+
+All UI text lives in one file, `src/i18n/en.ts`, grouped by screen or component (`header`, `search`, `plugin`, `badges`, `toast`, `common`, ...). Components never contain copy: they call `t('group.key')` or `plural('group.key', count)` from `src/i18n`. The UI is English only; localization is a non-goal (spec §1), so there is no language switcher, but `messages` in `src/i18n/index.ts` is the single place that points at the active table.
+
+Adding a string:
+
+1. Add it to `src/i18n/en.ts` under the right group. Values are plain strings. `{name}` is an interpolation placeholder: `t('card.viewLabel', { name })`. Plurals are `{ one, other }` objects read with `plural(key, count)`; `{count}` is filled in automatically. Rich text with inline code or links is split into fragments (`beforeBin`, `afterBin`, ...) that the component joins around the element, so the file has no JSX or HTML.
+2. Use it: `t('...')` takes only existing keys and the params its placeholders require, so a typo is a TypeScript error (`npm run typecheck`).
+
+Stays in code: technical literals (CSS classes, routes, storage keys, URL templates, command syntax such as `claude plugin install <plugin>@<marketplace>`, file names, ids), the brand name `test-ai-marketplace`, and anything that comes from the catalog JSON or README Markdown (that is content). The search stemmer, stop words and synonyms in `src/search/` are search data, not UI text.
+
+Guards (run by `npm test`):
+
+- `src/i18n/no-hardcoded-text.test.ts` parses every `.tsx` in `components/`, `routes/`, `app/` and `App.tsx`, and fails with `file:line` for JSX text with letters, a literal in `title`, `aria-label`, `aria-description`, `placeholder`, `alt` or `label`, a literal child expression such as `{'Hello'}`, and a literal message passed to `toast`/`show`-style calls. Its small `ALLOWED_TEXT` list holds technical tokens only (the brand name, `bin/`). It uses the TypeScript 7 `typescript/unstable/*` syntax tree API, because TypeScript 7 no longer ships `ts.createSourceFile`.
+- `src/i18n/unused-messages.test.ts` fails on a message nobody uses, on HTML/JSX inside a message, and on plural forms with different placeholders.
+- `src/i18n/index.test.ts` covers `t`/`plural` and checks that wrong keys and missing params do not compile.
 
 ## Deploy (GitHub Pages)
 
