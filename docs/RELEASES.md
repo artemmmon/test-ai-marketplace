@@ -17,8 +17,8 @@ How a plugin version is chosen, released and, if needed, rolled back. Contributo
   `## [Unreleased]` on top. The newest version in the changelog must equal `plugin.json` `version`
   (`check-marketplace.mjs` fails otherwise).
 
-`engineering-paved-path`, `research-tools` and `architecture-review` are at `1.0.0`, `sdd-engineering` is at `1.1.0`, and
-each released version has its `<plugin>--v<version>` tag on the remote.
+`research-tools` and `architecture-review` are at `1.0.0`, `engineering-paved-path` is at `1.0.1`,
+`sdd-engineering` is at `1.2.0`, and each released version has its `<plugin>--v<version>` tag on the remote.
 
 ## Semver rules for plugins
 
