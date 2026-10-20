@@ -1,81 +1,81 @@
-# Специфікація: плагіни Spec Driven Development для `test-ai-marketplace`
+# Specification: Spec Driven Development plugins for `test-ai-marketplace`
 
 | | |
 |---|---|
-| Статус | Draft v1 — до затвердження; реалізація ще не почата |
-| Дата | 2026-10-20 |
-| Репо | https://github.com/artemmmon/test-ai-marketplace (гілка `main`) |
-| Джерело | https://github.com/artemmmon/dev-digest, `main` @ `e6f0a5d` (`.claude/agents`, `.claude/skills`, `.claude/hooks`, `evals/`) |
-| Контекст | GoIT lab: кроки 2–5 («відбираємо components», «dependency graph», «пакуємо sdd-engineering», «реєструємо plugins») |
+| Status | Draft v1 — pending approval; implementation not started |
+| Date | 2026-10-20 |
+| Repo | https://github.com/artemmmon/test-ai-marketplace (branch `main`) |
+| Source | https://github.com/artemmmon/dev-digest, `main` @ `e6f0a5d` (`.claude/agents`, `.claude/skills`, `.claude/hooks`, `evals/`) |
+| Context | GoIT lab: steps 2–5 ("select components", "dependency graph", "package sdd-engineering", "register plugins") |
 
-Нотація: **FR-n** — вимога, **NFR-n** — нефункційна вимога, **R-n** — правило розміщення, **S-n** — spike (перевірка перед реалізацією), **Q-n** — відкрите питання. «MUST / має» — обов'язково, «SHOULD / бажано» — рекомендація.
+Notation: **FR-n** — requirement, **NFR-n** — non-functional requirement, **R-n** — placement rule, **S-n** — spike (a check before implementation), **Q-n** — open question. "MUST" — mandatory, "SHOULD" — recommended.
 
-Ця специфікація описує **що** буде в репозиторії і **як** воно влаштоване. Вона не переносить файли. Реалізація йде окремими PR за §11 після затвердження.
+This specification describes **what** will be in the repository and **how** it is structured. It does not move any files. Implementation proceeds in separate PRs per §11 after approval.
 
-## Зміст
+## Table of contents
 
-1. [Мета й не-цілі](#1-мета-й-не-цілі)
-2. [Стан репо: є зараз і має бути](#2-стан-репо-є-зараз-і-має-бути)
-3. [Каталог і граф залежностей](#3-каталог-і-граф-залежностей)
-4. [Обмеження платформи Claude Code](#4-обмеження-платформи-claude-code)
-5. [Плагін `sdd-engineering`](#5-плагін-sdd-engineering)
-6. [Плагіни `research-tools` і `architecture-review`](#6-плагіни-research-tools-і-architecture-review)
-7. [Плагін `engineering-paved-path` і правила розміщення skills](#7-плагін-engineering-paved-path-і-правила-розміщення-skills)
-8. [Прибирання DevDigest: явні inputs](#8-прибирання-devdigest-явні-inputs)
-9. [Версії й релізи](#9-версії-й-релізи)
-10. [Документація, evals, перевірки й acceptance](#10-документація-evals-перевірки-й-acceptance)
-11. [Фазування](#11-фазування)
-12. [Spikes і відкриті питання](#12-spikes-і-відкриті-питання)
-13. [Додаток: карта файлів «джерело → ціль»](#13-додаток-карта-файлів-джерело--ціль)
+1. [Goal and non-goals](#1-goal-and-non-goals)
+2. [Repository state: current and target](#2-repository-state-current-and-target)
+3. [Catalog and dependency graph](#3-catalog-and-dependency-graph)
+4. [Claude Code platform constraints](#4-claude-code-platform-constraints)
+5. [The `sdd-engineering` plugin](#5-the-sdd-engineering-plugin)
+6. [The `research-tools` and `architecture-review` plugins](#6-the-research-tools-and-architecture-review-plugins)
+7. [The `engineering-paved-path` plugin and skill placement rules](#7-the-engineering-paved-path-plugin-and-skill-placement-rules)
+8. [Stripping DevDigest: explicit inputs](#8-stripping-devdigest-explicit-inputs)
+9. [Versions and releases](#9-versions-and-releases)
+10. [Documentation, evals, checks and acceptance](#10-documentation-evals-checks-and-acceptance)
+11. [Phasing](#11-phasing)
+12. [Spikes and open questions](#12-spikes-and-open-questions)
+13. [Appendix: source → target file map](#13-appendix-source--target-file-map)
 
 ---
 
-## 1. Мета й не-цілі
+## 1. Goal and non-goals
 
-### 1.1 Мета
+### 1.1 Goal
 
-Винести з DevDigest набір плагінів, який дає будь-якому репозиторію процес **Spec Driven Development (SDD)**: спека → варіанти реалізації → план → реалізація → верифікація, плюс ретро прогону. Частина плагінів — **reusable dependencies**, які можна ставити окремо; решта складена в `sdd-engineering`, який залежить від них.
+Extract from DevDigest a set of plugins that gives any repository a **Spec Driven Development (SDD)** process: spec → implementation options → plan → implementation → verification, plus a retro of the run. Some of the plugins are **reusable dependencies** that can be installed on their own; the rest is bundled into `sdd-engineering`, which depends on them.
 
-Чотири плагіни:
+Four plugins:
 
-| Плагін | Роль | Що дає |
+| Plugin | Role | What it provides |
 |---|---|---|
-| `engineering-paved-path` | dependency | React, Next.js, Fastify, architecture, testing і security skills |
-| `research-tools` | dependency | read-only агент `researcher` |
-| `architecture-review` | dependency | узагальнений read-only агент `architecture-reviewer` |
-| `sdd-engineering` | головний | 5 агентів SDD, skills `run-plan`, `workflow-retro`, `spec-authoring`, README про те, як усе працює разом, і `CHANGELOG.md` |
+| `engineering-paved-path` | dependency | React, Next.js, Fastify, architecture, testing and security skills |
+| `research-tools` | dependency | the read-only `researcher` agent |
+| `architecture-review` | dependency | the generalized read-only `architecture-reviewer` agent |
+| `sdd-engineering` | main | 5 SDD agents, the skills `run-plan`, `workflow-retro`, `spec-authoring`, a README on how everything works together, and `CHANGELOG.md` |
 
-### 1.2 Не-цілі
+### 1.2 Non-goals
 
-- Перенос будь-чого з DevDigest, що не названо в §5–§7 (зокрема `doc-writer`, `test-writer`, `security-reviewer`, `pr-*` агентів, `pr-self-review`, `dependency-checker`, `devdigest-demo`). Див. Q-3.
-- Product specs DevDigest (`specs/*.md`), secrets, cache, DevDigest-specific інструкції (`references/devdigest.md`, `AGENTS.md`, `INSIGHTS.md` DevDigest) — не переносяться (слайд «Не переносимо»).
-- Зміни в сайті-каталозі. Сайт уже очікує структуру `plugins/<name>/{plugin.json, README.md, CHANGELOG.md, COMPATIBILITY.md}` і теги `<plugin>--v<semver>` (`docs/specs/site.md` FR-22, FR-26); ця специфікація лише наповнює каталог.
-- Реалізація, PR і merge: за запитом користувача.
+- Moving anything from DevDigest that is not named in §5–§7 (in particular the `doc-writer`, `test-writer`, `security-reviewer`, `pr-*` agents, `pr-self-review`, `dependency-checker`, `devdigest-demo`). See Q-3.
+- DevDigest product specs (`specs/*.md`), secrets, cache, DevDigest-specific instructions (`references/devdigest.md`, `AGENTS.md`, DevDigest's `INSIGHTS.md`) — are not moved (the "Not moving" slide).
+- Changes to the catalog site. The site already expects the structure `plugins/<name>/{plugin.json, README.md, CHANGELOG.md, COMPATIBILITY.md}` and the tags `<plugin>--v<semver>` (`docs/specs/site.md` FR-22, FR-26); this specification only fills the catalog.
+- Implementation, PRs and merge: on the user's request.
 
-### 1.3 Принцип відбору
+### 1.3 Selection principle
 
-Плагін отримує лише те, що (а) працює без DevDigest і (б) потрібне його ролі. Якщо агент чи skill у джерелі спирається на шлях, команду або конвенцію DevDigest, це не причина лишити їх: вони переносяться **з явним input замість зашитого значення** (§8).
+A plugin receives only what (a) works without DevDigest and (b) its role needs. If an agent or skill in the source relies on a DevDigest path, command or convention, that is not a reason to leave it out: it is moved **with an explicit input instead of the hard-coded value** (§8).
 
 ---
 
-## 2. Стан репо: є зараз і має бути
+## 2. Repository state: current and target
 
-| Елемент | Є зараз | Має бути |
+| Item | Current | Target |
 |---|---|---|
-| `.claude-plugin/marketplace.json` | `plugins: []` | 4 записи, відсортовані за `name` |
-| `plugins/` | лише `.gitkeep` | 4 теки за структурою з §3.2 |
-| `scripts/check-marketplace.mjs` | sort / dup / name regex / hidden Unicode / pinning / name+version / frontmatter `name` | + перевірки FR-13 |
-| `README.md` (корінь) | «catalogue is empty for now» | таблиця 4 плагінів, порядок встановлення |
-| Git tags | немає | `<plugin>--v1.0.0` для кожного плагіна (§9) |
-| `docs/specs/` | `site.md` | + цей файл |
+| `.claude-plugin/marketplace.json` | `plugins: []` | 4 entries, sorted by `name` |
+| `plugins/` | only `.gitkeep` | 4 directories with the structure from §3.2 |
+| `scripts/check-marketplace.mjs` | sort / dup / name regex / hidden Unicode / pinning / name+version / frontmatter `name` | + FR-13 checks |
+| `README.md` (root) | "catalogue is empty for now" | a table of the 4 plugins, installation order |
+| Git tags | none | `<plugin>--v1.0.0` for each plugin (§9) |
+| `docs/specs/` | `site.md` | + this file |
 
-Сайт-каталог лишається незмінним; він зчитує `plugins/` і `marketplace.json`.
+The catalog site stays unchanged; it reads `plugins/` and `marketplace.json`.
 
 ---
 
-## 3. Каталог і граф залежностей
+## 3. Catalog and dependency graph
 
-### 3.1 Граф
+### 3.1 Graph
 
 ```mermaid
 flowchart LR
@@ -85,7 +85,7 @@ flowchart LR
   AR --> PP
 ```
 
-- **FR-1.** `sdd-engineering` оголошує три залежності в `plugin.json`, кожну з діапазоном `^1.0.0`:
+- **FR-1.** `sdd-engineering` declares three dependencies in `plugin.json`, each with the range `^1.0.0`:
   ```json
   "dependencies": [
     { "name": "engineering-paved-path", "version": "^1.0.0" },
@@ -93,12 +93,12 @@ flowchart LR
     { "name": "architecture-review",    "version": "^1.0.0" }
   ]
   ```
-  Бездіапазонний рядок `"name"` не використовується: без діапазону залежність рухається за кожним релізом marketplace ([docs](https://code.claude.com/docs/en/plugin-dependencies)).
-- **FR-2.** `architecture-review` залежить від `engineering-paved-path ^1.0.0`. Це **відхилення від слайда кроку 3**, де граф плоский. Причина: узагальнений рев'юер читає rubric зі skills `onion-architecture` і `frontend-architecture`, які лежать у `engineering-paved-path`. Без залежності встановлений окремо `architecture-review` мовчки втратить rubric («якщо skill відсутній, Claude Code його пропускає й пише у debug log»). Див. Q-2.
-- **FR-3.** Цикли заборонені. `engineering-paved-path` і `research-tools` не мають залежностей.
-- **FR-4.** Залежності встановлюються автоматично, включно з транзитивними. `sdd-engineering` усе одно перелічує `engineering-paved-path` явно: його skills використовують агенти `sdd-engineering` напряму, а не лише через `architecture-review`.
+  A bare string `"name"` without a range is not used: without a range the dependency moves with every marketplace release ([docs](https://code.claude.com/docs/en/plugin-dependencies)).
+- **FR-2.** `architecture-review` depends on `engineering-paved-path ^1.0.0`. This is a **deviation from the step 3 slide**, where the graph is flat. Reason: the generalized reviewer reads its rubric from the skills `onion-architecture` and `frontend-architecture`, which live in `engineering-paved-path`. Without the dependency, a standalone `architecture-review` would silently lose the rubric ("if a skill is missing, Claude Code skips it and writes to the debug log"). See Q-2.
+- **FR-3.** Cycles are forbidden. `engineering-paved-path` and `research-tools` have no dependencies.
+- **FR-4.** Dependencies are installed automatically, including transitive ones. `sdd-engineering` still lists `engineering-paved-path` explicitly: its skills are used directly by the `sdd-engineering` agents, not only through `architecture-review`.
 
-### 3.2 Структура
+### 3.2 Structure
 
 ```
 plugins/
@@ -124,98 +124,98 @@ plugins/
     README.md  CHANGELOG.md  COMPATIBILITY.md
 ```
 
-- **FR-5.** У `.claude-plugin/` лежить лише `plugin.json`. Усе інше (`skills/`, `agents/`, `hooks/`, `README.md`, `CHANGELOG.md`) — у корені плагіна.
-- **FR-6.** Кожен плагін самодостатній у своїй теці: жодних symlink, жодних `../`. Плагін копіюється в кеш окремо, зовнішні файли втрачаються.
-- **FR-7.** Імена — kebab-case, не починаються з `claude-`, `anthropic-`, `cc-plugin-`. Усі чотири проходять.
+- **FR-5.** `.claude-plugin/` contains only `plugin.json`. Everything else (`skills/`, `agents/`, `hooks/`, `README.md`, `CHANGELOG.md`) lives at the plugin root.
+- **FR-6.** Each plugin is self-contained within its own directory: no symlinks, no `../`. A plugin is copied into the cache on its own, and external files are lost.
+- **FR-7.** Names are kebab-case and do not start with `claude-`, `anthropic-`, `cc-plugin-`. All four pass.
 
 ---
 
-## 4. Обмеження платформи Claude Code
+## 4. Claude Code platform constraints
 
-Це перевірені за документацією факти, що формують дизайн. Те, що документація не підтверджує, винесено в spikes (§12).
+These are facts verified against the documentation that shape the design. What the documentation does not confirm is moved into spikes (§12).
 
-| # | Факт | Наслідок у дизайні |
+| # | Fact | Consequence for the design |
 |---|---|---|
-| P-1 | Агенти плагіна **ігнорують** frontmatter `hooks`, `mcpServers`, `permissionMode` ([sub-agents](https://code.claude.com/docs/en/sub-agents)) | `spec-creator-guard`, `plans-guard` і `check-*` hooks з DevDigest не можна лишити у frontmatter. Їх переносимо в `hooks/hooks.json` плагіна (FR-18). Spike S-3 |
-| P-2 | Агенти плагіна мають scoped-імена `plugin:agent`, напр. `research-tools:researcher` | Усі посилання агентів і skills один на одного в тексті — scoped (FR-17) |
-| P-3 | `Agent(type)` у `tools` працює лише для головного треду (`claude --agent`); у subagent-у список типів **ігнорується** | Обмеження «spec-creator може запускати лише researcher» більше не можна виразити в frontmatter; воно лишається тільки в hook (FR-18) і в тексті агента |
-| P-4 | `skills:` у frontmatter агента preloads повний текст skills; документація **не** каже, чи працює scoped-ім'я `plugin:skill` і чи видно skills залежностей | Spike S-2; fallback у FR-16 |
-| P-5 | Skill з `disable-model-invocation: true` не можна preload-ити в агента | `run-plan` і `workflow-retro` (запускає користувач) — з цим прапорцем; `spec-authoring` — **без** нього (його preload-ить `spec-creator`) |
-| P-6 | `${CLAUDE_SKILL_DIR}` → тека `SKILL.md` (для plugin skills — підтека skill, не корінь плагіна); `${CLAUDE_PLUGIN_ROOT}` доступний у skills, agents, hooks; обидва підставляються в тілі Markdown, але **не** в env команд Bash | Скрипти skills шукаються через `${CLAUDE_SKILL_DIR}`, а не `.claude/skills/` (слайд кроку 4). Хуки — через `${CLAUDE_PLUGIN_ROOT}` |
-| P-7 | Залежність `{name, version: "^1.0.0"}` резолвиться за git-тегом `<plugin>--v<ver>`; для плагіна з відносним шляхом, якщо тегу немає, береться поточна копія marketplace, а діапазон перевіряється при завантаженні | Теги `--v1.0.0` MUST існувати до того, як хтось поставить плагін із залежністю (§9) |
-| P-8 | `userConfig` у `plugin.json` питає значення при вмиканні плагіна; нечутливі значення підставляються як `${user_config.KEY}` у вмісті skills і агентів | Механізм явних inputs (§8.2) |
-| P-9 | `claude plugin eval` читає `evals/<case>/{prompt.md, graders/*.md, case.yaml}`; формат `evals.json` зі skill-creator **не** читає; прогін іде в ізольованому workspace без інших плагінів і `CLAUDE.md` | Evals з DevDigest треба конвертувати (§10.3); залежності в ізоляції — spike S-5 |
-| P-10 | `claude plugin tag --push` створює `<plugin>--v<version>`, перевіряє `plugin.json` ↔ запис marketplace і чисте дерево | Релізний крок (§9.3) |
+| P-1 | Plugin agents **ignore** the frontmatter fields `hooks`, `mcpServers`, `permissionMode` ([sub-agents](https://code.claude.com/docs/en/sub-agents)) | The DevDigest `spec-creator-guard`, `plans-guard` and `check-*` hooks cannot stay in frontmatter. We move them into the plugin's `hooks/hooks.json` (FR-18). Spike S-3 |
+| P-2 | Plugin agents have scoped names `plugin:agent`, e.g. `research-tools:researcher` | All references of agents and skills to one another in text are scoped (FR-17) |
+| P-3 | `Agent(type)` in `tools` works only for the main thread (`claude --agent`); in a subagent the list of types is **ignored** | The restriction "spec-creator may launch only researcher" can no longer be expressed in frontmatter; it remains only in the hook (FR-18) and in the agent's text |
+| P-4 | `skills:` in agent frontmatter preloads the full text of skills; the documentation does **not** say whether the scoped name `plugin:skill` works or whether dependency skills are visible | Spike S-2; fallback in FR-16 |
+| P-5 | A skill with `disable-model-invocation: true` cannot be preloaded into an agent | `run-plan` and `workflow-retro` (launched by the user) have this flag; `spec-authoring` does **not** (it is preloaded by `spec-creator`) |
+| P-6 | `${CLAUDE_SKILL_DIR}` → the directory of `SKILL.md` (for plugin skills, the skill's subdirectory, not the plugin root); `${CLAUDE_PLUGIN_ROOT}` is available in skills, agents, hooks; both are substituted in the Markdown body, but **not** in the env of Bash commands | Skill scripts are located via `${CLAUDE_SKILL_DIR}`, not `.claude/skills/` (step 4 slide). Hooks — via `${CLAUDE_PLUGIN_ROOT}` |
+| P-7 | A dependency `{name, version: "^1.0.0"}` is resolved by the git tag `<plugin>--v<ver>`; for a plugin with a relative path, if there is no tag, the current marketplace copy is used, and the range is checked at load time | The `--v1.0.0` tags MUST exist before anyone installs a plugin with a dependency (§9) |
+| P-8 | `userConfig` in `plugin.json` prompts for values when the plugin is enabled; non-sensitive values are substituted as `${user_config.KEY}` in skill and agent content | The explicit inputs mechanism (§8.2) |
+| P-9 | `claude plugin eval` reads `evals/<case>/{prompt.md, graders/*.md, case.yaml}`; it does **not** read the `evals.json` format from skill-creator; the run happens in an isolated workspace without other plugins and `CLAUDE.md` | The DevDigest evals must be converted (§10.3); dependencies in isolation — spike S-5 |
+| P-10 | `claude plugin tag --push` creates `<plugin>--v<version>`, checks `plugin.json` ↔ the marketplace entry, and a clean tree | The release step (§9.3) |
 
 ---
 
-## 5. Плагін `sdd-engineering`
+## 5. The `sdd-engineering` plugin
 
-### 5.1 Склад
+### 5.1 Composition
 
-**Агенти (5).** Це список із вашого опису; слайд кроку 2 називає чотири («plan-verifier», без brainstorm). Див. Q-1.
+**Agents (5).** This is the list from your description; the step 2 slide names four ("plan-verifier", no brainstorm). See Q-1.
 
-| Агент | Джерело в DevDigest | Модель | Що робить | Пише файли |
+| Agent | Source in DevDigest | Model | What it does | Writes files |
 |---|---|---|---|---|
-| `spec-creator` | `agents/spec-creator.md` | opus | Два проходи: звіт discovery (питання, прогалини, edge cases) → після відповідей спека `Status: draft` | лише `<specs_dir>/*.md`, лише `draft` |
-| `brainstorm` | `agents/brainstorm.md` | sonnet | 3–5 варіантів реалізації у зваженій матриці з sensitivity-перевіркою, або короткий brief, якщо варіант один; рекомендує один | лише свій brief `<plans_dir>/NN-*.brainstorm.md` |
-| `implementation-planner` | `agents/implementation-planner.md` | opus | Review вимог (питання, рекомендації, режим) → Development Plan, у якому кожен крок цитує id спеки (`AC-n`, `EC-n`, `NFR-n`) | лише свій план `<plans_dir>/NN-*.md`, лише `draft` |
-| `implementer` | `agents/implementer.md` | sonnet | Виконує одну групу кроків затвердженого плану, лагодить тести, які зламав, запускає checks, звіряє свій diff з планом; режим fix за списком прогалин | код проєкту |
-| `implementation-verifier` | `agents/implementation-verifier.md` | sonnet | Останній gate: read-only трасування готового коду до кожної вимоги спеки й кроку плану, вердикт `PASS`/`FAIL`/`INCOMPLETE`; `recheck:` після fix | ні |
+| `spec-creator` | `agents/spec-creator.md` | opus | Two passes: a discovery report (questions, gaps, edge cases) → after the answers, a spec with `Status: draft` | only `<specs_dir>/*.md`, only `draft` |
+| `brainstorm` | `agents/brainstorm.md` | sonnet | 3–5 implementation options in a weighted matrix with a sensitivity check, or a short brief if there is only one option; recommends one | only its own brief `<plans_dir>/NN-*.brainstorm.md` |
+| `implementation-planner` | `agents/implementation-planner.md` | opus | Requirements review (questions, recommendations, mode) → a Development Plan in which every step cites spec ids (`AC-n`, `EC-n`, `NFR-n`) | only its own plan `<plans_dir>/NN-*.md`, only `draft` |
+| `implementer` | `agents/implementer.md` | sonnet | Executes one group of steps of an approved plan, fixes the tests it broke, runs checks, reconciles its diff against the plan; fix mode driven by a list of gaps | project code |
+| `implementation-verifier` | `agents/implementation-verifier.md` | sonnet | The final gate: read-only tracing of the finished code to every spec requirement and plan step, verdict `PASS`/`FAIL`/`INCOMPLETE`; `recheck:` after a fix | no |
 
 **Skills (3).**
 
-| Skill | Хто викликає | Джерело | Призначення |
+| Skill | Invoked by | Source | Purpose |
 |---|---|---|---|
-| `run-plan` | користувач (`/sdd-engineering:run-plan`) | `skills/sdd` + `skills/feature-flow` | Точка входу. Приймає спеку, план, дизайни і текст вимог у будь-якому поєднанні, визначає стадію й веде її маршрутом §5.3. Див. Q-4 |
-| `workflow-retro` | користувач | `skills/workflow-retro` | Міряє завершений прогін за транскриптами на диску (токени, cache read, tool calls, тривалість, паралелізм, вкладені субагенти), пропонує 3–5 конкретних дій і дописує рядок у ledger |
-| `spec-authoring` | агенти `spec-creator`, `implementation-planner`, `implementation-verifier` | `skills/spec-authoring` | Шаблон спеки, EARS-критерії, id `US/AC/EC/NFR/OQ`, provenance-теги, lifecycle `draft → approved → implemented`; скрипт `check-spec.mjs` |
+| `run-plan` | the user (`/sdd-engineering:run-plan`) | `skills/sdd` + `skills/feature-flow` | The entry point. Accepts a spec, plan, designs and requirements text in any combination, determines the stage and drives it along the route in §5.3. See Q-4 |
+| `workflow-retro` | the user | `skills/workflow-retro` | Measures a completed run from the transcripts on disk (tokens, cache read, tool calls, duration, parallelism, nested subagents), proposes 3–5 concrete actions and appends a row to the ledger |
+| `spec-authoring` | the agents `spec-creator`, `implementation-planner`, `implementation-verifier` | `skills/spec-authoring` | Spec template, EARS criteria, ids `US/AC/EC/NFR/OQ`, provenance tags, lifecycle `draft → approved → implemented`; the script `check-spec.mjs` |
 
-- **FR-8.** `run-plan` і `workflow-retro` мають `disable-model-invocation: true` (їх запускає лише користувач, у них є побічні ефекти: запуск агентів, запис ledger). `spec-authoring` — ні (P-5).
-- **FR-9.** Усі п'ять агентів і всі skills — англійською, як у джерелі; README і CHANGELOG — англійською для публічного каталогу (Q-6).
+- **FR-8.** `run-plan` and `workflow-retro` have `disable-model-invocation: true` (only the user launches them; they have side effects: launching agents, writing the ledger). `spec-authoring` does not (P-5).
+- **FR-9.** All five agents and all skills are in English, as in the source; the README and CHANGELOG are in English for the public catalog (Q-6).
 
-### 5.2 Hooks і скрипти
+### 5.2 Hooks and scripts
 
-DevDigest тримає захисні й перевірні hooks у frontmatter агентів (P-1 це забороняє для плагіна) і в `.claude/hooks/`.
+DevDigest keeps its guard and check hooks in agent frontmatter (P-1 forbids this for a plugin) and in `.claude/hooks/`.
 
-| Джерело | Призначення | У плагіні |
+| Source | Purpose | In the plugin |
 |---|---|---|
-| `hooks/spec-creator-guard.mjs` | `spec-creator` пише лише `specs/*.md` зі `Status: draft`, запускає лише `researcher`, з MCP лише читає Figma | `scripts/spec-creator-guard.mjs`, підключено в `hooks/hooks.json` |
-| `hooks/plans-guard.mjs` | `brainstorm` і planner пишуть лише свій файл у `docs/plans/`, лише `draft` | `scripts/plans-guard.mjs` |
-| `skills/spec-authoring/assets/check-spec.mjs` | форма спеки; PostToolUse | у skill (`${CLAUDE_SKILL_DIR}/assets/`) + виклик з hook |
-| `skills/feature-flow/assets/check-plan.mjs` | план: кожен `AC/EC/NFR` має крок, спека `approved`; `--implemented` для verifier | у `run-plan/assets/` |
-| `skills/workflow-retro/assets/{retro.mjs,prices.json}` | вимірювання транскриптів | у skill |
+| `hooks/spec-creator-guard.mjs` | `spec-creator` writes only `specs/*.md` with `Status: draft`, launches only `researcher`, and uses MCP only to read Figma | `scripts/spec-creator-guard.mjs`, wired in `hooks/hooks.json` |
+| `hooks/plans-guard.mjs` | `brainstorm` and the planner write only their own file in `docs/plans/`, only `draft` | `scripts/plans-guard.mjs` |
+| `skills/spec-authoring/assets/check-spec.mjs` | spec shape; PostToolUse | in the skill (`${CLAUDE_SKILL_DIR}/assets/`) + a call from the hook |
+| `skills/feature-flow/assets/check-plan.mjs` | plan: every `AC/EC/NFR` has a step, the spec is `approved`; `--implemented` for the verifier | in `run-plan/assets/` |
+| `skills/workflow-retro/assets/{retro.mjs,prices.json}` | transcript measurement | in the skill |
 
-- **FR-10.** Скрипти — самодостатній Node ESM без залежностей, їхні тести (`*.test.mjs`) переносяться поруч.
-- **FR-11.** Скрипти знаходять свої файли відносно `${CLAUDE_SKILL_DIR}` / `${CLAUDE_PLUGIN_ROOT}`. Жодного `.claude/skills/` чи `$CLAUDE_PROJECT_DIR/.claude/...` у вмісті плагіна.
-- **FR-12.** Шляхи проєкту (теки спек і планів, ledger ретро) скрипти отримують через `CLAUDE_PLUGIN_OPTION_<KEY>` або аргументи, не з констант (§8.2).
-- **FR-18.** `hooks/hooks.json` MUST діяти лише для відповідних агентів плагіна, а не для всіх сесій користувача. Для цього кожен guard на початку перевіряє, що викликач — потрібний агент (поле типу агента у вхідному JSON hook-а), і інакше завершується успіхом без дій. Якщо S-3 покаже, що поля немає, fallback: guard працює лише за пам'яттю шляху (`specs_dir`, `plans_dir`) без прив'язки до агента, або guards не постачаються, а ліміти лишаються в `tools` і в тексті агентів.
+- **FR-10.** Scripts are self-contained Node ESM with no dependencies; their tests (`*.test.mjs`) are moved alongside.
+- **FR-11.** Scripts locate their files relative to `${CLAUDE_SKILL_DIR}` / `${CLAUDE_PLUGIN_ROOT}`. No `.claude/skills/` or `$CLAUDE_PROJECT_DIR/.claude/...` in plugin content.
+- **FR-12.** Scripts obtain project paths (the specs and plans directories, the retro ledger) via `CLAUDE_PLUGIN_OPTION_<KEY>` or arguments, not from constants (§8.2).
+- **FR-18.** `hooks/hooks.json` MUST apply only to the corresponding plugin agents, not to all of the user's sessions. For this, each guard first checks that the caller is the required agent (the agent type field in the hook's input JSON) and otherwise exits successfully without doing anything. If S-3 shows that the field does not exist, the fallback is: the guard works only by path matching (`specs_dir`, `plans_dir`) without binding to an agent, or the guards are not shipped and the limits remain in `tools` and in the agents' text.
 
-### 5.3 Маршрут `run-plan`
+### 5.3 The `run-plan` route
 
 ```mermaid
 flowchart LR
-  SC[spec-creator] -->|draft spec, ви затверджуєте| B[brainstorm]
-  B -->|brief, ви обираєте варіант| P[implementation-planner]
-  P -->|plan + check-plan, ви затверджуєте| I[implementer<br/>одна група кроків = один запуск]
+  SC[spec-creator] -->|draft spec, you approve| B[brainstorm]
+  B -->|brief, you choose an option| P[implementation-planner]
+  P -->|plan + check-plan, you approve| I[implementer<br/>one group of steps = one run]
   I --> AR[architecture-review:<br/>architecture-reviewer]
   AR -->|CRITICAL/WARNING| F[implementer fix mode]
-  F -->|recheck, до 3 раундів| AR
-  AR -->|нічого відкритого| PV[implementation-verifier]
-  PV -->|FAIL: fix + recheck, до 2 раундів| F
-  PV -->|PASS| DONE[звіт]
-  SC -.-> R[research-tools:researcher<br/>до 4 паралельно]
+  F -->|recheck, up to 3 rounds| AR
+  AR -->|nothing open| PV[implementation-verifier]
+  PV -->|FAIL: fix + recheck, up to 2 rounds| F
+  PV -->|PASS| DONE[report]
+  SC -.-> R[research-tools:researcher<br/>up to 4 in parallel]
 ```
 
-Правила маршруту, що переносяться без змін по суті (джерело: `agents/README.md`, `feature-flow/SKILL.md`):
+Route rules carried over without change in substance (source: `agents/README.md`, `feature-flow/SKILL.md`):
 
-- **FR-14.** Два затвердження за користувачем: спека й план стартують `Status: draft`; `approved` ставить головна сесія лише зі слів користувача. `brainstorm` і planner зупиняються на draft-спеці, `implementer` — на draft-плані.
-- **FR-15.** План — єдиний handoff до `implementer`: кроки несуть файли, правила з `path:line` і умову «Done when». У prompt агентам — шляхи, не вміст.
-- **FR-16.** Fallback preload (P-4): якщо S-2 покаже, що `skills:` не бачить skills залежностей, агенти не мають поля `skills:` для skills з `engineering-paved-path`, а першим кроком у тілі викликають їх через Skill tool за scoped-іменем (`engineering-paved-path:onion-architecture`).
-- **FR-17.** Усі посилання між компонентами — scoped: `research-tools:researcher`, `architecture-review:architecture-reviewer`, `engineering-paved-path:react-best-practices`. Власні компоненти — `sdd-engineering:spec-creator` тощо.
-- Гілки, що лишаються: фікс-цикл architecture (до 3 раундів, потім зупинка й питання користувачу), verifier (до 2 раундів), amendment затвердженої спеки через `spec-creator` (нове id, рядок `Amended:`, повторне затвердження; id не перенумеровуються).
-- Тести за замовчуванням вимкнені (як у джерелі): `implementer` лише лагодить зламані тести. `test-writer` не переноситься (Q-3), тож `--tests` у `run-plan` не постачається у v1.0.0.
-- Стадії `security-reviewer`, `doc-writer`, `pr-skill-reviewer`, `pr-self-review` з маршруту джерела **виключені**. `run-plan` завершується звітом після verifier-а й повідомляє, що решта кроків поза плагіном.
+- **FR-14.** Two approvals belong to the user: the spec and the plan start with `Status: draft`; the main session sets `approved` only on the user's words. `brainstorm` and the planner stop at a draft spec, `implementer` — at a draft plan.
+- **FR-15.** The plan is the only handoff to `implementer`: steps carry files, rules with `path:line`, and a "Done when" condition. In prompts to agents — paths, not content.
+- **FR-16.** Preload fallback (P-4): if S-2 shows that `skills:` does not see dependency skills, the agents do not have the `skills:` field for skills from `engineering-paved-path`, and as the first step in their body invoke them through the Skill tool by scoped name (`engineering-paved-path:onion-architecture`).
+- **FR-17.** All references between components are scoped: `research-tools:researcher`, `architecture-review:architecture-reviewer`, `engineering-paved-path:react-best-practices`. Own components — `sdd-engineering:spec-creator` and so on.
+- Branches that remain: the architecture fix loop (up to 3 rounds, then stop and ask the user), the verifier (up to 2 rounds), amendment of an approved spec through `spec-creator` (new id, an `Amended:` line, re-approval; ids are not renumbered).
+- Tests are off by default (as in the source): `implementer` only fixes broken tests. `test-writer` is not moved (Q-3), so `--tests` in `run-plan` is not shipped in v1.0.0.
+- The stages `security-reviewer`, `doc-writer`, `pr-skill-reviewer`, `pr-self-review` from the source route are **excluded**. `run-plan` ends with a report after the verifier and says that the remaining steps are outside the plugin.
 
 ### 5.4 `plugin.json`
 
@@ -225,7 +225,7 @@ flowchart LR
   "version": "1.0.0",
   "description": "Spec Driven Development: spec → options → plan → implementation → verification, with a run-plan entry point and a workflow retro",
   "author": { "name": "artemmmon" },
-  "license": "<див. Q-7>",
+  "license": "<see Q-7>",
   "keywords": ["sdd", "spec-driven", "planning", "agents"],
   "dependencies": [ /* FR-1 */ ],
   "userConfig": { /* §8.2 */ }
@@ -234,234 +234,234 @@ flowchart LR
 
 ---
 
-## 6. Плагіни `research-tools` і `architecture-review`
+## 6. The `research-tools` and `architecture-review` plugins
 
-### 6.1 `research-tools` → агент `researcher`
+### 6.1 `research-tools` → the `researcher` agent
 
-- Джерело: `agents/researcher.md`. Read-only: `tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, AskUserQuestion, Skill`, `disallowedTools: Write, Edit, NotebookEdit`, `model: sonnet`.
-- Відповідає на **одне** конкретне питання з репозиторію, зовнішніх джерел або з обох; повертає Repository report і/або External report (Answer · Findings з evidence · Code map / Sources · Conflicts · **Not found**) або Clarification report.
-- **FR-19.** Прибрати з тексту DevDigest-приклади (`server/`, `INSIGHTS.md`, `AGENTS.md`). Читати `AGENTS.md` / `CLAUDE.md` / `INSIGHTS.md` лише «якщо існують».
-- **FR-20.** Плагін не має залежностей і skills; тека `skills/` відсутня.
-- `AskUserQuestion` відфільтровується, коли агент працює як субагент; тому агент має Clarification report як вихід (поведінка джерела, лишається).
+- Source: `agents/researcher.md`. Read-only: `tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, AskUserQuestion, Skill`, `disallowedTools: Write, Edit, NotebookEdit`, `model: sonnet`.
+- Answers **one** specific question from the repository, external sources, or both; returns a Repository report and/or External report (Answer · Findings with evidence · Code map / Sources · Conflicts · **Not found**) or a Clarification report.
+- **FR-19.** Remove the DevDigest examples (`server/`, `INSIGHTS.md`, `AGENTS.md`) from the text. Read `AGENTS.md` / `CLAUDE.md` / `INSIGHTS.md` only "if they exist".
+- **FR-20.** The plugin has no dependencies and no skills; the `skills/` directory is absent.
+- `AskUserQuestion` is filtered out when the agent runs as a subagent; therefore the agent has the Clarification report as an output (source behavior, retained).
 
-### 6.2 `architecture-review` → агент `architecture-reviewer`
+### 6.2 `architecture-review` → the `architecture-reviewer` agent
 
-- Джерело: `agents/architecture-reviewer.md`. Read-only аудит модуля, пакета чи diff гілки; спершу механічні перевірки, потім судження; повертає один JSON-об'єкт (`checks`, `findings` з `id` і `in_change`, `rechecked`, `rubric_read`, `not_checked`) або clarification JSON; `recheck:` після fix.
-- `skills: onion-architecture, frontend-architecture` — з `engineering-paved-path` (FR-2, FR-16).
-- **FR-21 (узагальнення).** Три зашиті команди DevDigest (`pnpm arch`, `pnpm lint`, `./scripts/shared-contracts.sh check`) замінюються input-ом `checks` — списком команд, які агент може виконати (за замовчуванням порожній; тоді `checks: []` і `not_checked` називає причину). Агент, як і раніше, не запускає `--fix` / `sync`.
-- **FR-22.** Тека `client/` / `server/` більше не зашита: `mode: module` приймає `target`, а правила для сервера й клієнта обираються за змістом `target` (бекенд → `onion-architecture`, фронтенд → `frontend-architecture`).
-- **FR-23.** Схема вихідного JSON не змінюється (її читає `run-plan`).
-- `architecture-reviewer-lite` (експеримент у джерелі) **не переноситься**.
+- Source: `agents/architecture-reviewer.md`. A read-only audit of a module, package or branch diff; mechanical checks first, then judgment; returns a single JSON object (`checks`, `findings` with `id` and `in_change`, `rechecked`, `rubric_read`, `not_checked`) or a clarification JSON; `recheck:` after a fix.
+- `skills: onion-architecture, frontend-architecture` — from `engineering-paved-path` (FR-2, FR-16).
+- **FR-21 (generalization).** The three hard-coded DevDigest commands (`pnpm arch`, `pnpm lint`, `./scripts/shared-contracts.sh check`) are replaced by the input `checks` — a list of commands the agent may run (empty by default; then `checks: []` and `not_checked` names the reason). The agent, as before, does not run `--fix` / `sync`.
+- **FR-22.** The `client/` / `server/` directory is no longer hard-coded: `mode: module` accepts `target`, and the rules for server and client are chosen by the content of `target` (backend → `onion-architecture`, frontend → `frontend-architecture`).
+- **FR-23.** The output JSON schema does not change (it is read by `run-plan`).
+- `architecture-reviewer-lite` (an experiment in the source) is **not moved**.
 
 ---
 
-## 7. Плагін `engineering-paved-path` і правила розміщення skills
+## 7. The `engineering-paved-path` plugin and skill placement rules
 
-### 7.1 Правила розміщення
+### 7.1 Placement rules
 
-- **R-1.** Skill живе в тому плагіні, чиї агенти чи маршрут його використовують **і** де він не потрібен іншим. Workflow-skills (`run-plan`, `workflow-retro`, `spec-authoring`) — у `sdd-engineering`.
-- **R-2.** Skill знань про стек, архітектуру, тести й безпеку, який потрібен агентам кількох плагінів або самій людині без SDD, — у `engineering-paved-path`.
-- **R-3.** Один skill живе рівно в одному плагіні. Дублі між плагінами заборонені; решта користується через залежність.
-- **R-4.** Залежності йдуть лише в бік «споживач → постачальник» (граф §3.1). Постачальник не знає про споживача.
-- **R-5.** Skill, у якого є `references/devdigest.md` (мапінг правил на DevDigest) чи скрипт із зашитими шляхами DevDigest, переноситься без цього файла; його вміст або узагальнюється в `references/`, або відкидається (§8).
+- **R-1.** A skill lives in the plugin whose agents or route use it **and** where other plugins do not need it. Workflow skills (`run-plan`, `workflow-retro`, `spec-authoring`) — in `sdd-engineering`.
+- **R-2.** A skill of knowledge about the stack, architecture, tests and security that agents of several plugins need, or a person needs without SDD, goes in `engineering-paved-path`.
+- **R-3.** A skill lives in exactly one plugin. Duplicates between plugins are forbidden; the rest use it through a dependency.
+- **R-4.** Dependencies go only in the direction "consumer → provider" (the §3.1 graph). The provider does not know about the consumer.
+- **R-5.** A skill that has `references/devdigest.md` (a mapping of rules onto DevDigest) or a script with hard-coded DevDigest paths is moved without that file; its content is either generalized into `references/` or discarded (§8).
 
-### 7.2 Розподіл skills із DevDigest
+### 7.2 Distribution of skills from DevDigest
 
-| Skill (DevDigest) | Рішення | Куди | Примітка |
+| Skill (DevDigest) | Decision | Where to | Note |
 |---|---|---|---|
-| `react-best-practices` | **включити** | `engineering-paved-path` | походження не в `skills-lock.json` — встановити автора й ліцензію (NFR-2) |
-| `next-best-practices` | **включити** | `engineering-paved-path` | vendored з `vercel-labs/next-skills` |
-| `fastify-best-practices` | **включити** | `engineering-paved-path` | vendored з `mcollina/skills` |
-| `onion-architecture` | **включити, узагальнити** | `engineering-paved-path` | прибрати `references/devdigest.md`; `assets/dependency-cruiser.cjs` лишити як приклад конфігу з параметризованими шарами |
-| `frontend-architecture` | **включити, узагальнити** | `engineering-paved-path` | прибрати `references/devdigest.md` |
-| `react-testing-library` | **включити** | `engineering-paved-path` | категорія «testing» зі слайда; походження — перевірити (NFR-2) |
-| `security` | **включити, переписати** | `engineering-paved-path` | у джерелі це trust boundaries DevDigest (SSRF guard, clone paths, prompt fencing); у v1.0.0 — стек-незалежні правила (вхід, вихідний HTTP, SQL, процеси, секрети/логи, CI) і шкала оцінки findings |
-| `spec-authoring` | включити | `sdd-engineering` | R-1 |
-| `feature-flow` + `sdd` | об'єднати в `run-plan` | `sdd-engineering` | Q-4 |
-| `workflow-retro` | включити | `sdd-engineering` | |
-| `engineering-insights` | **відкрите** | Q-5 | використовують planner, implementer; прив'язаний до `INSIGHTS.md` DevDigest |
-| `zod`, `typescript-expert`, `drizzle-orm-patterns`, `postgresql-table-design` | не в v1.0.0 | — | слайд не називає; усі vendored — потрібна ліцензія. Кандидати на 1.1.0 (Q-3) |
-| `mermaid-diagram`, `dependency-checker`, `pr-self-review`, `devdigest-demo` | не переносити | — | `devdigest-demo` — DevDigest-specific; інші не в списку |
+| `react-best-practices` | **include** | `engineering-paved-path` | origin is not in `skills-lock.json` — establish the author and license (NFR-2) |
+| `next-best-practices` | **include** | `engineering-paved-path` | vendored from `vercel-labs/next-skills` |
+| `fastify-best-practices` | **include** | `engineering-paved-path` | vendored from `mcollina/skills` |
+| `onion-architecture` | **include, generalize** | `engineering-paved-path` | remove `references/devdigest.md`; keep `assets/dependency-cruiser.cjs` as an example config with parameterized layers |
+| `frontend-architecture` | **include, generalize** | `engineering-paved-path` | remove `references/devdigest.md` |
+| `react-testing-library` | **include** | `engineering-paved-path` | the "testing" category from the slide; origin — to be checked (NFR-2) |
+| `security` | **include, rewrite** | `engineering-paved-path` | in the source these are DevDigest trust boundaries (SSRF guard, clone paths, prompt fencing); in v1.0.0 — stack-independent rules (input, outbound HTTP, SQL, processes, secrets/logs, CI) and a scale for rating findings |
+| `spec-authoring` | include | `sdd-engineering` | R-1 |
+| `feature-flow` + `sdd` | merge into `run-plan` | `sdd-engineering` | Q-4 |
+| `workflow-retro` | include | `sdd-engineering` | |
+| `engineering-insights` | **open** | Q-5 | used by the planner and implementer; tied to DevDigest's `INSIGHTS.md` |
+| `zod`, `typescript-expert`, `drizzle-orm-patterns`, `postgresql-table-design` | not in v1.0.0 | — | not named on the slide; all vendored — a license is needed. Candidates for 1.1.0 (Q-3) |
+| `mermaid-diagram`, `dependency-checker`, `pr-self-review`, `devdigest-demo` | do not move | — | `devdigest-demo` is DevDigest-specific; the others are not in the list |
 
-- **FR-24.** Каталог `engineering-paved-path` — лише skills, без агентів, hooks і MCP. Скрипти допустимі лише як приклади, які skill просить запустити явно (наприклад, конфіг dependency-cruiser).
-- **FR-25.** Vendored skills зберігають upstream-структуру, `LICENSE` і посилання на джерело в `README.md` плагіна та в `references`/шапці skill (у джерелі це `skills-lock.json`, у плагіні — секція «Sources» у README).
-- **FR-26.** Звідки викликати: з агентів — за scoped-іменем (FR-17); користувач бачить їх як `/engineering-paved-path:<skill>`.
-- **FR-27.** У кожного skill `description` — з тригерами; `name` у frontmatter = ім'я теки (перевіряє `check-marketplace.mjs`).
+- **FR-24.** The `engineering-paved-path` catalog is skills only, with no agents, hooks or MCP. Scripts are allowed only as examples that a skill asks to be run explicitly (for example, the dependency-cruiser config).
+- **FR-25.** Vendored skills keep the upstream structure, the `LICENSE`, and a reference to the source in the plugin's `README.md` and in the `references`/skill header (in the source this is `skills-lock.json`; in the plugin, the "Sources" section of the README).
+- **FR-26.** Where they are invoked from: from agents — by scoped name (FR-17); the user sees them as `/engineering-paved-path:<skill>`.
+- **FR-27.** Every skill's `description` includes triggers; `name` in frontmatter = the directory name (checked by `check-marketplace.mjs`).
 
 ---
 
-## 8. Прибирання DevDigest: явні inputs
+## 8. Stripping DevDigest: explicit inputs
 
-### 8.1 Правила
+### 8.1 Rules
 
-- **FR-28.** У вмісті плагінів (агенти, skills, скрипти, README) заборонені: слово `DevDigest` (крім згадки «extracted from DevDigest» у кореневому README і секції Sources), шляхи `server/`, `client/`, `reviewer-core/`, `.claude/skills/`, `.claude/hooks/`, `$CLAUDE_PROJECT_DIR/.claude/`, команди `pnpm …`, `./scripts/check-changed.sh`, `./scripts/shared-contracts.sh`, посилання на `routing.json`, `AGENTS.md` DevDigest, `INSIGHTS.md` як обов'язковий файл.
-- **FR-29.** Що не переноситься: product specs, секрети, cache-файли, DevDigest-specific інструкції (слайд кроку 2).
+- **FR-28.** The following are forbidden in plugin content (agents, skills, scripts, README): the word `DevDigest` (except the mention "extracted from DevDigest" in the root README and the Sources section), the paths `server/`, `client/`, `reviewer-core/`, `.claude/skills/`, `.claude/hooks/`, `$CLAUDE_PROJECT_DIR/.claude/`, the commands `pnpm …`, `./scripts/check-changed.sh`, `./scripts/shared-contracts.sh`, references to `routing.json`, DevDigest's `AGENTS.md`, and `INSIGHTS.md` as a required file.
+- **FR-29.** What is not moved: product specs, secrets, cache files, DevDigest-specific instructions (step 2 slide).
 
-### 8.2 Inputs через `userConfig` і аргументи
+### 8.2 Inputs via `userConfig` and arguments
 
-Замість зашитих значень `sdd-engineering` оголошує `userConfig` (нечутливі значення; підставляються як `${user_config.KEY}` у вмісті агентів і skills і як `CLAUDE_PLUGIN_OPTION_<KEY>` у hooks):
+Instead of hard-coded values, `sdd-engineering` declares `userConfig` (non-sensitive values; substituted as `${user_config.KEY}` in agent and skill content and as `CLAUDE_PLUGIN_OPTION_<KEY>` in hooks):
 
-| Ключ | Тип | Default | Замінює в DevDigest |
+| Key | Type | Default | Replaces in DevDigest |
 |---|---|---|---|
 | `specs_dir` | directory | `specs` | `specs/`, `<package>/specs/` |
 | `plans_dir` | directory | `docs/plans` | `docs/plans/` |
 | `retro_ledger` | file | `docs/retros/ledger.md` | `docs/retros/ledger.md` |
-| `check_commands` | string, `multiple: true` | порожній | `./scripts/check-changed.sh`, `pnpm typecheck/test/lint` |
-| `architecture_checks` | string, `multiple: true` | порожній | `pnpm arch`, `pnpm lint`, `shared-contracts.sh check` |
+| `check_commands` | string, `multiple: true` | empty | `./scripts/check-changed.sh`, `pnpm typecheck/test/lint` |
+| `architecture_checks` | string, `multiple: true` | empty | `pnpm arch`, `pnpm lint`, `shared-contracts.sh check` |
 
-- **FR-30.** Порожні `check_commands` означають: `implementer` бере команди з секції **Verification** затвердженого плану, а `implementation-verifier` — з тієї ж секції; без них обидва явно пишуть у звіті «checks not run: no commands configured».
-- **FR-31.** `routing.json` (мапа «шлях → skills → checks» із `pr-self-review`) **не переноситься**. Planner підбирає skills за їхніми `description` серед доступних і за `CLAUDE.md` / `AGENTS.md` проєкту (якщо існують) і записує вибір у кроки плану (`Practices`, `load:`). Це змінює джерело: там мапа детермінована. Див. Q-8.
-- **FR-32.** Інструкція «читати `INSIGHTS.md` модуля» стає умовною (Q-5).
-- **FR-33.** Агенти приймають inputs і в prompt (`specs_dir:`, `plans_dir:`, `checks:`), prompt перекриває `userConfig`.
-
----
-
-## 9. Версії й релізи
-
-- **FR-34.** SemVer. Усі чотири плагіни стартують з `1.0.0`. `version` задається в `plugin.json`; запис у `marketplace.json` його не дублює (правило кореневого README: «version in `plugin.json` only»). Це відхилення від слайда кроку 5, де `version` названо поряд з `name`, `owner`, `source`; див. Q-9.
-- **FR-35.** Кожен плагін має `CHANGELOG.md` у форматі Keep a Changelog. Заголовок релізу — `## [1.0.0] - 2026-10-20` (його розпізнає `scripts/build-index.mjs` сайту, FR-26 у `site.md`); `## [Unreleased]` — зверху. Найновіша версія в changelog = `version` у `plugin.json`.
-- **FR-36.** Кожен плагін має `COMPATIBILITY.md`: мінімальна версія Claude Code (залежність від `userConfig`, `dependencies` з діапазонами, `claude plugin tag` — визначити з документації і ввести числом), перелік залежностей і діапазони. Сайт відображає його у «Details».
-- **FR-37.** Bump `version` обов'язковий при будь-якій зміні вмісту плагіна (інакше користувачі не отримають файли). Зміна, що ламає scoped-імена, `userConfig`-ключі, вихідний JSON агентів або формат спеки / плану, — MAJOR.
-- **FR-38.** Правило діапазонів: `sdd-engineering` оголошує `^1.0.0`. MINOR/PATCH залежностей підхоплюються; MAJOR залежності вимагає нового релізу `sdd-engineering` з розширеним діапазоном після прогону evals.
-
-### 9.3 Порядок релізу
-
-1. Релізити залежності першими: `engineering-paved-path`, `research-tools`; потім `architecture-review` (залежить від першого); останнім — `sdd-engineering`.
-2. Для кожного: `claude plugin validate` → `node scripts/check-marketplace.mjs` → коміт з bump і записом у CHANGELOG → тег `claude plugin tag plugins/<name> --push` (`<plugin>--v1.0.0`).
-3. Теги MUST бути запушені **до** того, як `marketplace.json` з записами потрапить у `main` (P-7), інакше залежність пройде резолв лише «за поточною копією» і діапазон не перевірено за тегом.
-4. Реліз `sdd-engineering` без оновлення tag залежностей, що змінилися, заборонено.
+- **FR-30.** Empty `check_commands` means: `implementer` takes the commands from the **Verification** section of the approved plan, and `implementation-verifier` from the same section; without them both state explicitly in the report "checks not run: no commands configured".
+- **FR-31.** `routing.json` (the "path → skills → checks" map from `pr-self-review`) is **not moved**. The planner selects skills by their `description` among those available and by the project's `CLAUDE.md` / `AGENTS.md` (if they exist) and records the choice in the plan steps (`Practices`, `load:`). This changes the source: there the map is deterministic. See Q-8.
+- **FR-32.** The instruction "read the module's `INSIGHTS.md`" becomes conditional (Q-5).
+- **FR-33.** Agents also accept inputs in the prompt (`specs_dir:`, `plans_dir:`, `checks:`); the prompt overrides `userConfig`.
 
 ---
 
-## 10. Документація, evals, перевірки й acceptance
+## 9. Versions and releases
 
-### 10.1 README `sdd-engineering` (обов'язково, «як усе працює разом»)
+- **FR-34.** SemVer. All four plugins start at `1.0.0`. `version` is set in `plugin.json`; the `marketplace.json` entry does not duplicate it (the root README rule: "version in `plugin.json` only"). This is a deviation from the step 5 slide, where `version` is named alongside `name`, `owner`, `source`; see Q-9.
+- **FR-35.** Every plugin has a `CHANGELOG.md` in Keep a Changelog format. The release heading is `## [1.0.0] - 2026-10-20` (recognized by the site's `scripts/build-index.mjs`, FR-26 in `site.md`); `## [Unreleased]` goes on top. The newest version in the changelog = `version` in `plugin.json`.
+- **FR-36.** Every plugin has a `COMPATIBILITY.md`: the minimum Claude Code version (dependence on `userConfig`, `dependencies` with ranges, `claude plugin tag` — determine from the documentation and enter as a number), the list of dependencies and ranges. The site displays it under "Details".
+- **FR-37.** A `version` bump is mandatory for any change to plugin content (otherwise users will not receive the files). A change that breaks scoped names, `userConfig` keys, the agents' output JSON, or the spec / plan format is MAJOR.
+- **FR-38.** Range rule: `sdd-engineering` declares `^1.0.0`. MINOR/PATCH of dependencies are picked up; a MAJOR of a dependency requires a new `sdd-engineering` release with an extended range after an evals run.
 
-Секції:
+### 9.3 Release order
 
-1. Що це і для кого; діаграма залежностей (§3.1).
-2. Установлення: `claude plugin marketplace add artemmmon/test-ai-marketplace`, `claude plugin install sdd-engineering@test-ai-marketplace` (залежності ставляться самі); як оновлювати (ручне оновлення з кореневого README).
-3. Склад: таблиця агентів (роль · модель · що пише · що не може) і skills.
-4. Маршрут: діаграма §5.3 і пояснення двох затверджень, bounded fix-циклів та «спека каже що, план каже як».
-5. Швидкий старт: приклад прогону `run-plan` від тексту вимог і від готової спеки; як викликати окремого агента за іменем (`--only spec`, `--only plan`, якщо Q-4 залишить прапорці).
-6. Inputs: таблиця `userConfig` (§8.2) і де їх змінити.
-7. Хто від кого залежить і чому (`engineering-paved-path`, `research-tools`, `architecture-review`) — з посиланням на їхні README.
-8. Що навмисно не входить (§1.2) і як це підключити окремо.
-9. Вартість: коротко про принцип «шляхи, не вміст», один запуск implementer на групу, відсутність тестового етапу — з джерела `agents/README.md` «Keeping token cost down».
-10. Ретро: що міряє `workflow-retro`, куди пише ledger.
-11. Безпека: що виконує плагін (hooks, скрипти) — перелік файлів, які варто прочитати перед установленням.
-12. Посилання на `CHANGELOG.md` і `COMPATIBILITY.md`.
+1. Release the dependencies first: `engineering-paved-path`, `research-tools`; then `architecture-review` (depends on the first); `sdd-engineering` last.
+2. For each: `claude plugin validate` → `node scripts/check-marketplace.mjs` → a commit with the bump and a CHANGELOG entry → the tag `claude plugin tag plugins/<name> --push` (`<plugin>--v1.0.0`).
+3. The tags MUST be pushed **before** the `marketplace.json` with the entries lands in `main` (P-7), otherwise the dependency will resolve only "by current copy" and the range will not be checked against a tag.
+4. Releasing `sdd-engineering` without updating the tag of changed dependencies is forbidden.
 
-README інших трьох плагінів — коротші: призначення, склад, input-контракт агента, залежності, версія.
+---
 
-### 10.2 Кореневий README
+## 10. Documentation, evals, checks and acceptance
 
-Таблиця плагінів (назва · роль · залежності · версія), «починайте з `sdd-engineering`» і посилання на `docs/specs/sdd-plugins.md`.
+### 10.1 README of `sdd-engineering` (mandatory, "how everything works together")
+
+Sections:
+
+1. What it is and who it is for; the dependency diagram (§3.1).
+2. Installation: `claude plugin marketplace add artemmmon/test-ai-marketplace`, `claude plugin install sdd-engineering@test-ai-marketplace` (dependencies install themselves); how to update (manual update from the root README).
+3. Composition: a table of agents (role · model · what it writes · what it cannot do) and skills.
+4. Route: the §5.3 diagram and an explanation of the two approvals, the bounded fix loops, and "the spec says what, the plan says how".
+5. Quick start: an example `run-plan` run from requirements text and from a ready spec; how to invoke an individual agent by name (`--only spec`, `--only plan`, if Q-4 keeps the flags).
+6. Inputs: the `userConfig` table (§8.2) and where to change them.
+7. Who depends on whom and why (`engineering-paved-path`, `research-tools`, `architecture-review`) — with links to their READMEs.
+8. What is intentionally not included (§1.2) and how to connect it separately.
+9. Cost: briefly on the principle "paths, not content", one implementer run per group, no test stage — from the source `agents/README.md` "Keeping token cost down".
+10. Retro: what `workflow-retro` measures, where it writes the ledger.
+11. Security: what the plugin executes (hooks, scripts) — a list of files worth reading before installation.
+12. Links to `CHANGELOG.md` and `COMPATIBILITY.md`.
+
+The READMEs of the other three plugins are shorter: purpose, composition, the agent's input contract, dependencies, version.
+
+### 10.2 Root README
+
+A table of plugins (name · role · dependencies · version), "start with `sdd-engineering`" and a link to `docs/specs/sdd-plugins.md`.
 
 ### 10.3 Evals
 
-- **FR-39.** Слайд кроку 4 вимагає переносити evals. Формат DevDigest (`evals.json`: `id, skills, query, files, expected_behavior`) не читається `claude plugin eval` (P-9). Кожен кейс конвертується в `evals/<case>/prompt.md` + `graders/*.md` (`type: llm` з PASS/FAIL-критеріями з `expected_behavior`; `type: tool_used` для перевірки, що skill спрацював).
-- **FR-40.** Джерела кейсів: `skills/{workflow-retro,spec-authoring,feature-flow,sdd,security,onion-architecture}/evals/evals.json`, `evals/agents/architecture-reviewer`. Кейси, що посилаються на DevDigest-файли (`files: [".claude/skills/…/devdigest.md"]`), переписуються на fixtures у `evals/<case>/resources/` або відкидаються.
-- **FR-41.** Evals розміщуються в тому плагіні, чию поведінку перевіряють. Кейси `sdd-engineering` залежать від чужих агентів — S-5.
+- **FR-39.** The step 4 slide requires moving the evals. The DevDigest format (`evals.json`: `id, skills, query, files, expected_behavior`) is not read by `claude plugin eval` (P-9). Each case is converted into `evals/<case>/prompt.md` + `graders/*.md` (`type: llm` with PASS/FAIL criteria from `expected_behavior`; `type: tool_used` to check that the skill fired).
+- **FR-40.** Case sources: `skills/{workflow-retro,spec-authoring,feature-flow,sdd,security,onion-architecture}/evals/evals.json`, `evals/agents/architecture-reviewer`. Cases that reference DevDigest files (`files: [".claude/skills/…/devdigest.md"]`) are rewritten onto fixtures in `evals/<case>/resources/` or discarded.
+- **FR-41.** Evals are placed in the plugin whose behavior they check. The `sdd-engineering` cases depend on other plugins' agents — S-5.
 
-### 10.4 Перевірки
+### 10.4 Checks
 
-- **FR-13.** `scripts/check-marketplace.mjs` розширюється (зі збереженням самодостатності, без залежностей):
-  - усі `dependencies[].name` існують у `plugins[]` цього marketplace;
-  - діапазон кожної залежності задовольняє `version` з її `plugin.json`;
-  - немає циклів у графі залежностей;
-  - тег `<plugin>--v<version>` існує для кожного плагіна з `dependencies` на нього (попередження до першого релізу, помилка після);
-  - у `agents/*.md` немає frontmatter `hooks`, `mcpServers`, `permissionMode` (вони ігноруються, P-1);
-  - у вмісті плагінів немає заборонених рядків FR-28;
-  - у кожного плагіна є `README.md`, `CHANGELOG.md`, `COMPATIBILITY.md`; найновіша версія changelog = `version`;
-  - немає symlink і шляхів з `..` (FR-6).
+- **FR-13.** `scripts/check-marketplace.mjs` is extended (staying self-contained, with no dependencies):
+  - all `dependencies[].name` exist in this marketplace's `plugins[]`;
+  - the range of each dependency is satisfied by the `version` from its `plugin.json`;
+  - there are no cycles in the dependency graph;
+  - the tag `<plugin>--v<version>` exists for every plugin that is listed in the `dependencies` of another plugin (a warning before the first release, an error after);
+  - there is no frontmatter `hooks`, `mcpServers`, `permissionMode` in `agents/*.md` (they are ignored, P-1);
+  - there are no forbidden strings of FR-28 in plugin content;
+  - every plugin has `README.md`, `CHANGELOG.md`, `COMPATIBILITY.md`; the newest changelog version = `version`;
+  - there are no symlinks and no paths with `..` (FR-6).
 
 ### 10.5 Acceptance
 
-| # | Перевірка | Очікуваний результат |
+| # | Check | Expected result |
 |---|---|---|
-| AC-1 | `claude plugin validate .` | passed (без `--strict` warnings) |
+| AC-1 | `claude plugin validate .` | passed (no `--strict` warnings) |
 | AC-2 | `node scripts/check-marketplace.mjs` | exit 0 |
-| AC-3 | `claude --plugin-dir plugins/engineering-paved-path --plugin-dir plugins/research-tools --plugin-dir plugins/architecture-review --plugin-dir plugins/sdd-engineering` | усі компоненти завантажені, у `/plugin` немає Errors |
-| AC-4 | локальна установка з marketplace (`claude plugin marketplace add ./`) `sdd-engineering` у чистому профілі | три залежності встановлені; `claude plugin list` показує їхні версії |
-| AC-5 | `run-plan` на тестовому проєкті без DevDigest, від текстових вимог | spec-creator повертає discovery report; після відповідей з'являється `<specs_dir>/NN-*.md` зі `Status: draft`; жодного звернення до шляху DevDigest |
-| AC-6 | guard-перевірки | `spec-creator` не може записати спеку зі `Status: approved` і не може запустити агента, крім `researcher`; planner не може записати поза `plans_dir` (за умови S-3) |
-| AC-7 | `claude plugin eval` для кожного плагіна | проходить поріг, зафіксований у README (початковий — прохід усіх кейсів) |
-| AC-8 | `grep -ri devdigest plugins/` | лише допустимі входження (FR-28) |
-| AC-9 | сайт: `node scripts/build-index.mjs` | `index.json` містить 4 плагіни, компоненти за типами, залежності зі статусом `satisfied`, релізи з changelog |
+| AC-3 | `claude --plugin-dir plugins/engineering-paved-path --plugin-dir plugins/research-tools --plugin-dir plugins/architecture-review --plugin-dir plugins/sdd-engineering` | all components loaded, no Errors in `/plugin` |
+| AC-4 | local installation of `sdd-engineering` from the marketplace (`claude plugin marketplace add ./`) in a clean profile | three dependencies installed; `claude plugin list` shows their versions |
+| AC-5 | `run-plan` on a test project without DevDigest, from text requirements | spec-creator returns a discovery report; after the answers `<specs_dir>/NN-*.md` appears with `Status: draft`; no access to any DevDigest path |
+| AC-6 | guard checks | `spec-creator` cannot write a spec with `Status: approved` and cannot launch any agent other than `researcher`; the planner cannot write outside `plans_dir` (subject to S-3) |
+| AC-7 | `claude plugin eval` for each plugin | passes the threshold recorded in the README (initially — all cases pass) |
+| AC-8 | `grep -ri devdigest plugins/` | only permitted occurrences (FR-28) |
+| AC-9 | site: `node scripts/build-index.mjs` | `index.json` contains 4 plugins, components by type, dependencies with status `satisfied`, releases from the changelog |
 
-- **NFR-1.** Плагіни не містять секретів і абсолютних шляхів до машини автора.
-- **NFR-2.** Кожен vendored або стороннього походження skill має ліцензію, що дозволяє публічний redistribution; без підтвердженої ліцензії skill не потрапляє у `engineering-paved-path` v1.0.0.
-- **NFR-3.** Розмір кожного `SKILL.md` — як у джерелі (близько 100–150 рядків для власних); довгі теми — в `references/`.
+- **NFR-1.** Plugins contain no secrets and no absolute paths to the author's machine.
+- **NFR-2.** Every vendored or third-party skill has a license that permits public redistribution; without a confirmed license a skill does not enter `engineering-paved-path` v1.0.0.
+- **NFR-3.** The size of each `SKILL.md` is as in the source (about 100–150 lines for our own); long topics go in `references/`.
 
 ---
 
-## 11. Фазування
+## 11. Phasing
 
-Кожна фаза — окрема гілка й PR в `main`, за `CLAUDE.md` проєкту. Merge — лише на прохання користувача.
+Each phase is a separate branch and PR into `main`, per the project's `CLAUDE.md`. Merge only at the user's request.
 
-| Фаза | Зміст | Залежить від |
+| Phase | Content | Depends on |
 |---|---|---|
-| P0 | Spikes S-1…S-5 (§12.1), результат — оновлення цієї специфікації | — |
-| P1 | `engineering-paved-path` (після NFR-2) + `check-marketplace.mjs` (FR-13) | P0 |
+| P0 | Spikes S-1…S-5 (§12.1), the result is an update to this specification | — |
+| P1 | `engineering-paved-path` (after NFR-2) + `check-marketplace.mjs` (FR-13) | P0 |
 | P2 | `research-tools` | P0 |
 | P3 | `architecture-review` | P1 |
-| P4 | `sdd-engineering`: агенти, skills, hooks/scripts, `userConfig`, evals, README | P1–P3 |
-| P5 | записи в `marketplace.json`, теги `--v1.0.0`, кореневий README, перевірка AC-1…AC-9 | P1–P4 |
+| P4 | `sdd-engineering`: agents, skills, hooks/scripts, `userConfig`, evals, README | P1–P3 |
+| P5 | entries in `marketplace.json`, `--v1.0.0` tags, root README, verification of AC-1…AC-9 | P1–P4 |
 
-P2 і P3 незалежні й можуть іти паралельно (кожна в своєму worktree); P1 стартує першою, бо від неї залежать P3 і P4.
+P2 and P3 are independent and can run in parallel (each in its own worktree); P1 starts first because P3 and P4 depend on it.
 
 ---
 
-## 12. Spikes і відкриті питання
+## 12. Spikes and open questions
 
-### 12.1 Spikes (перевірити до реалізації)
+### 12.1 Spikes (to check before implementation)
 
-| # | Що перевірити | Метод | Впливає на |
+| # | What to check | Method | Affects |
 |---|---|---|---|
-| S-1 | Мінімальна версія Claude Code для `userConfig`, `dependencies` з діапазонами, `claude plugin tag`, `claude plugin eval` | `claude plugin validate`, документація, локальна 2.1.304 | FR-36 |
-| S-2 | Чи працює `skills:` у frontmatter агента плагіна зі scoped-іменем `engineering-paved-path:onion-architecture` і чи видно skills залежності | міні-плагін з двох частин, запуск агента з `--plugin-dir` | FR-16, FR-2 |
-| S-3 | Чи містить вхід PreToolUse-hook плагіна ідентифікатор агента (тип) і чи можна надійно обмежити guard одним агентом | міні-hook, що пише вхідний JSON у файл | FR-18, AC-6 |
-| S-4 | Чи працюють `${CLAUDE_SKILL_DIR}` і `${user_config.KEY}` у тілі агента та skill, чи доходить `CLAUDE_PLUGIN_OPTION_*` до hook-скриптів | міні-плагін | FR-11, FR-12, §8.2 |
-| S-5 | Чи завантажує `claude plugin eval` залежності плагіна в ізольованому workspace | eval-кейс для `sdd-engineering` | FR-41 |
+| S-1 | The minimum Claude Code version for `userConfig`, `dependencies` with ranges, `claude plugin tag`, `claude plugin eval` | `claude plugin validate`, the documentation, local 2.1.304 | FR-36 |
+| S-2 | Whether `skills:` in a plugin agent's frontmatter works with the scoped name `engineering-paved-path:onion-architecture` and whether the dependency's skills are visible | a two-part mini-plugin, launching the agent with `--plugin-dir` | FR-16, FR-2 |
+| S-3 | Whether the input of a plugin's PreToolUse hook contains an agent identifier (type) and whether a guard can be reliably restricted to one agent | a mini-hook that writes the input JSON to a file | FR-18, AC-6 |
+| S-4 | Whether `${CLAUDE_SKILL_DIR}` and `${user_config.KEY}` work in an agent and skill body, and whether `CLAUDE_PLUGIN_OPTION_*` reaches the hook scripts | a mini-plugin | FR-11, FR-12, §8.2 |
+| S-5 | Whether `claude plugin eval` loads the plugin's dependencies in an isolated workspace | an eval case for `sdd-engineering` | FR-41 |
 
-### 12.2 Відкриті питання
+### 12.2 Open questions
 
-Для кожного вказано дефолт, на якому написана специфікація.
+For each, the default on which the specification is written is given.
 
-- **Q-1. Склад агентів.** Ви назвали п'ять агентів (spec-creator, brainstorm, implementation-planner, implementer, implementation-verifier); слайд кроку 2 — чотири (spec-creator, implementation-planner, implementer, **plan-verifier**), без brainstorm. *Дефолт: п'ять, ім'я verifier-а `implementation-verifier` (як у DevDigest і у вашому тексті).* Якщо потрібен `plan-verifier` — це перейменування; якщо без brainstorm — маршрут §5.3 втрачає крок вибору варіанта.
-- **Q-2. Залежність `architecture-review → engineering-paved-path`.** Слайд цього не показує. *Дефолт: додано (FR-2).* Альтернатива — зробити рев'юера рубричним без skills (input `rubric:` зі шляхом) і лишити граф плоским.
-- **Q-3. Що з `doc-writer`, `test-writer`, `security-reviewer`, `pr-*` і додатковими skills (`zod`, `typescript-expert`, drizzle, postgres, `mermaid-diagram`).** Не названі, тому не входять у 1.0.0.
-- **Q-4. Що саме таке `run-plan`.** У DevDigest окремого `run-plan` немає: ближчі `/sdd` (повний маршрут від довільного входу) і `feature-flow`. Слайд описує `run-plan` як виконання **затвердженого плану**. *Дефолт: `run-plan` = `sdd` + `feature-flow` разом; приймає будь-яку стадію (`--from`, `--until`, `--only`); виконання затвердженого плану — один з режимів.* Альтернатива: `run-plan` лише від затвердженого плану, а перші дві стадії користувач запускає агентами за іменем.
-- **Q-5. `engineering-insights` / `INSIGHTS.md`.** Це конвенція DevDigest, на яку спираються planner і implementer. *Дефолт: у v1.0.0 не переноситься; агенти читають `INSIGHTS.md` лише якщо він існує (FR-32).*
-- **Q-6. Мова документів.** Агенти й skills — англійською (як у джерелі, потрібне для публічного каталогу). Ця специфікація — українською, як `site.md`. *Дефолт: README і CHANGELOG плагінів англійською.*
-- **Q-7. Ліцензія** плагінів і переносу vendored skills (NFR-2).
-- **Q-8. `routing.json`.** Без нього відбір skills планувальником недетермінований (FR-31). *Дефолт: не переноситься.* Альтернатива: необов'язковий input `routing_file`.
-- **Q-9. `version` у записі marketplace.** Слайд показує `name, version, owner, source`; кореневий README і `claude plugin tag` припускають одне джерело правди. *Дефолт: лише `plugin.json`; `owner` лишається на рівні marketplace, у `plugin.json` — `author`.*
+- **Q-1. Agent composition.** You named five agents (spec-creator, brainstorm, implementation-planner, implementer, implementation-verifier); the step 2 slide names four (spec-creator, implementation-planner, implementer, **plan-verifier**), without brainstorm. *Default: five, the verifier is named `implementation-verifier` (as in DevDigest and in your text).* If `plan-verifier` is needed, it is a rename; if there is no brainstorm, the §5.3 route loses the option-selection step.
+- **Q-2. The dependency `architecture-review → engineering-paved-path`.** The slide does not show it. *Default: added (FR-2).* The alternative is to make the reviewer rubric-based without skills (an input `rubric:` with a path) and keep the graph flat.
+- **Q-3. What about `doc-writer`, `test-writer`, `security-reviewer`, `pr-*` and the additional skills (`zod`, `typescript-expert`, drizzle, postgres, `mermaid-diagram`).** They are not named, so they are not included in 1.0.0.
+- **Q-4. What exactly `run-plan` is.** DevDigest has no separate `run-plan`: the closest are `/sdd` (the full route from an arbitrary entry) and `feature-flow`. The slide describes `run-plan` as executing an **approved plan**. *Default: `run-plan` = `sdd` + `feature-flow` together; accepts any stage (`--from`, `--until`, `--only`); executing an approved plan is one of the modes.* The alternative: `run-plan` only from an approved plan, and the user launches the first two stages as agents by name.
+- **Q-5. `engineering-insights` / `INSIGHTS.md`.** This is a DevDigest convention that the planner and implementer rely on. *Default: not moved in v1.0.0; agents read `INSIGHTS.md` only if it exists (FR-32).*
+- **Q-6. Document language.** Agents and skills are in English (as in the source, required for the public catalog). *Default: plugin READMEs and CHANGELOGs in English.* This specification itself is also in English, per the repository rule that everything in the repository is in English (it was originally written in Ukrainian, like `site.md`).
+- **Q-7. License** of the plugins and of the transfer of vendored skills (NFR-2).
+- **Q-8. `routing.json`.** Without it, the planner's skill selection is non-deterministic (FR-31). *Default: not moved.* The alternative: an optional input `routing_file`.
+- **Q-9. `version` in the marketplace entry.** The slide shows `name, version, owner, source`; the root README and `claude plugin tag` assume a single source of truth. *Default: only `plugin.json`; `owner` stays at the marketplace level, and `plugin.json` has `author`.*
 
 ---
 
-## 13. Додаток: карта файлів «джерело → ціль»
+## 13. Appendix: source → target file map
 
-Шляхи джерела — відносно `dev-digest/.claude/`. «—» означає «не переноситься».
+Source paths are relative to `dev-digest/.claude/`. "—" means "not moved".
 
-| Джерело | Ціль | Зміни |
+| Source | Target | Changes |
 |---|---|---|
-| `agents/spec-creator.md` | `sdd-engineering/agents/spec-creator.md` | прибрати `hooks:` (P-1); `skills: spec-authoring` + security за FR-16; шляхи → `${user_config.specs_dir}`; Figma: у `tools` обидва відомі префікси MCP-сервера (`mcp__plugin_figma_figma`, `mcp__plugin_design_figma`), бо ім'я залежить від установки |
-| `agents/brainstorm.md` | `sdd-engineering/agents/brainstorm.md` | прибрати `hooks:`; `docs/plans` → `plans_dir`; skills архітектури — з paved-path |
-| `agents/implementation-planner.md` | `sdd-engineering/agents/implementation-planner.md` | прибрати `hooks:`; прибрати `routing.json` (FR-31); `pnpm`, `scripts/*.sh` → Verification і `check_commands` |
-| `agents/implementer.md` | `sdd-engineering/agents/implementer.md` | прибрати `server/`, `client/`, `reviewer-core`, `pnpm …`; checks з плану / `check_commands` |
-| `agents/implementation-verifier.md` | `sdd-engineering/agents/implementation-verifier.md` | `check-plan.mjs --implemented` з `run-plan/assets`; checks з плану |
+| `agents/spec-creator.md` | `sdd-engineering/agents/spec-creator.md` | remove `hooks:` (P-1); `skills: spec-authoring` + security per FR-16; paths → `${user_config.specs_dir}`; Figma: in `tools` both known MCP server prefixes (`mcp__plugin_figma_figma`, `mcp__plugin_design_figma`), because the name depends on the installation |
+| `agents/brainstorm.md` | `sdd-engineering/agents/brainstorm.md` | remove `hooks:`; `docs/plans` → `plans_dir`; architecture skills — from paved-path |
+| `agents/implementation-planner.md` | `sdd-engineering/agents/implementation-planner.md` | remove `hooks:`; remove `routing.json` (FR-31); `pnpm`, `scripts/*.sh` → Verification and `check_commands` |
+| `agents/implementer.md` | `sdd-engineering/agents/implementer.md` | remove `server/`, `client/`, `reviewer-core`, `pnpm …`; checks from the plan / `check_commands` |
+| `agents/implementation-verifier.md` | `sdd-engineering/agents/implementation-verifier.md` | `check-plan.mjs --implemented` from `run-plan/assets`; checks from the plan |
 | `agents/researcher.md` | `research-tools/agents/researcher.md` | FR-19 |
 | `agents/architecture-reviewer.md` | `architecture-review/agents/architecture-reviewer.md` | FR-21…FR-23 |
-| `agents/{architecture-reviewer-lite,doc-writer,test-writer,security-reviewer,pr-skill-reviewer,pr-finding-verifier}.md`, `agents/README.md` | — | агентський README переписується в README плагіна |
-| `hooks/{spec-creator-guard,plans-guard}.mjs` (+ тести) | `sdd-engineering/scripts/` | переписати на `userConfig`-шляхи й перевірку агента (FR-18) |
-| `skills/spec-authoring/**` | `sdd-engineering/skills/spec-authoring/**` | без `references/devdigest.md`; `check-spec.mjs` + тести + `spec-template.md`, `ears.md`, `design-gaps.md`, `example-spec.md` |
-| `skills/sdd/**`, `skills/feature-flow/**` | `sdd-engineering/skills/run-plan/**` | Q-4; `check-plan.mjs` + тести → `assets/`; `handoffs.md` → `references/`; без `devdigest.md` |
-| `skills/workflow-retro/**` | `sdd-engineering/skills/workflow-retro/**` | `retro.mjs`, `prices.json`, тести, `reading.md`; ledger → `retro_ledger`; без `devdigest.md` |
-| `skills/{react-best-practices,next-best-practices,fastify-best-practices,react-testing-library}/**` | `engineering-paved-path/skills/…` | upstream-структура, LICENSE, Sources |
-| `skills/{onion-architecture,frontend-architecture}/**` | `engineering-paved-path/skills/…` | без `devdigest.md`; узагальнити приклади |
-| `skills/security/**` | `engineering-paved-path/skills/security/` | переписати (§7.2) |
-| `skills/*/evals/evals.json`, `evals/agents/architecture-reviewer/**` | `<plugin>/evals/<case>/` | конвертація (FR-39, FR-40) |
+| `agents/{architecture-reviewer-lite,doc-writer,test-writer,security-reviewer,pr-skill-reviewer,pr-finding-verifier}.md`, `agents/README.md` | — | the agents README is rewritten into the plugin README |
+| `hooks/{spec-creator-guard,plans-guard}.mjs` (+ tests) | `sdd-engineering/scripts/` | rewrite onto `userConfig` paths and the agent check (FR-18) |
+| `skills/spec-authoring/**` | `sdd-engineering/skills/spec-authoring/**` | without `references/devdigest.md`; `check-spec.mjs` + tests + `spec-template.md`, `ears.md`, `design-gaps.md`, `example-spec.md` |
+| `skills/sdd/**`, `skills/feature-flow/**` | `sdd-engineering/skills/run-plan/**` | Q-4; `check-plan.mjs` + tests → `assets/`; `handoffs.md` → `references/`; without `devdigest.md` |
+| `skills/workflow-retro/**` | `sdd-engineering/skills/workflow-retro/**` | `retro.mjs`, `prices.json`, tests, `reading.md`; ledger → `retro_ledger`; without `devdigest.md` |
+| `skills/{react-best-practices,next-best-practices,fastify-best-practices,react-testing-library}/**` | `engineering-paved-path/skills/…` | upstream structure, LICENSE, Sources |
+| `skills/{onion-architecture,frontend-architecture}/**` | `engineering-paved-path/skills/…` | without `devdigest.md`; generalize examples |
+| `skills/security/**` | `engineering-paved-path/skills/security/` | rewrite (§7.2) |
+| `skills/*/evals/evals.json`, `evals/agents/architecture-reviewer/**` | `<plugin>/evals/<case>/` | conversion (FR-39, FR-40) |
 | `settings.json` (hook `pr-self-review`) | — | DevDigest-specific |
 | `skills/{engineering-insights,mermaid-diagram,dependency-checker,pr-self-review,devdigest-demo,zod,typescript-expert,drizzle-orm-patterns,postgresql-table-design}/**` | — | Q-3, Q-5 |
