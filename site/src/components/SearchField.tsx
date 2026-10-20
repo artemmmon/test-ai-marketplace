@@ -3,9 +3,8 @@
 import type { KeyboardEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { usePrefs } from '../app/prefs';
+import { t } from '../i18n';
 import { Icon } from './Icon';
-
-const PLACEHOLDER = 'Search plugins, skills, agents…';
 
 function useSearchHandlers() {
   const { text, setText } = usePrefs();
@@ -28,7 +27,7 @@ export function SearchBox({ id, variant }: { id: string; variant: 'hero' | 'mobi
   return (
     <>
       <label htmlFor={id} className="sr-only">
-        Search plugins, skills, agents
+        {t('search.fieldLabel')}
       </label>
       <div className="searchbox">
         <Icon name="search" />
@@ -38,7 +37,7 @@ export function SearchBox({ id, variant }: { id: string; variant: 'hero' | 'mobi
           type="search"
           role="searchbox"
           value={text}
-          placeholder={PLACEHOLDER}
+          placeholder={t('search.placeholder')}
           autoComplete="off"
           spellCheck={false}
           onChange={(e) => setText(e.target.value)}
@@ -46,7 +45,7 @@ export function SearchBox({ id, variant }: { id: string; variant: 'hero' | 'mobi
         />
         {variant === 'hero' && <kbd aria-hidden="true">/</kbd>}
         {text && (
-          <button className="btn btn-ghost btn-icon" type="button" aria-label="Clear search" onClick={() => setText('')}>
+          <button className="btn btn-ghost btn-icon" type="button" aria-label={t('search.clear')} onClick={() => setText('')}>
             <Icon name="x" />
           </button>
         )}
@@ -62,7 +61,7 @@ export function HeaderSearch() {
     <div className="hsearch">
       <Icon name="search" style={{ color: 'var(--text-muted)' }} />
       <label htmlFor="hq" className="sr-only">
-        Search the catalog
+        {t('search.headerFieldLabel')}
       </label>
       <input
         id="hq"
@@ -70,7 +69,7 @@ export function HeaderSearch() {
         type="search"
         role="searchbox"
         value={text}
-        placeholder={PLACEHOLDER}
+        placeholder={t('search.placeholder')}
         autoComplete="off"
         spellCheck={false}
         onChange={(e) => setText(e.target.value)}

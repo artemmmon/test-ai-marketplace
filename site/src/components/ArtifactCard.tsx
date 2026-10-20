@@ -2,6 +2,7 @@
 import { Link } from 'react-router';
 import { useCatalog } from '../app/catalog';
 import { bodyFileName, composition, dependencySummary, itemHref, sourceUrl } from '../data/links';
+import { t } from '../i18n';
 import { highlight, hasMark, snippet, type Hit } from '../search/engine';
 import { ExecBadge, ExternalBadge, TypeBadge } from './Badges';
 import { CopyInstallButton } from './Copy';
@@ -36,16 +37,16 @@ export function ArtifactCard({ hit, onTag }: { hit: Hit; onTag: (tag: string) =>
       </h3>
       {isPlugin ? (
         <p className="card-meta">
-          {item.version ? `v${item.version} · ` : ''}
-          {composition(item)} · {dependencySummary(item)}
+          {item.version ? `${t('common.version', { version: item.version })} · ` : ''}
+          {t('card.pluginMeta', { composition: composition(item), dependencies: dependencySummary(item) })}
         </p>
       ) : (
         <p className="card-meta">
-          in{' '}
+          {t('card.inPlugin')}{' '}
           <Link className="mono" to={`/plugin/${item.plugin}`} translate="no" style={{ fontSize: 12.5 }}>
             {item.plugin}
           </Link>
-          {item.version ? ` · v${item.version}` : ''}
+          {item.version ? ` · ${t('common.version', { version: item.version })}` : ''}
         </p>
       )}
       <p className="card-desc">
@@ -53,13 +54,13 @@ export function ArtifactCard({ hit, onTag }: { hit: Hit; onTag: (tag: string) =>
       </p>
       {body && (
         <p className="card-snippet">
-          Matched in {bodyFileName(item)}: <Highlight parts={body} />
+          {t('card.matchedIn', { file: bodyFileName(item) })} <Highlight parts={body} />
         </p>
       )}
       {tags.length > 0 && (
         <div className="row">
           {tags.map((tag) => (
-            <button key={tag} className="tag" type="button" onClick={() => onTag(tag)} aria-label={`Filter by tag ${tag}`}>
+            <button key={tag} className="tag" type="button" onClick={() => onTag(tag)} aria-label={t('card.filterByTag', { tag })}>
               {tag}
             </button>
           ))}
@@ -70,18 +71,18 @@ export function ArtifactCard({ hit, onTag }: { hit: Hit; onTag: (tag: string) =>
         <CopyInstallButton
           command={item.installCommands.chat}
           plugin={item.plugin}
-          title={isPlugin ? `Copies ${item.installCommands.chat}` : `Installs the whole plugin ${item.plugin}`}
+          title={isPlugin ? t('copy.copiesCommand', { command: item.installCommands.chat }) : t('common.installsWholePlugin', { plugin: item.plugin })}
         />
-        <Link className="btn" to={itemHref(item)} aria-label={`View ${item.qualifiedName}`}>
-          View
+        <Link className="btn" to={itemHref(item)} aria-label={t('card.viewLabel', { name: item.qualifiedName })}>
+          {t('card.view')}
         </Link>
         {src &&
           (external ? (
             <ExtLink className="btn push" href={src}>
-              Source
+              {t('common.source')}
             </ExtLink>
           ) : (
-            <ExtLink className="btn btn-ghost btn-icon push" href={src} aria-label="View source on GitHub">
+            <ExtLink className="btn btn-ghost btn-icon push" href={src} aria-label={t('card.viewSource')}>
               <Icon name="github" />
             </ExtLink>
           ))}

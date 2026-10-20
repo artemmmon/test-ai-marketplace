@@ -1,6 +1,7 @@
 // Toast notifications and clipboard copy with a fallback (spec §6.2, FR-59).
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from '../components/Icon';
+import { t } from '../i18n';
 
 interface Toast {
   id: number;
@@ -46,7 +47,7 @@ function FallbackField({ text }: { text: string }) {
     ref.current?.focus();
     ref.current?.select();
   }, []);
-  return <input ref={ref} readOnly value={text} aria-label="Command to copy" onFocus={(e) => e.currentTarget.select()} />;
+  return <input ref={ref} readOnly value={text} aria-label={t('toast.commandToCopy')} onFocus={(e) => e.currentTarget.select()} />;
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -56,14 +57,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback((message: string, fallback?: string) => {
     const id = ++seq.current;
     setToasts((list) => [...list.slice(-2), { id, message, fallback }]);
-    window.setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), fallback ? 8000 : 2000);
+    window.setTimeout(() => setToasts((list) => list.filter((toast) => toast.id !== id)), fallback ? 8000 : 2000);
   }, []);
 
   const copy = useCallback(
     async (text: string) => {
       const ok = await writeClipboard(text);
-      if (ok) show('Copied');
-      else show("Couldn't copy — press Ctrl/Cmd+C", text);
+      if (ok) show(t('toast.copied'));
+      else show(t('toast.copyFailed'), text);
       return ok;
     },
     [show],
@@ -73,13 +74,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ show, copy }}>
       {children}
       <div className="toast-region" role="status" aria-live="polite">
-        {toasts.map((t) => (
-          <div className="toast" key={t.id}>
+        {toasts.map((toast) => (
+          <div className="toast" key={toast.id}>
             <span className="toast-line">
-              <Icon name={t.fallback ? 'warn' : 'check'} />
-              {t.message}
+              <Icon name={toast.fallback ? 'warn' : 'check'} />
+              {toast.message}
             </span>
-            {t.fallback && <FallbackField text={t.fallback} />}
+            {toast.fallback && <FallbackField text={toast.fallback} />}
           </div>
         ))}
       </div>

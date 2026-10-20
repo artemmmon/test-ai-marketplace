@@ -1,4 +1,5 @@
 import { useCatalog } from '../app/catalog';
+import { t } from '../i18n';
 import { Icon } from './Icon';
 
 /** Shown while index.json comes from the fictitious fixtures (fixture: true). */
@@ -9,7 +10,7 @@ export function DemoBanner() {
     <div className="demo-banner" role="note">
       <div>
         <Icon name="info" style={{ width: 14, height: 14 }} />
-        Demo data — the real catalog is not indexed yet
+        {t('demoBanner.text')}
       </div>
     </div>
   );

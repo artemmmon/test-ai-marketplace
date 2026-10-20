@@ -11,17 +11,14 @@ import { ExtLink } from '../components/ExtLink';
 import { Icon } from '../components/Icon';
 import { SearchBox } from '../components/SearchField';
 import { CardSkeleton } from '../components/Skeleton';
-import { TYPE_LABEL, TYPE_ORDER, TYPE_PLURAL, issueUrl } from '../data/links';
+import { TYPE_ORDER, issueUrl, typeLabel } from '../data/links';
+import { plural, t } from '../i18n';
 import type { Filters, SortKey } from '../search/engine';
 import type { ArtifactType, IndexFile } from '../types';
 
 const PAGE = 60;
 const TOP_TAGS = 6;
-const SORTS: Array<[SortKey, string]> = [
-  ['relevance', 'Relevance'],
-  ['name', 'Name (A–Z)'],
-  ['updated', 'Recently updated'],
-];
+const SORTS: SortKey[] = ['relevance', 'name', 'updated'];
 
 function list(value: string | null): string[] {
   return value ? value.split(',').map((v) => v.trim()).filter(Boolean) : [];
@@ -29,7 +26,7 @@ function list(value: string | null): string[] {
 
 export function SearchPage() {
   const catalog = useCatalog();
-  usePageTitle('Search');
+  usePageTitle(t('common.searchLink'));
 
   if (catalog.status === 'error') return <CatalogError retry={catalog.retry} />;
   if (catalog.status === 'loading') return <SearchLoading />;
@@ -49,11 +46,11 @@ function SearchLoading() {
   return (
     <main id="main" className="page page-search" aria-busy="true">
       <h1 className="sr-only" tabIndex={-1}>
-        Search the catalog
+        {t('search.heading')}
       </h1>
       <SearchHero />
       <p className="muted" aria-live="polite">
-        Loading catalog…
+        {t('search.loading')}
       </p>
       <ul className="grid">
         {Array.from({ length: 6 }, (_, i) => (
@@ -69,14 +66,14 @@ function CatalogError({ retry }: { retry: () => void }) {
     <main id="main" className="page page-search">
       <section className="empty-state" style={{ paddingTop: 56 }}>
         <div>
-          <h1 tabIndex={-1}>Couldn’t load the catalog</h1>
-          <p>Check your connection and try again. If the problem persists, the deploy may be broken.</p>
+          <h1 tabIndex={-1}>{t('common.couldntLoadCatalog')}</h1>
+          <p>{t('search.error.body')}</p>
           <div className="row" style={{ gap: 10 }}>
             <button className="btn btn-primary btn-lg" type="button" onClick={retry}>
-              Retry
+              {t('common.retry')}
             </button>
             <ExtLink className="btn btn-lg" href="https://github.com/artemmmon/test-ai-marketplace">
-              Open the repository
+              {t('search.error.openRepository')}
             </ExtLink>
           </div>
         </div>
@@ -101,15 +98,15 @@ function EmptyCatalog({ index }: { index: IndexFile }) {
         </svg>
         <div style={{ flex: '1 1 360px', minWidth: 0 }}>
           <h1 id="empty-h" tabIndex={-1}>
-            The catalog is empty
+            {t('search.empty.title')}
           </h1>
-          <p>No plugins have been published yet. Once a plugin is added to the marketplace, it appears here with its skills, agents and commands.</p>
+          <p>{t('search.empty.body')}</p>
           <div className="row" style={{ gap: 10 }}>
             <ExtLink className="btn btn-primary btn-lg" href={`${index.marketplace.repo.url}#readme`}>
-              How to add a plugin
+              {t('search.empty.howToAdd')}
             </ExtLink>
             <Link className="btn btn-lg" to="/getting-started">
-              Getting started
+              {t('common.gettingStarted')}
             </Link>
           </div>
         </div>
@@ -141,7 +138,7 @@ function SearchReady() {
     plugin: rawPlugin && pluginNames.includes(rawPlugin) ? rawPlugin : null,
     tags: rawTags.filter((t) => allKeywords.has(t)),
   };
-  const sort = SORTS.some(([k]) => k === rawSort) ? (rawSort as SortKey) : null;
+  const sort = SORTS.some((k) => k === rawSort) ? (rawSort as SortKey) : null;
 
   // Unknown filter values are dropped from the URL (spec FR-50).
   useEffect(() => {
@@ -249,20 +246,20 @@ function SearchReady() {
   return (
     <main id="main" className="page page-search">
       <h1 className="sr-only" tabIndex={-1}>
-        Search the catalog
+        {t('search.heading')}
       </h1>
       <SearchHero />
 
       <div className="search-layout">
-        <aside aria-label="Filters" className={`filters${panelOpen ? ' open' : ''}`} id="filters-panel">
+        <aside aria-label={t('search.filters.title')} className={`filters${panelOpen ? ' open' : ''}`} id="filters-panel">
           <div className="filters-panel-head">
-            <h2>Filters</h2>
-            <button className="btn btn-ghost btn-icon" type="button" aria-label="Close filters" onClick={() => setPanelOpen(false)}>
+            <h2>{t('search.filters.title')}</h2>
+            <button className="btn btn-ghost btn-icon" type="button" aria-label={t('search.filters.close')} onClick={() => setPanelOpen(false)}>
               <Icon name="x" />
             </button>
           </div>
           <fieldset>
-            <legend>Type</legend>
+            <legend>{t('search.filters.type')}</legend>
             {TYPE_ORDER.map((t) => {
               const n = facets.types.get(t) ?? 0;
               return (
@@ -275,10 +272,10 @@ function SearchReady() {
             })}
           </fieldset>
           <fieldset>
-            <legend>Plugin</legend>
+            <legend>{t('search.filters.plugin')}</legend>
             <label className="facet">
               <input type="radio" name="plugin" checked={!filters.plugin} onChange={() => setPlugin(null)} />
-              <span className="label">All plugins</span>
+              <span className="label">{t('common.allPlugins')}</span>
               <span className="n">{pluginTotal}</span>
             </label>
             {pluginRows.map((p) => (
@@ -293,7 +290,7 @@ function SearchReady() {
           </fieldset>
           {tagRows.length > 0 && (
             <fieldset>
-              <legend>Tag</legend>
+              <legend>{t('search.filters.tag')}</legend>
               {visibleTags.map(([tag, n]) => (
                 <label className="facet" key={tag}>
                   <input type="checkbox" checked={filters.tags.includes(tag)} onChange={() => toggleTag(tag)} />
@@ -303,25 +300,25 @@ function SearchReady() {
               ))}
               {tagRows.length > TOP_TAGS && (
                 <button className="btn btn-ghost btn-link" type="button" onClick={() => setAllTags((v) => !v)}>
-                  {allTags ? 'Show fewer tags' : 'Show all tags'}
+                  {allTags ? t('search.filters.showFewerTags') : t('search.filters.showAllTags')}
                 </button>
               )}
             </fieldset>
           )}
           <div className="filters-panel-foot">
             <button className="btn btn-primary" type="button" onClick={() => setPanelOpen(false)}>
-              Show {hits.length} {hits.length === 1 ? 'result' : 'results'}
+              {plural('search.results.showCount', hits.length)}
             </button>
           </div>
         </aside>
 
-        <section aria-label="Results" className="results">
+        <section aria-label={t('search.results.label')} className="results">
           <div className="toolbar">
             <p className="count" aria-live="polite">
               <strong>
-                {hits.length} {hits.length === 1 ? 'result' : 'results'}
+                {plural('search.results.count', hits.length)}
               </strong>
-              {q && <span className="muted for"> for “{q}”</span>}
+              {q && <span className="muted for"> {t('search.results.forQuery', { query: q })}</span>}
             </p>
             {shownChip && (
               <button
@@ -332,10 +329,10 @@ function SearchReady() {
                 onClick={() => toggleType(shownChip)}
               >
                 <Icon name={shownChip} />
-                Only {TYPE_PLURAL[shownChip].toLowerCase() === 'mcp' ? 'MCP' : TYPE_PLURAL[shownChip].toLowerCase()}
+                {t(`search.only.${shownChip}`)}
               </button>
             )}
-            {partial && <span className="muted" style={{ fontSize: 14 }}>Showing partial matches</span>}
+            {partial && <span className="muted" style={{ fontSize: 14 }}>{t('search.results.partial')}</span>}
             <button
               className="btn filters-toggle"
               type="button"
@@ -344,14 +341,14 @@ function SearchReady() {
               onClick={() => setPanelOpen(true)}
             >
               <Icon name="filter" />
-              Filters{activeCount ? ` (${activeCount})` : ''}
+              {activeCount ? t('search.filters.toggleWithCount', { count: activeCount }) : t('search.filters.toggle')}
             </button>
             <div className="sort">
-              <label htmlFor="sort">Sort</label>
+              <label htmlFor="sort">{t('search.sort.label')}</label>
               <select id="sort" className="select" value={effectiveSort} onChange={(e) => setSort(e.target.value as SortKey)}>
-                {SORTS.map(([k, label]) => (
+                {SORTS.map((k) => (
                   <option key={k} value={k}>
-                    {label}
+                    {t(`search.sort.${k}`)}
                   </option>
                 ))}
               </select>
@@ -359,24 +356,24 @@ function SearchReady() {
           </div>
 
           {activeCount > 0 && (
-            <div className="row active-filters" aria-label="Active filters">
-              {filters.types.map((t) => (
-                <button key={t} className="tag" type="button" onClick={() => toggleType(t)} aria-label={`Remove filter type ${TYPE_LABEL[t]}`}>
-                  {TYPE_LABEL[t]} ×
+            <div className="row active-filters" aria-label={t('search.filters.active')}>
+              {filters.types.map((type) => (
+                <button key={type} className="tag" type="button" onClick={() => toggleType(type)} aria-label={t('search.filters.removeType', { type: typeLabel(type) })}>
+                  {typeLabel(type)} ×
                 </button>
               ))}
               {filters.plugin && (
-                <button className="tag mono" type="button" onClick={() => setPlugin(null)} aria-label={`Remove filter plugin ${filters.plugin}`}>
+                <button className="tag mono" type="button" onClick={() => setPlugin(null)} aria-label={t('search.filters.removePlugin', { plugin: filters.plugin })}>
                   {filters.plugin} ×
                 </button>
               )}
-              {filters.tags.map((t) => (
-                <button key={t} className="tag" type="button" onClick={() => toggleTag(t)} aria-label={`Remove filter tag ${t}`}>
-                  #{t} ×
+              {filters.tags.map((tag) => (
+                <button key={tag} className="tag" type="button" onClick={() => toggleTag(tag)} aria-label={t('search.filters.removeTag', { tag })}>
+                  #{tag} ×
                 </button>
               ))}
               <button className="btn btn-ghost" type="button" style={{ height: 26, color: 'var(--accent)' }} onClick={clearAll}>
-                Clear all
+                {t('search.filters.clearAll')}
               </button>
             </div>
           )}
@@ -400,7 +397,7 @@ function SearchReady() {
               {hits.length > limit && (
                 <div className="show-more">
                   <button className="btn btn-lg" type="button" onClick={() => setLimit((n) => n + PAGE)}>
-                    Show more
+                    {t('search.results.showMore')}
                   </button>
                 </div>
               )}
@@ -430,18 +427,18 @@ function NoResults(props: { q: string; hasFilters: boolean; clearAll: () => void
   const cyrillic = /[Ѐ-ӿ]/.test(props.q);
   return (
     <div className="no-results">
-      <h2>{props.q ? `No results for “${props.q}”` : 'No results'}</h2>
+      <h2>{props.q ? t('search.noResults.forQuery', { query: props.q }) : t('search.noResults.title')}</h2>
       <ul>
         {props.hasFilters && (
           <li>
             <button className="linkish" type="button" onClick={props.clearAll}>
-              Reset the filters
+              {t('search.noResults.resetFilters')}
             </button>
           </li>
         )}
-        {cyrillic && <li>Try the same words in English: descriptions are written in English.</li>}
+        {cyrillic && <li>{t('search.noResults.tryEnglish')}</li>}
         <li>
-          Try a popular tag:{' '}
+          {t('search.noResults.tryTag')}{' '}
           <span className="row" style={{ display: 'inline-flex', verticalAlign: 'middle' }}>
             {props.topTags.map((t) => (
               <button key={t} className="tag" type="button" onClick={() => props.onTag(t)}>
@@ -451,8 +448,8 @@ function NoResults(props: { q: string; hasFilters: boolean; clearAll: () => void
           </span>
         </li>
         <li>
-          Can’t find it?{' '}
-          <ExtLink href={issueUrl(props.index, `[request] ${props.q}`)}>Request a plugin</ExtLink>
+          {t('search.noResults.cantFind')}{' '}
+          <ExtLink href={issueUrl(props.index, `[request] ${props.q}`)}>{t('search.noResults.requestPlugin')}</ExtLink>
         </li>
       </ul>
     </div>

@@ -5,6 +5,7 @@ import { usePageTitle } from '../app/page';
 import { usePrefs } from '../app/prefs';
 import { Slip } from '../components/Copy';
 import { Icon } from '../components/Icon';
+import { t } from '../i18n';
 import { ModeSwitch } from './PluginPage';
 
 const FALLBACK = {
@@ -15,8 +16,16 @@ const FALLBACK = {
   },
 };
 
+// Technical tokens shown inside <code>; they are not translated.
+const EXAMPLE_COMPONENT = 'engineering-paved-path:code-review';
+const PLUGIN_PLACEHOLDER = '<plugin>';
+const SCOPE_PROJECT = '--scope project';
+const SCOPE_USER = '--scope user';
+const VERSION_FIELD = 'version';
+const BIN_DIR = 'bin/';
+
 export function GettingStartedPage() {
-  usePageTitle('Getting started');
+  usePageTitle(t('gettingStarted.title'));
   const { index } = useCatalog();
   const { installMode } = usePrefs();
   const terminal = installMode === 'terminal';
@@ -29,9 +38,9 @@ export function GettingStartedPage() {
     <main id="main" className="page page-doc">
       <div className="gs-head">
         <div>
-          <h1 tabIndex={-1}>Getting started</h1>
+          <h1 tabIndex={-1}>{t('gettingStarted.title')}</h1>
           <p className="lede" style={{ maxWidth: '52ch' }}>
-            Add the marketplace to Claude Code, install a plugin and keep it up to date.
+            {t('gettingStarted.lede')}
           </p>
         </div>
         <ModeSwitch />
@@ -42,9 +51,9 @@ export function GettingStartedPage() {
           1
         </span>
         <div>
-          <h2 id="s1">Add the marketplace</h2>
-          <p>Run this once. Claude Code remembers the marketplace afterwards.</p>
-          <Slip command={add} label="Copy the add marketplace command" />
+          <h2 id="s1">{t('gettingStarted.add.title')}</h2>
+          <p>{t('gettingStarted.add.body')}</p>
+          <Slip command={add} label={t('gettingStarted.add.label')} />
         </div>
       </section>
 
@@ -53,13 +62,13 @@ export function GettingStartedPage() {
           2
         </span>
         <div>
-          <h2 id="s2">Find a plugin</h2>
+          <h2 id="s2">{t('gettingStarted.find.title')}</h2>
           <p>
-            Skills, agents and commands come inside plugins. You always install the whole plugin, not a single skill. Components have namespaced names like{' '}
-            <code className="in">engineering-paved-path:code-review</code>.
+            {t('gettingStarted.find.body')}{' '}
+            <code className="in">{EXAMPLE_COMPONENT}</code>.
           </p>
           <p style={{ margin: 0 }}>
-            <Link to="/search">Search the catalog</Link>
+            <Link to="/search">{t('gettingStarted.find.search')}</Link>
           </p>
         </div>
       </section>
@@ -69,12 +78,13 @@ export function GettingStartedPage() {
           3
         </span>
         <div>
-          <h2 id="s3">Install</h2>
+          <h2 id="s3">{t('gettingStarted.install.title')}</h2>
           <p>
-            Replace <code className="in">&lt;plugin&gt;</code> with the plugin name. In the terminal, <code className="in">--scope project</code> installs for the current
-            project and <code className="in">--scope user</code> for all your projects.
+            {t('gettingStarted.install.replace')} <code className="in">{PLUGIN_PLACEHOLDER}</code> {t('gettingStarted.install.withPluginName')}{' '}
+            <code className="in">{SCOPE_PROJECT}</code> {t('gettingStarted.install.installsForProject')} <code className="in">{SCOPE_USER}</code>{' '}
+            {t('gettingStarted.install.forAllProjects')}
           </p>
-          <Slip command={install} label="Copy the install command" />
+          <Slip command={install} label={t('gettingStarted.install.label')} />
         </div>
       </section>
 
@@ -83,9 +93,9 @@ export function GettingStartedPage() {
           4
         </span>
         <div>
-          <h2 id="s4">Check what’s installed</h2>
-          <p>Runs in the terminal.</p>
-          <Slip command="claude plugin list --json" label="Copy the list command" />
+          <h2 id="s4">{t('gettingStarted.installed.title')}</h2>
+          <p>{t('gettingStarted.installed.body')}</p>
+          <Slip command="claude plugin list --json" label={t('gettingStarted.installed.label')} />
         </div>
       </section>
 
@@ -94,14 +104,13 @@ export function GettingStartedPage() {
           5
         </span>
         <div>
-          <h2 id="s5">Update</h2>
+          <h2 id="s5">{t('gettingStarted.update.title')}</h2>
           <p>
-            Auto-update is off by default for third-party marketplaces and is unreliable, so update by hand. A new version arrives only after the plugin’s{' '}
-            <code className="in">version</code> is bumped.
+            {t('gettingStarted.update.beforeVersion')} <code className="in">{VERSION_FIELD}</code> {t('gettingStarted.update.afterVersion')}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Slip command={update} label="Copy the update command" />
-            <Slip command="/reload-plugins" label="Copy the reload command" />
+            <Slip command={update} label={t('gettingStarted.update.updateLabel')} />
+            <Slip command="/reload-plugins" label={t('gettingStarted.update.reloadLabel')} />
           </div>
         </div>
       </section>
@@ -110,14 +119,14 @@ export function GettingStartedPage() {
         <section aria-labelledby="sec-h" className="warn">
           <h2 id="sec-h">
             <Icon name="warn" />
-            Security
+            {t('gettingStarted.security.title')}
           </h2>
           <p style={{ margin: 0, fontSize: 14 }}>
-            Hooks, MCP servers and{' '}
+            {t('gettingStarted.security.beforeBin')}{' '}
             <code className="mono" style={{ fontSize: 13 }}>
-              bin/
+              {BIN_DIR}
             </code>{' '}
-            run with your privileges, outside Claude’s permission rules. Read them on the plugin page before installing.
+            {t('gettingStarted.security.afterBin')}
           </p>
         </section>
       </div>

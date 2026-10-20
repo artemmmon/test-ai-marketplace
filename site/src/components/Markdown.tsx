@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useCatalog } from '../app/catalog';
 import { useToast } from '../app/toast';
 import { loadBody } from '../data/catalog';
+import { t } from '../i18n';
 import { Bar } from './Skeleton';
 
 /** Renders markdown through marked + DOMPurify, loaded lazily (FR-61). */
@@ -43,8 +44,8 @@ export function Markdown({ source, baseDir }: { source: string; baseDir: string 
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'btn pre-copy';
-      button.textContent = 'Copy';
-      button.setAttribute('aria-label', 'Copy code');
+      button.textContent = t('common.copy');
+      button.setAttribute('aria-label', t('copy.code'));
       button.addEventListener('click', () => void copy(pre.textContent ?? ''));
       wrap.appendChild(button);
     });
@@ -96,9 +97,9 @@ export function formatJson(text: string): string {
 export function LoadError({ what, retry }: { what: string; retry: () => void }) {
   return (
     <p className="muted" style={{ margin: 0 }}>
-      Couldn’t load {what}.{' '}
+      {t('common.couldntLoad', { what })}{' '}
       <button className="linkish" type="button" onClick={retry}>
-        Retry
+        {t('common.retry')}
       </button>
     </p>
   );

@@ -1,4 +1,5 @@
 // Link builders for GitHub, issues and in-app routes.
+import { plural, t } from '../i18n';
 import type { ArtifactType, ComponentType, IndexFile, IndexItem, PluginItem } from '../types';
 
 export function blobUrl(index: IndexFile, path: string): string {
@@ -32,12 +33,12 @@ export function itemHref(item: IndexItem): string {
 export function issueUrl(index: IndexFile | null, title: string): string {
   const repo = index?.marketplace.repo.url ?? 'https://github.com/artemmmon/test-ai-marketplace';
   const body = [
-    `Page: ${window.location.href}`,
-    `Catalog commit: ${index?.commit || 'unknown'}`,
+    t('issue.page', { url: window.location.href }),
+    t('issue.commit', { commit: index?.commit || t('issue.unknownCommit') }),
     '',
-    '## What happened',
+    t('issue.whatHappened'),
     '',
-    '## Expected',
+    t('issue.expected'),
     '',
   ].join('\n');
   const q = `title=${encodeURIComponent(title)}&labels=site-feedback&body=${encodeURIComponent(body)}`;
@@ -47,45 +48,31 @@ export function issueUrl(index: IndexFile | null, title: string): string {
 export const TYPE_ORDER: ArtifactType[] = ['skill', 'agent', 'command', 'plugin', 'hook', 'mcp'];
 export const COMPONENT_TYPES: ComponentType[] = ['skill', 'agent', 'command', 'hook', 'mcp'];
 
-export const TYPE_LABEL: Record<ArtifactType, string> = {
-  plugin: 'Plugin',
-  skill: 'Skill',
-  agent: 'Agent',
-  command: 'Command',
-  hook: 'Hook',
-  mcp: 'MCP',
-};
+export function typeLabel(type: ArtifactType): string {
+  return t(`types.label.${type}`);
+}
 
-export const TYPE_PLURAL: Record<ArtifactType, string> = {
-  plugin: 'Plugins',
-  skill: 'Skills',
-  agent: 'Agents',
-  command: 'Commands',
-  hook: 'Hooks',
-  mcp: 'MCP',
-};
-
-function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
+export function typePlural(type: ArtifactType): string {
+  return t(`types.plural.${type}`);
 }
 
 /** "3 skills, 1 agent, 1 command, hooks" */
 export function composition(p: PluginItem): string {
-  if (p.source === 'external') return 'not indexed';
+  if (p.source === 'external') return t('plugin.composition.notIndexed');
   const c = p.components;
   const parts: string[] = [];
-  if (c.skill.length) parts.push(plural(c.skill.length, 'skill', 'skills'));
-  if (c.agent.length) parts.push(plural(c.agent.length, 'agent', 'agents'));
-  if (c.command.length) parts.push(plural(c.command.length, 'command', 'commands'));
-  if (c.hook.length) parts.push('hooks');
-  if (c.mcp.length) parts.push(plural(c.mcp.length, 'MCP server', 'MCP servers'));
-  if (p.bin.length) parts.push(plural(p.bin.length, 'bin file', 'bin files'));
-  return parts.join(', ') || 'no components';
+  if (c.skill.length) parts.push(plural('plugin.composition.skills', c.skill.length));
+  if (c.agent.length) parts.push(plural('plugin.composition.agents', c.agent.length));
+  if (c.command.length) parts.push(plural('plugin.composition.commands', c.command.length));
+  if (c.hook.length) parts.push(t('plugin.composition.hooks'));
+  if (c.mcp.length) parts.push(plural('plugin.composition.mcpServers', c.mcp.length));
+  if (p.bin.length) parts.push(plural('plugin.composition.binFiles', p.bin.length));
+  return parts.join(', ') || t('plugin.composition.noComponents');
 }
 
 export function dependencySummary(p: PluginItem): string {
   const n = p.dependencies.length;
-  return n === 0 ? 'no dependencies' : `depends on ${plural(n, 'plugin', 'plugins')}`;
+  return n === 0 ? t('plugin.dependencySummary.none') : plural('plugin.dependencySummary.dependsOn', n);
 }
 
 /** File name shown for a body ("SKILL.md", "code-reviewer.md", "hooks/hooks.json"). */

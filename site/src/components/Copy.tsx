@@ -1,6 +1,7 @@
 // Copy controls: the primary "Copy install" button and the command "slip".
 import { useEffect, useState } from 'react';
 import { useToast } from '../app/toast';
+import { t } from '../i18n';
 import { Icon } from './Icon';
 
 function useCopied(): [boolean, (text: string) => void] {
@@ -21,12 +22,12 @@ export function CopyInstallButton({ command, plugin, title, block }: { command: 
       className="btn btn-primary"
       type="button"
       style={block ? { flex: 1 } : undefined}
-      aria-label={`Copy install command for plugin ${plugin}`}
+      aria-label={t('copy.installLabel', { plugin })}
       title={title}
       onClick={() => run(command)}
     >
       <Icon name={copied ? 'check' : 'copy'} />
-      {copied ? 'Copied' : 'Copy install'}
+      {copied ? t('common.copied') : t('copy.install')}
     </button>
   );
 }
@@ -36,7 +37,7 @@ export function CopyButton({ text, label, className = 'btn btn-ghost' }: { text:
   return (
     <button className={className} type="button" aria-label={label} onClick={() => run(text)}>
       <Icon name={copied ? 'check' : 'copy'} />
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? t('common.copied') : t('common.copy')}
     </button>
   );
 }
@@ -56,7 +57,7 @@ export function Slip({ command, label, prompt }: { command: string; label: strin
       </code>
       <button type="button" aria-label={label} onClick={() => run(command)}>
         <Icon name={copied ? 'check' : 'copy'} />
-        {copied ? 'Copied' : 'Copy'}
+        {copied ? t('common.copied') : t('common.copy')}
       </button>
     </div>
   );

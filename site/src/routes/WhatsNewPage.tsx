@@ -9,10 +9,11 @@ import { Markdown } from '../components/Markdown';
 import { Bar } from '../components/Skeleton';
 import { loadReleases } from '../data/catalog';
 import { formatDate, formatMonth, tagUrl } from '../data/links';
+import { t } from '../i18n';
 import type { Release } from '../types';
 
 export function WhatsNewPage() {
-  usePageTitle('What’s new');
+  usePageTitle(t('whatsNew.title'));
   const { index } = useCatalog();
   const [params, setParams] = useSearchParams();
   const [releases, setReleases] = useState<Release[] | null>(null);
@@ -52,9 +53,9 @@ export function WhatsNewPage() {
     <main id="main" className="page page-doc" aria-busy={!releases && !failed}>
       <div className="gs-head">
         <div>
-          <h1 tabIndex={-1}>What’s new</h1>
+          <h1 tabIndex={-1}>{t('whatsNew.title')}</h1>
           <p className="lede" style={{ maxWidth: '52ch' }}>
-            Releases of plugins in the catalog, newest first.
+            {t('whatsNew.lede')}
           </p>
         </div>
       </div>
@@ -62,7 +63,7 @@ export function WhatsNewPage() {
       {plugins.length > 1 && (
         <div className="row" style={{ gap: 8, marginBottom: 8 }}>
           <label htmlFor="wn-plugin" className="muted" style={{ fontSize: 14 }}>
-            Plugin
+            {t('whatsNew.pluginFilter')}
           </label>
           <select
             id="wn-plugin"
@@ -78,7 +79,7 @@ export function WhatsNewPage() {
               })
             }
           >
-            <option value="">All plugins</option>
+            <option value="">{t('common.allPlugins')}</option>
             {plugins.map((p) => (
               <option key={p} value={p}>
                 {p}
@@ -90,9 +91,9 @@ export function WhatsNewPage() {
 
       {failed && (
         <p className="muted">
-          Couldn’t load releases.{' '}
+          {t('whatsNew.couldntLoad')}{' '}
           <button className="linkish" type="button" onClick={() => setAttempt((n) => n + 1)}>
-            Retry
+            {t('common.retry')}
           </button>
         </p>
       )}
@@ -103,12 +104,12 @@ export function WhatsNewPage() {
           <Bar w="50%" />
         </div>
       )}
-      {releases && shown.length === 0 && <p className="muted">No releases yet.</p>}
+      {releases && shown.length === 0 && <p className="muted">{t('whatsNew.none')}</p>}
 
       {[...groups.entries()].map(([month, list]) => (
         <section key={month} aria-labelledby={`m-${month}`}>
           <h2 id={`m-${month}`} className="release-month">
-            {month === 'undated' ? 'Undated' : formatMonth(month)}
+            {month === 'undated' ? t('whatsNew.undated') : formatMonth(month)}
           </h2>
           {list.map((r) => (
             <article key={r.id} id={`r-${r.id}`} className={`release${highlighted === r.id ? ' highlighted' : ''}`}>
@@ -116,17 +117,17 @@ export function WhatsNewPage() {
                 <Link className="mono" to={`/plugin/${r.plugin}`} translate="no">
                   {r.plugin}
                 </Link>
-                <span className="mono">v{r.version}</span>
+                <span className="mono">{t('common.version', { version: r.version })}</span>
                 {r.date && <span className="date">{formatDate(r.date)}</span>}
                 {r.tag && index ? (
                   <ExtLink className="mono tagref" href={tagUrl(index, r.tag)}>
                     {r.tag}
                   </ExtLink>
                 ) : (
-                  <span className="badge neutral">untagged</span>
+                  <span className="badge neutral">{t('whatsNew.untagged')}</span>
                 )}
               </h3>
-              {r.notesMarkdown ? <Markdown source={r.notesMarkdown} baseDir={`plugins/${r.plugin}`} /> : <p className="muted">No release notes.</p>}
+              {r.notesMarkdown ? <Markdown source={r.notesMarkdown} baseDir={`plugins/${r.plugin}`} /> : <p className="muted">{t('whatsNew.noNotes')}</p>}
             </article>
           ))}
         </section>
