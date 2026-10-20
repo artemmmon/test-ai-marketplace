@@ -108,6 +108,15 @@ test('Edit: the status cannot change, whatever part of the line is replaced', ()
   blocked(edit('Spec ID: SPEC-10\n', 'Spec ID: SPEC-10\nStatus: approved\n'));
 });
 
+test('an insights file is outside the spec folder: blocked for spec-creator, open to the implementer', () => {
+  const root = project({ 'src/INSIGHTS.md': '# Insights\n' });
+  for (const file_path of ['INSIGHTS.md', 'src/INSIGHTS.md', 'specs/../INSIGHTS.md']) {
+    blocked(run(root, 'Write', { file_path, content: 'x' }));
+    blocked(run(root, 'Edit', { file_path, old_string: 'a', new_string: 'b' }));
+    allowed(run(root, 'Write', { file_path, content: 'x' }, { extra: { agent_type: 'sdd-engineering:implementer', agent_id: 'i1' } }));
+  }
+});
+
 test('a symlink cannot lead a write out of the spec folder', () => {
   const root = project({ 'specs/README.md': '# Specs\n', 'src/a.ts': '' });
   symlinkSync(join(root, 'src/a.ts'), join(root, 'specs/10-link.md'));

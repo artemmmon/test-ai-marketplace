@@ -75,7 +75,7 @@ Never do any of these:
 4. Run `git status` and `git diff --stat`. Every changed file must belong to a plan step, or to a check's generated output such as a migration or a synced contracts copy.
 5. If you did the plan's last group, or the whole plan, set its `Status:` to `implemented`, or `partial` if some steps were not done. After an earlier group, leave it `in progress`.
 
-If the project keeps `INSIGHTS.md` files, record anything non-obvious you hit (a quirk, a dead end, or an error and its fix) in the nearest one, in the format of its existing entries, and file the entries the plan lists under "Insights to record" once you have confirmed them in the code. If the project keeps none, skip this and write "None." in the report.
+Record what you learned by following the `sdd-engineering:engineering-insights` skill (load it with the Skill tool, once, when you have something to record; its rules decide the file, section and entry format): anything non-obvious you hit (a quirk, a dead end, or an error and its fix) goes into the nearest `INSIGHTS.md`, and so do the entries the plan lists under "Insights to record" once you have confirmed them in the code. The skill creates the file when the project has none yet, but only for a finding that passes its filter. If nothing passes, skip this and write "None." in the report.
 
 ## Report
 
@@ -109,7 +109,7 @@ Your final message is the report and nothing else. Leave no section empty: write
 - <check> — <reason, e.g. database not running>
 
 ## Insights recorded
-- <INSIGHTS.md path, if the project keeps them> → <entry title>
+- <INSIGHTS.md path, if you recorded any> → <entry title>
 
 ## Out-of-plan issues noticed
 - <path:line> — <issue> (not changed)
