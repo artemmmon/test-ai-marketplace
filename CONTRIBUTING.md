@@ -105,7 +105,7 @@ A plugin lists the plugins it needs in `dependencies`, each with a semver range,
 Run them from the repository root.
 
 ```sh
-npm test                               # unit tests of scripts/ (the indexer, the checks, the plugin scripts' rules)
+npm test                               # unit tests of scripts/ and of the plugins' own scripts (plugins/**/*.test.mjs)
 node scripts/check-marketplace.mjs .   # marketplace and plugin invariants (same as `npm run check`)
 claude plugin validate .               # Claude Code's own validation of the marketplace
 for d in plugins/*/; do claude plugin validate "$d"; done

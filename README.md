@@ -111,7 +111,7 @@ npm run preview                       # http://localhost:4173/test-ai-marketplac
   `npm run build:index` both `npm run dev` and `npm run build` stop with a message saying what to run first.
 - `npm run build:index:fixtures` generates fictitious demo data from `scripts/__fixtures__/` instead of the real
   catalog (the site shows a demo banner); never deploy it.
-- `npm run check` runs the marketplace invariants, `npm test` the tests of the scripts. `build:index` runs the
+- `npm run check` runs the marketplace invariants, `npm test` the tests of the scripts and of the plugins' own scripts (`plugins/**/*.test.mjs`). `build:index` runs the
   same checks first and writes nothing if one fails.
 - On GitHub, pull requests build the index and the site; `pages.yml` repeats the build after a merge to `main`
   and publishes `site/dist`. The generated files and `site/dist/` stay out of git.
