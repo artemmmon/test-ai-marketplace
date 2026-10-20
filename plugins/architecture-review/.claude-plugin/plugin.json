@@ -1,0 +1,11 @@
+{
+  "name": "architecture-review",
+  "version": "1.0.0",
+  "description": "Read-only architecture reviewer agent: audits a module, a package or a branch diff against onion-architecture and frontend-architecture rules and returns findings with evidence as JSON",
+  "author": { "name": "artemmmon" },
+  "license": "MIT",
+  "keywords": ["architecture", "review", "agent", "read-only", "onion-architecture"],
+  "dependencies": [
+    { "name": "engineering-paved-path", "version": "^1.0.0" }
+  ]
+}

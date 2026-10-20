@@ -3,6 +3,12 @@
 import { minimalFiles } from './helpers.mjs';
 
 const manifest = (name, extra = {}) => ({ name, version: '1.0.0', description: 'x', ...extra });
+/** The three docs the strict check requires (FR-13), so a case about something else is not about missing docs. */
+const docs = (dir) => ({
+  [`plugins/${dir}/README.md`]: '# Plugin\n',
+  [`plugins/${dir}/CHANGELOG.md`]: '# Changelog\n\n## [1.0.0] - 2026-10-01\n',
+  [`plugins/${dir}/COMPATIBILITY.md`]: 'Requires Claude Code >=2.1.0.\n',
+});
 const skill = (name) => `---\nname: ${name}\ndescription: Does ${name}\n---\n\nBody.\n`;
 
 /** @type {Array<{ name: string, files: Record<string, unknown>, stderr: string | null }>} stderr null = success */
@@ -16,6 +22,7 @@ export const CASES = [
         { name: 'alpha-plugin', source: './plugins/alpha-plugin' },
       ];
       f['plugins/zeta-plugin/.claude-plugin/plugin.json'] = manifest('zeta-plugin');
+      Object.assign(f, docs('zeta-plugin'));
     }),
     stderr: '✘ plugins[] must be sorted by name\n',
   },
@@ -32,6 +39,7 @@ export const CASES = [
     files: minimalFiles((f) => {
       f['.claude-plugin/marketplace.json'].plugins = [{ name: 'Bad_Name', source: './plugins/bad-name' }];
       f['plugins/bad-name/.claude-plugin/plugin.json'] = manifest('Bad_Name');
+      Object.assign(f, docs('bad-name'));
     }),
     stderr: '✘ "Bad_Name": name must match /^[a-z0-9][a-z0-9-]{1,63}$/\n',
   },

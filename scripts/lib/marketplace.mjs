@@ -5,6 +5,8 @@
 //   .claude-plugin/plugin.json, README.md, CHANGELOG.md, COMPATIBILITY.md, skills/*/SKILL.md,
 //   agents/*.md, commands/*.md, hooks/hooks.json, .mcp.json and the file names in bin/ and next to
 //   each SKILL.md. Nothing else (no .claude/, docs/, site/, evals/, scripts/, references/...) is opened.
+// Only with { includeUnregistered: true } (the strict check-marketplace CLI) it also lists plugins/ and loads
+// the folders that marketplace.json does not register; the indexer never sets it.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { parseChangelog } from './changelog.mjs';
@@ -36,15 +38,20 @@ function diagnostics() {
     errors,
     warnings,
     fail: (msg) => errors.push(msg),
-    warn: (file, message) => warnings.push({ file, message }),
+    warn: (file, message, code) => warnings.push(code ? { file, message, code } : { file, message }),
   };
 }
 
+/** Repo-relative path of a local plugin source, e.g. "./plugins/a/" -> "plugins/a". */
+const repoPathOf = (source) => posix.normalize(source.replace(/\\/g, '/')).replace(/^\.\//, '').replace(/\/+$/, '');
+
 /**
  * Loads and normalizes the marketplace. Problems found on the way are returned in `errors` / `warnings`.
+ * Warnings that the strict check treats as errors carry a `code`.
  * @param {string} root repository root (default '.')
+ * @param {{ includeUnregistered?: boolean }} [opts] also load plugins/<dir> folders that marketplace.json does not list
  */
-export function loadMarketplace(root = '.') {
+export function loadMarketplace(root = '.', { includeUnregistered = false } = {}) {
   const d = diagnostics();
   const marketplacePath = join(root, '.claude-plugin/marketplace.json');
   const result = { root, marketplace: null, plugins: [], errors: d.errors, warnings: d.warnings };
@@ -92,7 +99,21 @@ export function loadMarketplace(root = '.') {
       result.plugins.push(externalRecord(entry, d));
     }
   }
+  if (includeUnregistered) loadUnregistered(root, entries, result, d);
   return result;
+}
+
+/** plugins/<dir> folders without a marketplace.json entry are loaded as if they were registered. */
+function loadUnregistered(root, entries, result, d) {
+  const pluginsDir = join(root, 'plugins');
+  if (!existsSync(pluginsDir)) return;
+  const registered = new Set(entries.filter((e) => typeof e.source === 'string').map((e) => repoPathOf(e.source)));
+  for (const e of listDir(pluginsDir)) {
+    if (!e.isDirectory() || e.name.startsWith('.') || registered.has(`plugins/${e.name}`)) continue;
+    if (!NAME_RE.test(e.name)) d.fail(`"${e.name}": name must match ${NAME_RE}`);
+    const record = loadLocalPlugin(root, { name: e.name, source: `./plugins/${e.name}` }, d);
+    if (record) result.plugins.push(record);
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -127,7 +148,7 @@ function externalRecord(entry, d) {
 
 function loadLocalPlugin(root, entry, d) {
   const name = entry.name;
-  const repoPath = posix.normalize(entry.source.replace(/\\/g, '/')).replace(/^\.\//, '').replace(/\/+$/, '');
+  const repoPath = repoPathOf(entry.source);
   if (repoPath === '..' || repoPath.startsWith('../') || repoPath.startsWith('/') || !repoPath.startsWith('plugins/')) {
     d.fail(`"${name}": source "${entry.source}" must be a path inside ./plugins/`);
     return null;
@@ -229,7 +250,7 @@ function loadDocs(record, d) {
   for (const [key, file] of files) {
     const path = join(dir, file);
     if (existsSync(path)) record.docs[key] = readText(path);
-    else d.warn(posix.join(repoPath, file), `"${name}": ${file} is missing, the site shows "Not provided"`);
+    else d.warn(posix.join(repoPath, file), `"${name}": ${file} is missing, the site shows "Not provided"`, 'docs-missing');
   }
   const clFile = posix.join(repoPath, 'CHANGELOG.md');
   if (record.docs.changelog !== undefined) {
@@ -241,7 +262,7 @@ function loadDocs(record, d) {
     if (versions.length && record.version) {
       const newest = versions.reduce((a, b) => (compareVersions(b, a) > 0 ? b : a));
       if (newest !== record.version) {
-        d.warn(clFile, `"${name}": the newest CHANGELOG.md version is ${newest}, plugin.json says ${record.version}`);
+        d.warn(clFile, `"${name}": the newest CHANGELOG.md version is ${newest}, plugin.json says ${record.version}`, 'changelog-version-mismatch');
       }
     }
   }
@@ -450,7 +471,7 @@ function resolveDependencies(plugins, d) {
       }
       const target = byName.get(dep.name);
       if (!target) {
-        d.warn(p.source === 'local' ? posix.join(p.repoPath, '.claude-plugin/plugin.json') : null, `"${p.name}": dependency "${dep.name}" is not in the catalog (status not-in-catalog)`);
+        d.warn(p.source === 'local' ? posix.join(p.repoPath, '.claude-plugin/plugin.json') : null, `"${p.name}": dependency "${dep.name}" is not in the catalog (status not-in-catalog)`, 'dependency-not-in-catalog');
         p.resolved.push({ name: dep.name, range: dep.range, resolvedVersion: null, status: 'not-in-catalog' });
         continue;
       }
@@ -506,11 +527,12 @@ function checkDuplicateIds(plugins, d) {
 /**
  * Loads, validates and resolves the marketplace.
  * @param {string} root
- * @param {{ tags?: Array<{name: string, date: string|null, commit: string|null}> }} [opts] git tags for the release checks
+ * @param {{ tags?: Array<{name: string, date: string|null, commit: string|null}>, includeUnregistered?: boolean }} [opts]
+ *   tags: git tags for the release checks; includeUnregistered: see loadMarketplace
  */
-export function analyze(root = '.', { tags = [] } = {}) {
-  const loaded = loadMarketplace(root);
-  const d = { errors: loaded.errors, warnings: loaded.warnings, fail: (m) => loaded.errors.push(m), warn: (file, message) => loaded.warnings.push({ file, message }) };
+export function analyze(root = '.', { tags = [], includeUnregistered = false } = {}) {
+  const loaded = loadMarketplace(root, { includeUnregistered });
+  const d = { errors: loaded.errors, warnings: loaded.warnings, fail: (m) => loaded.errors.push(m), warn: (file, message, code) => loaded.warnings.push(code ? { file, message, code } : { file, message }) };
   let releases = [];
   if (loaded.marketplace) {
     checkDuplicateIds(loaded.plugins, d);

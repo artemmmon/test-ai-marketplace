@@ -1,0 +1,50 @@
+{
+  "name": "sdd-engineering",
+  "version": "1.0.0",
+  "description": "Spec Driven Development: spec → options → plan → implementation → verification, with a run-plan entry point and a workflow retro",
+  "author": { "name": "artemmmon" },
+  "license": "MIT",
+  "keywords": ["sdd", "spec-driven", "planning", "agents"],
+  "dependencies": [
+    { "name": "engineering-paved-path", "version": "^1.0.0" },
+    { "name": "research-tools", "version": "^1.0.0" },
+    { "name": "architecture-review", "version": "^1.0.0" }
+  ],
+  "userConfig": {
+    "specs_dir": {
+      "type": "directory",
+      "title": "Specs directory",
+      "description": "Folder, relative to the repository root, where feature specs are written (default: specs)",
+      "default": "specs",
+      "required": false
+    },
+    "plans_dir": {
+      "type": "directory",
+      "title": "Plans directory",
+      "description": "Folder, relative to the repository root, where brainstorm briefs and development plans are written (default: docs/plans)",
+      "default": "docs/plans",
+      "required": false
+    },
+    "retro_ledger": {
+      "type": "file",
+      "title": "Retro ledger file",
+      "description": "Markdown file that workflow-retro appends one row per measured run to (default: docs/retros/ledger.md)",
+      "default": "docs/retros/ledger.md",
+      "required": false
+    },
+    "check_commands": {
+      "type": "string",
+      "title": "Check commands",
+      "description": "Commands the implementer and the verifier run to check the code (type check, tests, lint), one per entry. Empty: use the plan's Verification section",
+      "multiple": true,
+      "required": false
+    },
+    "architecture_checks": {
+      "type": "string",
+      "title": "Architecture check commands",
+      "description": "Commands the architecture reviewer may run as mechanical checks (an architecture linter, a boundary check), one per entry. Empty: none are run",
+      "multiple": true,
+      "required": false
+    }
+  }
+}

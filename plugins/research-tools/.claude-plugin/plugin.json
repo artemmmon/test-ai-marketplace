@@ -1,0 +1,8 @@
+{
+  "name": "research-tools",
+  "version": "1.0.0",
+  "description": "Read-only researcher agent that answers one concrete question from a repository or from external sources and returns an evidence-backed report",
+  "author": { "name": "artemmmon" },
+  "license": "MIT",
+  "keywords": ["research", "agent", "read-only", "investigation"]
+}
