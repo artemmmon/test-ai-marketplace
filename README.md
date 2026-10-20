@@ -123,6 +123,15 @@ Claude's permission rules. Read `hooks/hooks.json`, `.mcp.json` and `bin/` of an
 before installing it. `sdd-engineering` registers hooks and runs scripts from its `scripts/` folder; its
 README lists the files worth reading first.
 
+## Contributing and project docs
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): add or change a plugin, local checks, branch and pull request flow, what CI runs.
+- [docs/PLUGIN-GUIDELINES.md](docs/PLUGIN-GUIDELINES.md): authoring rules for skills, agents, hooks, `userConfig` and paths.
+- [docs/RELEASES.md](docs/RELEASES.md): versions, release tags, the release procedure and rollback.
+- [docs/SECURITY.md](docs/SECURITY.md): how to report a vulnerability and what the plugins run.
+- [docs/specs/](docs/specs/): the design specs of the plugins and of the catalog site.
+- [evals/README.md](evals/README.md): behaviour tests of the plugins.
+
 ## License
 
 [MIT](LICENSE). Third-party skills inside `plugins/engineering-paved-path` keep their own licenses and
