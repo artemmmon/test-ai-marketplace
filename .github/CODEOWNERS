@@ -1,0 +1,8 @@
+# Code owners. The last matching pattern wins, so every path is listed explicitly.
+*                   @artemmmon
+/plugins/           @artemmmon
+/.claude-plugin/    @artemmmon
+/.github/           @artemmmon
+/scripts/           @artemmmon
+/site/              @artemmmon
+/docs/              @artemmmon
