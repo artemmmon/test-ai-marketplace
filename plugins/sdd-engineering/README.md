@@ -290,6 +290,13 @@ caller, including your main session, it exits at once and does nothing. Every ho
 
 A blocked call exits with code 2 and the reason goes back to the agent. Nothing here touches the network.
 
+**The guards protect the session's own project.** `<specs_dir>` and `<plans_dir>` are resolved against the project root
+of the session that runs the agent (`CLAUDE_PROJECT_DIR`, else the hook's `cwd`), even when the prompt gives an absolute
+path into another repository. An agent started from repository A and told to write a spec in repository B is refused
+("is outside the spec folder"). Open the session in the repository you are building in and run
+`/sdd-engineering:run-plan` there. Driving another repository from outside is possible only if the main session writes
+the files the agents return, which is the main session doing the agents' work: avoid it.
+
 ### What to read before installing
 
 The plugin runs Node scripts on your machine. Read these first:
