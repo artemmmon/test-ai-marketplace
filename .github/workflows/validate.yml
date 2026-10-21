@@ -4,6 +4,9 @@ name: Validate
 #   invariants  - scripts/check-marketplace.mjs: the rules `claude plugin validate` does not cover
 #                 (dependency graph and ranges, scoped references, required docs, forbidden strings, ...)
 #   claude      - `claude plugin validate` on the marketplace and on every plugin folder
+#   install     - scripts/check-plugin-install.mjs: adds this checkout as a marketplace in a throw-away profile,
+#                 installs sdd-engineering and fails if `claude plugin list --json` reports dependency errors or
+#                 anything but the plugin and its dependencies enabled at their manifest versions (no model call)
 # Only runs when something that can affect them changes.
 on:
   pull_request:
@@ -68,3 +71,22 @@ jobs:
             claude plugin validate "${dir}"
             echo "::endgroup::"
           done
+
+  install:
+    name: Test install
+    runs-on: ubuntu-latest
+    steps:
+      # The marketplace is added from this checkout (a local path), and Claude Code reads release tags only for
+      # GitHub sources, so tags are not needed here and the default shallow checkout is enough.
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code@2.1.304
+
+      # No login and no API key: marketplace add, install and list do not call the model.
+      - name: Install sdd-engineering and check `claude plugin list --json`
+        run: node scripts/check-plugin-install.mjs
