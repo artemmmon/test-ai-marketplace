@@ -311,6 +311,46 @@ prints "Plugin under test ... version 1.0.0").
 Cost: about 1.8 USD at the CLI's list-price estimate, from the subscription usage (see [evals/README.md](../evals/README.md)).
 Only the `criteria` judge failed on the tag: the agent was dispatched and no spec file was written in every run.
 
+#### Smoke tier: deterministic graders on the rolled-back 1.0.0 (2026-10-21)
+
+The two cases above are judged by an `llm` grader (`criteria`) that fails a sound reply on one literal bullet, so they
+cannot be a green/red gate (see below). The smoke tier is the part of those cases that does not depend on a judge:
+two cases tagged `smoke`, with only `tool_used` and `file_exists` graders, copied from the originals without `criteria.md`.
+
+| Case (tag `smoke`) | Graders | What a pass means |
+|---|---|---|
+| `smoke-discovery-dispatch` | `dispatched-spec-creator` (`tool_used`), `no-spec-written` (`file_exists`, `**/*.md` absent) | the plugin set loads, the `spec-creator` agent is dispatched for pass 1 and writes no file |
+| `smoke-run-plan-draft-gate` | `no-later-stage-started` (`tool_used`, 0 calls) | `run-plan` on a draft spec starts no brainstorm, planner, implementer, verifier or reviewer |
+
+Run against the tag, from a scratch checkout outside the repository (the cases are copied in, because the tag predates them):
+
+```sh
+git worktree add --detach <scratch>/rollback sdd-engineering--v1.0.0
+cp -R evals/sdd-engineering/smoke-* <scratch>/rollback/evals/sdd-engineering/
+cd <scratch>/rollback
+claude plugin eval . --tag smoke --scaffold --model sonnet --trust-plugin --no-publish --ablation none --runs 3 --max-cost-usd 3
+```
+
+Result (Claude Code 2.1.306, `--model sonnet`, the eval printed all four plugins at version `1.0.0`):
+
+| Case | Runs | Passed | Cost |
+|---|---|---|---|
+| `smoke-discovery-dispatch` | 3 | **3 of 3** (both graders in every run) | about 0.93 USD |
+| `smoke-run-plan-draft-gate` | 3 | **3 of 3** | about 0.24 USD |
+| total | 6 | **6 of 6, score 1.00** | about 1.2 USD at list price |
+
+What this does and does not say, plainly:
+
+- **It is a smoke result, not a quality result.** It shows that the rolled-back tag loads, dispatches its agent and
+  keeps its gate. It does not show that the replies are good: that is what the `criteria` judge cases measure, and
+  they stay as reported below (1 of 4 and 2 of 5 on 1.0.0; a flake rate of about one run in four on 1.1.1 and 1.2.0).
+- `smoke-run-plan-draft-gate` checks that something did not happen, so on its own it would also pass without the
+  plugin. The plugin-loaded evidence is `smoke-discovery-dispatch` (the agent exists only through the plugin).
+- The cases were derived from the two judge cases after their judge failures were analysed; the deterministic graders
+  were not changed and had passed in every earlier run of every tag.
+- The run printed two load errors for files under `scripts/__fixtures__/` (test fixtures, not eval cases); the two
+  smoke cases ran normally.
+
 #### Why the judge failed on 1.0.0 (analysed 2026-10-21)
 
 The two cases were run again on a detached checkout of the tag (`--runs 1 --ablation none`, otherwise the same command)
@@ -372,7 +412,7 @@ In the 1.1.1 and 1.2.0 runs that failed, the votes were `FAIL PASS FAIL`, `FAIL 
 `FAIL PASS FAIL` on the `criteria` grader; nothing else failed. The whole session cost about 6 USD at list price
 (0.45 for the 1.0.0 rerun, 2.8 each for the two later tags, the haiku re-judging not counted).
 
-**No tag gives a smoke eval that is green in every run.** Counting every run, discovery passed in 6 of 8 on both
+**No tag gives a judged eval that is green in every run** (the deterministic smoke tier above is green on 1.0.0). Counting every run, discovery passed in 6 of 8 on both
 later tags, and 1.0.0 is below them on both cases. Nobody should write "the smoke eval is green" for any pin on this
 evidence; the accurate statement is "the deterministic graders pass in every run and the `criteria` judge passes
 about three of four runs on 1.1.1 and 1.2.0".
