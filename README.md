@@ -130,6 +130,7 @@ README lists the files worth reading first.
 - [docs/RELEASES.md](docs/RELEASES.md): versions, release tags, the release procedure and rollback.
 - [docs/SECURITY.md](docs/SECURITY.md): how to report a vulnerability and what the plugins run.
 - [docs/COST-BASELINE.md](docs/COST-BASELINE.md): what one measured run of the `sdd-engineering` route costs, and how to measure it again.
+- [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md): how to confirm which plugin version is active, whether its dependencies loaded, and which skill or agent fired.
 - [docs/specs/site.md](docs/specs/site.md): the specification of the catalog site (`site/`).
 - [docs/specs/sdd-plugins.md](docs/specs/sdd-plugins.md): the specification of the plugins and the reasons behind their structure.
 - [docs/design/README.md](docs/design/README.md): design mockups of the catalog site.
