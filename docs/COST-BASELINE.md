@@ -355,6 +355,29 @@ it is harmless to ship later together with other changes, but it is **not worth 
 would have to come from elsewhere; the baseline points at output (36% of the cost) and at the main session (about a
 third). Neither was tried.
 
+### The same scenario on the rolled-back 1.0.0 (2026-10-21)
+
+After the rollback rehearsal ([RELEASES.md](RELEASES.md)) the fixed scenario was run once on the plugins of the tag
+`sdd-engineering--v1.0.0` (all four plugins at `1.0.0`, loaded with `--plugin-dir` from a copy of the tag's `plugins/`),
+with the same driver, brief, answer policy and gate (`drive.mjs base 1`, then `collect.mjs base 1`), on the same sample
+commit `e150ea2`, Claude Code 2.1.306, models not overridden. It is the "verified workflow" of the rolled-back version:
+the route runs to a plan and the gate passes.
+
+| Run | Cost $ (CLI) | Latency s | Tokens | API calls | Tool calls | Turns | Hook blocks | Tool errors | Gate |
+|---|---|---|---|---|---|---|---|---|---|
+| 1.0.0, 1 run | 1.804 | 321 | 1,619,195 | 40 | 50 | 4 | 0 | 0 | pass (A1-A6, 16 criteria) |
+| 1.2.0, 5 runs (above) | 1.670 median (1.615-1.716) | 361 median (314-376) | 1.49M median | 37 | 44 | 3-4 | 0 | 0 | 5/5 |
+
+By agent on the 1.0.0 run (list-price estimates): main session $0.553, `spec-creator` $0.587, `implementation-planner`
+$0.508, `brainstorm` $0.166.
+
+- **The gate passes on 1.0.0**: one spec and one plan, both pass their checks, every criterion is covered by the plan,
+  nothing written outside `specs/` and `docs/plans/`, the plan was reached in 4 turns with no hook block.
+- **The cost is $0.09 (8%) above the 1.2.0 median and above its range.** One run cannot tell whether that is the
+  version or the run-to-run spread (about 6%), and the two sets differ in Claude Code version (2.1.305 against 2.1.306)
+  and in time; no difference between the versions is claimed.
+- **One run only.** It shows the rolled-back version carries the route to a passing plan; it is not a pass rate.
+
 ### Limitations of this section
 
 - **n = 3 per arm (5 for the baseline), one project, one brief, headless.** The standard deviation was estimated from
