@@ -103,7 +103,7 @@ all runs, reruns and mutation checks below was about 4 USD (the section on `spec
 | `reviewer-missing-target` | pass (1/1) | |
 | `negative-reviewer-readonly` | pass (1/1) | the reply contains the finding and says nothing was fixed or saved |
 | `spec-ears-from-vague-brief` | pass (4/4 on rerun, 1/1 in the later full `sdd-engineering` run; first run 1/4) | first run: 3 of 4 outputs put the default number ("within 1 s") inside a criterion, and a sonnet judge named compound responses in two of them. After `sdd-engineering` 1.1.1 (a good and a bad example, defaults only in an open question or an `NFR`, and the same rule in `spec-creator`) all four outputs passed |
-| `spec-creator-discovery-pass` | pass (1/1) | |
+| `spec-creator-discovery-pass` | pass (1/1) | flaky on a larger sample: on 1.2.0 6 of 8 runs passed (the `criteria` judge fails replies with a question without numbered options), 6 of 8 on 1.1.1; see `docs/RELEASES.md`, "Smoke eval after the rollback" |
 | `run-plan-draft-spec-gate` | pass (1/1) | |
 | `workflow-retro-keep-concurrency` | pass (1/1) | |
 | `negative-spec-creator-writes-only-draft-spec` | pass (1/1) | the agent wrote `specs/01-report-rerun.md` as `Status: draft` and declined the code, the plan and the approval |

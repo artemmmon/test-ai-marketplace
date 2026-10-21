@@ -244,6 +244,11 @@ pinned to the tag of the last verified release, declared in the project's settin
 project gets the same versions. Moving the pin to a newer tag is the promotion; moving it back to an older tag is the
 rollback. Rehearse both once before relying on them (done, see the rehearsal above).
 
+The tag to pin today is `sdd-engineering--v1.1.1`. It is the best-supported choice, not a verified-green one: on the
+smoke eval (two cases) its deterministic graders passed in every run and the `criteria` judge passed 3 of 3 (gate) and
+6 of 8 (discovery) runs; no tag passes every run. The evidence, the reasons for 1.1.1 over 1.0.0 and 1.2.0, and what is
+still weak are under "Smoke eval after the rollback" below.
+
 ```sh
 # in the project, once: declare the marketplace pinned, then install
 claude plugin marketplace add --scope project 'artemmmon/test-ai-marketplace#sdd-engineering--v1.1.1'
@@ -304,10 +309,92 @@ prints "Plugin under test ... version 1.0.0").
 | `main` (`sdd-engineering` 1.2.0) | `run-plan-draft-spec-gate` | 1 | pass (1.00) |
 
 Cost: about 1.8 USD at the CLI's list-price estimate, from the subscription usage (see [evals/README.md](../evals/README.md)).
-Only the `criteria` judge failed on the tag: the agent was dispatched and no spec file was written in every run. The
-failing replies were read in two runs (one per case). They are well-formed discovery and gate replies; what the judge
-rejected was not analysed, so this document does not say that 1.0.0 behaves worse. It says that the smoke eval
-**did not pass cleanly on the rollback target**.
+Only the `criteria` judge failed on the tag: the agent was dispatched and no spec file was written in every run.
+
+#### Why the judge failed on 1.0.0 (analysed 2026-10-21)
+
+The two cases were run again on a detached checkout of the tag (`--runs 1 --ablation none`, otherwise the same command)
+and failed again: `spec-creator-discovery-pass` 0.67 (judge FAIL FAIL FAIL, about 0.37 USD) and
+`run-plan-draft-spec-gate` 0.50 (FAIL FAIL FAIL, about 0.08 USD). With the earlier runs that is **1 of 4** and **2 of 5**
+passing. The result file keeps only the votes and the agent's reply, not the judge's reasons, so the reasons were
+reproduced by giving the same `criteria.md` and the same two replies to the same default judge (`haiku`), asking for a
+verdict per bullet. The verdicts were FAIL, as in the run, and named these bullets:
+
+| Case | Bullet of `criteria.md` that decided | What the reply did |
+|---|---|---|
+| `run-plan-draft-spec-gate` | "It names the next stage after approval: brainstorm, with the spec path" | The reply stopped correctly, asked for approval, surfaced OQ-1 and OQ-2 and the design source, and wrote nothing. But "brainstorm" appears only in "I can't go on to brainstorm or the plan yet"; it never says that brainstorm follows approval. Judge: "Brainstorm appears only as something it 'can't go on to... yet.'" |
+| `spec-creator-discovery-pass` | "Questions are numbered and each has numbered options" and the FAIL line "gives questions without options" | Questions 1-8 and 10 have options with the recommended one first. Question 9 says "No options. Please name them", and questions 11 ("Which proposals do you accept?") and 12 ("Can you share a design?") have none. Judge: "Question 9 says 'No options', and Questions 11 and 12 have no numbered options." (A second bullet, a concrete value for "handle errors properly", was also marked not met by the judge in that reply.) |
+
+So the replies are sound discovery and gate replies, and the judge fails them on one literal bullet each. The gate
+replies that passed on 1.1.1 (two were read) say the same thing as the failing one, plus a clause such as "I'll set `Status:
+approved` and go on to brainstorm" (the failing reply offers option 2 "Approve the spec as it is" but does not name the stage).
+
+**Conclusion: the 1.0.0 contract does not lack what the criteria demand; it is run-to-run variation of the agent's reply
+that the judge scores literally.** Evidence:
+
+- The text that governs these two replies is the same in 1.0.0 and 1.2.0. `git diff sdd-engineering--v1.0.0
+  sdd-engineering--v1.2.0` changes in `spec-creator.md` only pass 2 (criteria rules, coverage pass, the "Brief coverage"
+  table) and in `run-plan/SKILL.md` only the sentence about tests after the run ends. The discovery rule ("Give each
+  question numbered options (1/2/3, never A/B/C) with your recommended one first and marked") and the report template
+  are identical, and nothing in `run-plan` about the draft gate changed. 1.1.1's rules (one `shall`, no invented numbers)
+  and 1.2.0's coverage pass concern the written spec, not the discovery questions or the gate reply.
+- The discovery case is just as unstable on the later tags, with the same text: 1.1.1 passed 3 of 3 and then 3 of 5,
+  1.2.0 passed 1 of 3 and then 5 of 5 (table below). The tag with the better first batch was the worse second one.
+- The judge is consistent on a given reply (it fails the replies above every time it is asked) but reply-to-reply it
+  moves with small differences: single votes of FAIL appear in runs that passed (`PASS FAIL PASS`), and a 1.2.0 reply
+  was failed (`FAIL PASS FAIL`) because it never said that the proposals are not in any spec yet, a different bullet.
+  A criterion that asks for five things at once, with a strict judge, passes a reply only if all five appear in that run.
+- Not explained: the gate case failed 3 of 5 on 1.0.0 and 0 of 6 on 1.1.1 and 1.2.0 (Fisher exact, one-sided, about
+  0.06). That is suggestive but not significant at these sizes, and no change in the 1.0.0 to 1.1.1 diff addresses the
+  gate reply; the added skill and files of 1.1.0 could shift how the model words it. Treat "1.0.0 is worse on the gate"
+  as unproven, not as ruled out.
+
+A fix, if the cases are to be a gate, belongs in the case or the contract, not in the tag. For discovery: tell
+`spec-creator` that the closing questions (accept the proposals, share a design) also carry numbered options, or let
+`criteria.md` allow a free-text question. For the gate: make `run-plan` say explicitly that brainstorm follows approval.
+Neither was changed here (this change touches documentation only).
+
+#### The same smoke eval on the later tags (2026-10-21)
+
+Same command as above (`--tag sdd-engineering --scaffold --model sonnet --trust-plugin --no-publish --ablation none`,
+Claude Code 2.1.306, default judge), run from a detached checkout of each tag; `--runs 3` first, then more runs of the
+discovery case, because it differed between the tags and the two batches ordered them the other way round. A run counts as
+passed when it scores 1.00 (the `criteria` judge decides by majority of three votes). In every run of every tag the
+deterministic graders (`dispatched-spec-creator`, `no-spec-written`, `no-later-stage-started`) passed.
+
+| Tag (`sdd-engineering`, with `engineering-paved-path` 1.0.1 from 1.1.1 on) | `spec-creator-discovery-pass` | `run-plan-draft-spec-gate` | Cost |
+|---|---|---|---|
+| `sdd-engineering--v1.0.0` | 1 of 4 (earlier 1 of 3, now 0 of 1) | 2 of 5 (earlier 2 of 4, now 0 of 1) | about 1.8 + 0.45 USD |
+| `sdd-engineering--v1.1.1` | **6 of 8** (3 of 3, then 3 of 5) | **3 of 3** | about 2.8 USD |
+| `sdd-engineering--v1.2.0` (the plugin files of `main` are identical to this tag) | **6 of 8** (1 of 3, then 5 of 5) | **3 of 3** | about 2.8 USD |
+
+In the 1.1.1 and 1.2.0 runs that failed, the votes were `FAIL PASS FAIL`, `FAIL FAIL FAIL`, `PASS FAIL FAIL` and
+`FAIL PASS FAIL` on the `criteria` grader; nothing else failed. The whole session cost about 6 USD at list price
+(0.45 for the 1.0.0 rerun, 2.8 each for the two later tags, the haiku re-judging not counted).
+
+**No tag gives a smoke eval that is green in every run.** Counting every run, discovery passed in 6 of 8 on both
+later tags, and 1.0.0 is below them on both cases. Nobody should write "the smoke eval is green" for any pin on this
+evidence; the accurate statement is "the deterministic graders pass in every run and the `criteria` judge passes
+about three of four runs on 1.1.1 and 1.2.0".
+
+#### Which tag the stable channel should pin
+
+Pin **`sdd-engineering--v1.1.1`** (the example in "Stable channel" above). Why:
+
+- It is the oldest tag that carries the fix of the one failure of `spec-ears-from-vague-brief` that is documented
+  (`evals/README.md`: 1 of 4 on 1.0.0, then 4 of 4 and 1 of 1 on 1.1.1 and later). 1.0.0 does not have it.
+- On the two cases above it is as good as 1.2.0 (3 of 3 on the gate, 6 of 8 on discovery) and not worse than anything older.
+- A stable channel is meant to lag behind the latest release; 1.2.0 is the floating channel's version. Its extra
+  content (the coverage pass and the "Brief coverage" table) was checked only by `spec-every-story-has-criterion`, which
+  does not exist on 1.1.1 (and fails there by design), so there is no reason to prefer it on these cases.
+- The pin was installed and listed in the rehearsal above (`sdd-engineering` 1.1.1 with its three dependencies).
+
+Weak evidence, said plainly: this is two cases of the seven `sdd-engineering` has, on one model and one judge, with 3 to 8
+runs per tag. The initial gate (every case, 3 runs, score 1.0) was not run for any tag. `workflow-retro-keep-concurrency`,
+`spec-every-story-has-criterion`, the `negative-*` cases and the other three plugins' cases were not run on 1.1.1 in this
+check. The 6 of 8 on discovery is a measured flake rate of about one run in four, not a pass; do not read 1.1.1 as
+"verified green". If the team requires every run to pass, it has nothing to pin until the case or the contract is fixed
+as described above and the case reruns green with enough runs.
 
 What this smoke eval proves and what it does not:
 
@@ -320,7 +407,8 @@ What this smoke eval proves and what it does not:
 - Two to four runs of two cases are weak evidence. 1.0.0 is not a "verified release" in the sense of a clean eval: the
   initial gate of `evals/README.md` (every case, 3 runs, score 1.0) was never run for it, and these two cases are flaky on
   it. Whoever relies on a stable channel pinned to an older tag has to decide which cases must pass there, and run them
-  with enough runs to see the flakiness (`--runs 3`).
+  with enough runs to see the flakiness (`--runs 3` was not enough: the discovery case went from 3 of 3 to 3 of 5 on 1.1.1).
+  The same holds for 1.1.1, the recommended pin: it is the best-supported choice, not a clean one.
 
 ### Not verified
 
@@ -332,8 +420,10 @@ What this smoke eval proves and what it does not:
 - Loading a tagged checkout for one session (`git worktree add ../rollback <tag>` and `claude --plugin-dir ../rollback/plugins/<name>`)
   is documented by Claude Code for `--plugin-dir`, but was not run here; the smoke eval above uses `claude plugin eval` on
   the checkout instead.
-- Why the `criteria` judge rejected replies of the 1.0.0 plugin that look correct, and whether the two cases are flaky on
-  `main` as well (one run each passed).
+- The judge's own reasons for the 1.0.0 runs: the result files keep only the votes. The reasons in "Why the judge failed
+  on 1.0.0" come from re-judging the saved replies with the same judge model, not from the votes of the run. Whether 1.0.0
+  is really worse than 1.1.1 on the draft-spec gate (3 of 5 failed against 0 of 6) is unresolved; the discovery case is
+  flaky on every tag tried, 1.2.0 included.
 - Dependency resolution when a newer `1.x` of a dependency is released after the pin was set, for an install made later: the
   rehearsal saw `engineering-paved-path` `1.0.1` kept by an in-place update and `1.0.0` taken by a fresh install, with the
   tag `engineering-paved-path--v1.0.1` present in both cases. By the Claude Code documentation a range resolves to the
