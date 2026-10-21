@@ -111,62 +111,138 @@ which is still the previous release (resolution rule from the Claude Code depend
 
 ## Rollback
 
-### Facts verified for this document
+A user is rolled back by pointing the marketplace at the tag of an earlier release (a **stable channel**, see below) and
+updating the plugin. The tags are listed by `git ls-remote --tags origin`. Everything in this section was run against the
+public repository; what was not run is listed under "Not verified".
 
-Checked with Claude Code 2.1.304, using a throw-away `CLAUDE_CONFIG_DIR` so that no real configuration was touched:
+### Facts verified
 
-- `claude plugin install --help` lists no option to select a version or a tag. `claude plugin update --help` takes only a
-  plugin name and updates it to the latest version. The install and update commands cannot pin a plugin by themselves.
-- `claude plugin marketplace add artemmmon/test-ai-marketplace#research-tools--v1.0.0` clones the repository at that ref
-  (`marketplace list` shows `artemmmon/test-ai-marketplace@research-tools--v1.0.0`), and
-  `claude plugin install sdd-engineering@test-ai-marketplace` then installs `sdd-engineering` and its three dependencies at
-  `1.0.0`.
-- Adding the marketplace again with a different ref while it is registered is refused ("its source doesn't match its
-  extraKnownMarketplaces entry"). `claude plugin marketplace remove test-ai-marketplace` removes the marketplace and
-  uninstalls its plugins, including their saved options.
+Checked with Claude Code 2.1.304 and again with 2.1.306 (the rehearsal below), always with a throw-away
+`CLAUDE_CONFIG_DIR` and project directory, so that no real configuration was touched:
 
-The `#<ref>` syntax (a branch or tag appended to a GitHub or git-URL marketplace) is also described in the Claude Code
-documentation, "Hold users on one version".
+- `claude plugin install --help` lists no option to select a version or a tag, and `claude plugin update` takes only a
+  plugin name. Neither command can pin a plugin by itself; the pin is the marketplace's `#<ref>`.
+- `claude plugin marketplace add artemmmon/test-ai-marketplace#<tag>` clones the repository at that ref (`marketplace list`
+  shows `artemmmon/test-ai-marketplace@<tag>`). Because every plugin here has a relative-path source, pinning the
+  marketplace pins the plugin files to the state of the repository at that tag. The `#<ref>` syntax is also described in
+  the Claude Code documentation, "Hold users on one version".
+- Adding the marketplace again with another ref depends on the scope that declares it (2.1.306):
+  - **user scope** (no `--scope`): refused with "its source doesn't match its extraKnownMarketplaces entry in user or
+    managed settings". The marketplace has to be removed first.
+  - **`--scope project`**: accepted. The command prints "Marketplace 'test-ai-marketplace' was already added from
+    github:artemmmon/test-ai-marketplace and now points at github:artemmmon/test-ai-marketplace@sdd-engineering--v1.0.0",
+    rewrites `extraKnownMarketplaces.test-ai-marketplace.source.ref` in `.claude/settings.json`, and keeps the installed
+    plugins and their settings.
+- `claude plugin marketplace remove test-ai-marketplace` uninstalls the marketplace's plugins and deletes their saved
+  options and their data directory (see the rehearsal for the exact effect).
 
-A second check, after `sdd-engineering` 1.1.0 was released and tagged, again with a throw-away `CLAUDE_CONFIG_DIR`,
-covered a real upgrade and a real downgrade:
+### Rehearsal: floating channel, rollback to 1.0.0, back to latest
 
-- `claude plugin marketplace add artemmmon/test-ai-marketplace#sdd-engineering--v1.0.0` followed by an install of
-  `sdd-engineering` installs `sdd-engineering` `1.0.0` and the three dependencies at `1.0.0`.
-- After `claude plugin marketplace remove test-ai-marketplace`, adding the marketplace again without a ref and installing
-  `sdd-engineering` gives `1.1.0`. The dependencies stayed at `1.0.0` because no newer version of them exists.
-- Removing the marketplace and adding it again pinned to `#sdd-engineering--v1.0.0` installs `sdd-engineering` `1.0.0`
-  again: this is a working rollback from `1.1.0` to `1.0.0`, using the procedure below.
+Run on 2026-10-21 with Claude Code 2.1.306 against `main` at `e8a3ea9` (`sdd-engineering` 1.2.0 is the latest). The
+profile was a new `CLAUDE_CONFIG_DIR` (a temporary directory, no login) and the project was an empty directory.
+Every command below was run inside that project directory. The tag `sdd-engineering--v1.0.0` is the rollback target named by the lab (`1.1.1` is the one used in "Stable channel" below).
+
+**1. Floating channel (latest).**
+
+```sh
+claude plugin marketplace add --scope project artemmmon/test-ai-marketplace
+claude plugin install sdd-engineering@test-ai-marketplace --scope project
+#  ✔ Successfully installed plugin: sdd-engineering@test-ai-marketplace (scope: project) (+ 3 dependencies: engineering-paved-path, research-tools, architecture-review)
+claude plugin list --json     # sdd-engineering 1.2.0, engineering-paved-path 1.0.1, research-tools 1.0.0, architecture-review 1.0.0, all scope project, enabled
+```
+
+Then user data was created, to see whether it survives (see "Does user data survive?" below):
+`echo '{"specs_dir":"my-specs","plans_dir":"my-plans"}' | claude plugin configure sdd-engineering@test-ai-marketplace --values-stdin`
+and a marker file `$P/plugins/data/sdd-engineering-test-ai-marketplace/marker.txt`.
+
+**2. Roll back to 1.0.0, in place.**
+
+```sh
+claude plugin marketplace add --scope project 'artemmmon/test-ai-marketplace#sdd-engineering--v1.0.0'
+#  ✔ Successfully added marketplace: test-ai-marketplace (declared in project settings)
+#    Marketplace 'test-ai-marketplace' was already added from github:artemmmon/test-ai-marketplace and now points at github:artemmmon/test-ai-marketplace@sdd-engineering--v1.0.0.
+claude plugin update sdd-engineering@test-ai-marketplace --scope project
+#  ✔ Plugin "sdd-engineering" updated from 1.2.0 to 1.0.0 for scope project (...). Restart to apply changes.
+```
+
+Right after the `marketplace add`, and before the `update`, `plugin list` still showed `sdd-engineering` `1.2.0`: the `add`
+only moves the source, the `update` is what changes the installed version. After the `update`, `claude plugin list --json`
+showed `sdd-engineering` `1.0.0` (git commit `3083073`, the commit of the tag), `research-tools` `1.0.0`,
+`architecture-review` `1.0.0` and `engineering-paved-path` `1.0.1`, all enabled at scope `project`. `claude plugin list`
+printed "Status: ✔ enabled" for each, and the JSON output contains no "error" (the command has no
+separate error field, so "no errors" here means exactly that, plus the exit code 0 of every command). `.claude/settings.json` had
+`"ref": "sdd-engineering--v1.0.0"` and `marketplace list` showed `artemmmon/test-ai-marketplace@sdd-engineering--v1.0.0`.
+The installed files in `$P/plugins/cache/test-ai-marketplace/sdd-engineering/1.0.0` are identical to the plugin directory of
+a checkout of the tag (`diff -r` reports only the `.in_use` marker that Claude Code adds).
+
+**3. Dependencies.** The `update` touched only `sdd-engineering`. `engineering-paved-path` stayed at `1.0.1` (the version
+the floating channel had installed; `^1.0.0` is satisfied by it), so this in-place rollback gives `sdd-engineering` `1.0.0`
+with a newer dependency than the tag shipped with. A fresh install on the pinned marketplace behaves differently:
+after `marketplace remove`, adding `...#sdd-engineering--v1.0.0` and `plugin install sdd-engineering@test-ai-marketplace
+--scope project`, all four plugins were `1.0.0`, although the tag `engineering-paved-path--v1.0.1` exists and satisfies
+the range. So in this rehearsal a new install on a pinned marketplace took the dependencies from the pinned
+checkout, not from the newest matching tag. Choose the in-place way to keep the project's settings and options, and the
+remove way to get exactly the versions of the tag.
+
+**4. Back to latest.**
+
+```sh
+claude plugin marketplace add --scope project artemmmon/test-ai-marketplace
+#    Marketplace ... was already added from github:artemmmon/test-ai-marketplace@sdd-engineering--v1.0.0 and now points at github:artemmmon/test-ai-marketplace.
+claude plugin update sdd-engineering@test-ai-marketplace --scope project
+#  ✔ Plugin "sdd-engineering" updated from 1.0.0 to 1.2.0 for scope project (...)
+```
+
+`plugin list --json` showed `sdd-engineering` `1.2.0` again and `.claude/settings.json` had no `ref`.
+
+**5. Promotion and rollback between two tags**, in place, with the same two commands each time (starting from a
+fresh install pinned to 1.0.0, with all four plugins at 1.0.0): pinning to `#sdd-engineering--v1.1.1` and updating gave
+`sdd-engineering` `1.0.0` to `1.1.1`; pinning back to `#sdd-engineering--v1.0.0` and updating gave `1.1.1` to `1.0.0`.
+The dependencies stayed at `1.0.0` in both steps.
+
+### Does user data survive?
+
+The lab asks that a rollback does not make the user lose plugin data. There are two places, and they behave differently:
+
+| What | Where (in the profile) | In-place rollback (steps 2 to 5) | `marketplace remove` + add + install |
+|---|---|---|---|
+| `userConfig` values of `sdd-engineering` | `settings.json`, key `pluginConfigs."sdd-engineering@test-ai-marketplace".options` (`specs_dir`, `plans_dir`, ...) | **kept**. `plugin configure ... --json` still showed `specs_dir: my-specs`, `plans_dir: my-plans` after the rollback and after returning to latest | **deleted**. The key became `"pluginConfigs": {}`, and after the reinstall `plugin configure` said "not set" for every option; the values must be entered again |
+| Plugin data directory `${CLAUDE_PLUGIN_DATA}` | `plugins/data/<plugin>-<marketplace>/` | **kept** (the marker file was still there after each step) | **deleted** (the directory was empty after the remove; the output says "The removal also deletes their saved options, secrets and data where it can") |
+| The project's own files (`specs/`, `docs/plans/`, ...) | the repository | not touched by any command here | not touched |
+
+Limits of this check: `sdd-engineering` and the other three plugins do not use `${CLAUDE_PLUGIN_DATA}` (there is no
+reference to it in `plugins/`), so the data directory did not exist until the marker file was written by hand, and no
+real plugin data was tested. That the marker file was removed by `marketplace remove` shows that the path is the
+plugin's data directory; whether a plugin that writes there loses the content in the same way was not run. To keep the
+data in a remove-based rollback, write down the `userConfig` values first (`claude plugin configure <plugin> --json`), and
+set them again with `--values-stdin` after the install; `claude plugin uninstall --keep-data` exists for a single plugin
+but was not tried together with `marketplace remove`.
 
 ### Pin a user to a previous release
 
-Because every plugin in this marketplace has a relative-path source, its files come from the marketplace checkout, so
-pinning the marketplace to a tag pins all plugins to the state of the repository at that tag.
+Two ways. The first is the one to prefer: it keeps the options and the data of the user.
 
 ```sh
-claude plugin marketplace remove test-ai-marketplace      # also uninstalls its plugins and deletes their saved options
+# 1. In place, project scope (the marketplace is already declared in .claude/settings.json)
+claude plugin marketplace add --scope project 'artemmmon/test-ai-marketplace#<plugin>--v<version>'
+claude plugin update <plugin>@test-ai-marketplace --scope project
+# restart Claude Code to apply
+
+# 2. Clean, or when the marketplace is declared at user scope (the add of a new ref is refused there)
+claude plugin marketplace remove test-ai-marketplace      # also uninstalls its plugins and deletes their saved options and data
 claude plugin marketplace add artemmmon/test-ai-marketplace#<plugin>--v<version>
 claude plugin install <plugin>@test-ai-marketplace
 ```
 
-Then set the `userConfig` values again if the plugin has any (`/plugin configure <plugin>@test-ai-marketplace`). To leave
-the pin, remove the marketplace and add it again without `#<ref>`.
-
-Not verified:
-
-- How dependencies resolve while the marketplace is pinned to an older tag **and a newer `1.x` of a dependency exists**.
-  No dependency has a release newer than `1.0.0` yet, so this case could not be run. By the Claude Code documentation a
-  range resolves to the highest tag that satisfies it, so a pinned `sdd-engineering` may still receive a newer `1.x` of its
-  dependencies.
-- Loading a tagged checkout for one session (`git worktree add ../rollback <tag>` and `claude --plugin-dir ../rollback/plugins/<name>`)
-  is documented by Claude Code for `--plugin-dir`, but was not run here.
+After the second way set the `userConfig` values again (`/plugin configure <plugin>@test-ai-marketplace`). To leave the
+pin, run the same commands with the repository name and no `#<ref>`.
 
 ### Stable channel
 
 A team that wants new releases only after it has checked them keeps its project on a **stable channel**: the marketplace
 pinned to the tag of the last verified release, declared in the project's settings so that everyone who opens the
 project gets the same versions. Moving the pin to a newer tag is the promotion; moving it back to an older tag is the
-rollback. Rehearse both once before relying on them.
+rollback. Rehearse both once before relying on them (done, see the rehearsal above).
 
 ```sh
 # in the project, once: declare the marketplace pinned, then install
@@ -176,14 +252,16 @@ git add .claude/settings.json && git commit -m "chore: pin the marketplace to sd
 ```
 
 `--scope project` writes the pin to `.claude/settings.json` (`extraKnownMarketplaces.test-ai-marketplace.source.ref`) and
-enables the plugins there, so the commit is the record of what the team runs. To promote or to roll back, change `ref` to
-the other tag, or run `claude plugin marketplace remove test-ai-marketplace` and add it again with the other `#<tag>`
-(the plugins have to be installed again after a remove). The tags are listed by `git ls-remote --tags origin`.
+enables the plugins there, so the commit is the record of what the team runs. To promote or to roll back, run the `add` with
+the other `#<tag>` and `claude plugin update <plugin>@test-ai-marketplace --scope project` (in-place way above), then commit
+the changed `ref`. The rehearsal ran only one profile, so how a
+second profile picks up a changed `ref` (a restart, `marketplace update`, a trust prompt) was not run.
 
 Verified with Claude Code 2.1.304 and a throw-away `CLAUDE_CONFIG_DIR` and project directory: the command above creates
 exactly that `ref` entry, `claude plugin list` then shows `sdd-engineering` `1.1.1` at scope `project` (with the
 dependencies `engineering-paved-path` `1.0.1`, `research-tools` `1.0.0`, `architecture-review` `1.0.0`), and
-`marketplace list` shows `artemmmon/test-ai-marketplace@sdd-engineering--v1.1.1`.
+`marketplace list` shows `artemmmon/test-ai-marketplace@sdd-engineering--v1.1.1`. The 2.1.306 rehearsal above repeated
+the pin at `--v1.0.0` and `--v1.1.1` and moved between them.
 
 Not possible, and not verified beyond that:
 
@@ -194,7 +272,72 @@ Not possible, and not verified beyond that:
   second repository with another `marketplace.json` `name`; this was not tried.
 - Whether a teammate whose user-scope settings declare the same marketplace unpinned wins over the project's pin (the
   scopes were not compared here). Tell the team to keep only the project entry.
-- How plugin dependencies resolve while the marketplace is pinned, see "Not verified" above.
+
+### Smoke eval after the rollback
+
+The eval cases load plugins from the working tree (`plugins: ["../../../plugins/..."]` in each `prompt.md`), never from
+the installed copy under `~/.claude/plugins`. So an eval started in this repository tests `main`, not the rolled-back
+plugin. To run it against the rolled-back content, check the tag out into a scratch directory outside the repository and
+run the eval there:
+
+```sh
+git worktree add --detach <scratch>/rollback sdd-engineering--v1.0.0
+cd <scratch>/rollback
+claude plugin eval . --tag sdd-engineering --scaffold --model sonnet --trust-plugin --no-publish \
+  --case spec-creator-discovery-pass --runs 1 --ablation none --max-cost-usd 2
+cd - && git worktree remove --force <scratch>/rollback
+```
+
+The tag contains the eval cases as they were at the release. At `sdd-engineering--v1.0.0` four `sdd-engineering` cases
+exist (`spec-creator-discovery-pass`, `spec-ears-from-vague-brief`, `run-plan-draft-spec-gate`,
+`workflow-retro-keep-concurrency`); the later ones (`spec-every-story-has-criterion`, the `negative-*` case) do not. The
+files of the two cases run below are byte-identical to the ones on `main`. The eval ran in the normal logged-in profile
+(the throw-away profile has no login), with Claude Code 2.1.306, `--model sonnet` and the default judge.
+The run loaded `sdd-engineering` `1.0.0` and the other three plugins at `1.0.0` from the tag checkout (the eval output
+prints "Plugin under test ... version 1.0.0").
+
+| Plugin content | Case | Runs | Result |
+|---|---|---|---|
+| tag `sdd-engineering--v1.0.0` | `spec-creator-discovery-pass` | 3 (1, then 2) | **1 of 3 passed**. The two failures: the `criteria` judge voted FAIL FAIL FAIL (0.67); the pass had one FAIL vote of three. `dispatched-spec-creator` and `no-spec-written` passed every time |
+| tag `sdd-engineering--v1.0.0` | `run-plan-draft-spec-gate` | 4 (1, then 3) | **2 of 4 passed**. The failures: `criteria` FAIL FAIL FAIL (0.50); `no-later-stage-started` passed every time |
+| `main` (`sdd-engineering` 1.2.0) | `spec-creator-discovery-pass` | 1 | pass (1.00) |
+| `main` (`sdd-engineering` 1.2.0) | `run-plan-draft-spec-gate` | 1 | pass (1.00) |
+
+Cost: about 1.8 USD at the CLI's list-price estimate, from the subscription usage (see [evals/README.md](../evals/README.md)).
+Only the `criteria` judge failed on the tag: the agent was dispatched and no spec file was written in every run. The
+failing replies were read in two runs (one per case). They are well-formed discovery and gate replies; what the judge
+rejected was not analysed, so this document does not say that 1.0.0 behaves worse. It says that the smoke eval
+**did not pass cleanly on the rollback target**.
+
+What this smoke eval proves and what it does not:
+
+- It proves that the files of the tag `sdd-engineering--v1.0.0` load as a plugin set in `claude plugin eval`, that the
+  agent can be dispatched, and what the two cases score on them. Since the installed copy at `1.0.0` equals the tag's plugin
+  directory (the `diff -r` above), the result describes the rolled-back content, but it was not read from the installed copy.
+- It does not test the installed copy or the project's settings (a different path), a running session after the restart,
+  the user's `userConfig`, or the dependencies as installed by the in-place rollback (`engineering-paved-path` `1.0.1`; the
+  eval loaded `1.0.0` of it from the tag).
+- Two to four runs of two cases are weak evidence. 1.0.0 is not a "verified release" in the sense of a clean eval: the
+  initial gate of `evals/README.md` (every case, 3 runs, score 1.0) was never run for it, and these two cases are flaky on
+  it. Whoever relies on a stable channel pinned to an older tag has to decide which cases must pass there, and run them
+  with enough runs to see the flakiness (`--runs 3`).
+
+### Not verified
+
+- A running session after the rollback: the check ended at `plugin list`, the settings file and the cache directory. No
+  interactive Claude Code session was started after the restart, so that the session really loads the `1.0.0` skills and
+  agents was not observed.
+- Plugin data of a plugin that really writes to `${CLAUDE_PLUGIN_DATA}` (none of the four does), and `--keep-data`.
+- Whether a second profile or a teammate picks up a changed `ref` committed in `.claude/settings.json`.
+- Loading a tagged checkout for one session (`git worktree add ../rollback <tag>` and `claude --plugin-dir ../rollback/plugins/<name>`)
+  is documented by Claude Code for `--plugin-dir`, but was not run here; the smoke eval above uses `claude plugin eval` on
+  the checkout instead.
+- Why the `criteria` judge rejected replies of the 1.0.0 plugin that look correct, and whether the two cases are flaky on
+  `main` as well (one run each passed).
+- Dependency resolution when a newer `1.x` of a dependency is released after the pin was set, for an install made later: the
+  rehearsal saw `engineering-paved-path` `1.0.1` kept by an in-place update and `1.0.0` taken by a fresh install, with the
+  tag `engineering-paved-path--v1.0.1` present in both cases. By the Claude Code documentation a range resolves to the
+  highest tag that satisfies it; the fresh install did not.
 
 ### Roll back a bad release as the maintainer
 
