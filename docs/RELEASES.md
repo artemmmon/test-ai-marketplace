@@ -351,6 +351,47 @@ What this does and does not say, plainly:
 - The run printed two load errors for files under `scripts/__fixtures__/` (test fixtures, not eval cases); the two
   smoke cases ran normally.
 
+#### The new behaviour of 1.1.0: `engineering-insights` eval (2026-10-21)
+
+1.1.0 added the `engineering-insights` skill and made `implementer` and `implementation-planner` follow it (CHANGELOG).
+No eval covered it, so one was added: `engineering-insights-records-finding`. The agent is told about a float-rounding
+quirk in `src/modules/billing/rounding.ts` and asked, without fixing the code, to record it with the skill in a project
+that has no `INSIGHTS.md`. All graders are deterministic (no judge):
+
+| Grader | Type | Passes when |
+|---|---|---|
+| `skill-loaded` | `tool_used` | the `Skill` tool is called with `engineering-insights` |
+| `insights-file-created` | `file_exists` | `src/modules/billing/INSIGHTS.md` exists (the module folder, by the skill's "most specific wins" rule) |
+| `built-from-template` | `regex` on the file | the template heading `## Open Questions` is there |
+| `entry-is-dated` | `regex` on the file | an entry heading `### YYYY-MM-DD — title` is there |
+| `entry-is-anchored` | `regex` on the file | the entry has `Where: ...rounding.ts:<line>` |
+| `code-not-changed` | `regex` on `rounding.ts` | the code was not touched |
+
+Run from a scratch checkout of each tag, with the case copied in (the tags predate it), `--allow-tools Write Edit`
+because the case writes a file:
+
+```sh
+git worktree add --detach <scratch>/wt sdd-engineering--v1.1.0   # and again with --v1.0.0
+cp -R evals/sdd-engineering/engineering-insights-records-finding <scratch>/wt/evals/sdd-engineering/
+cd <scratch>/wt
+claude plugin eval . --case engineering-insights-records-finding --scaffold --allow-tools Write Edit \
+  --model sonnet --trust-plugin --no-publish --ablation none --runs 3 --max-cost-usd 3
+```
+
+| Tag | Runs | Passed | Cost |
+|---|---|---|---|
+| `sdd-engineering--v1.1.0` | 3 | **3 of 3** (score 1.00 each) | about 0.19 USD |
+| `sdd-engineering--v1.0.0` | 3 | **0 of 3** (score 0.33 each) | about 0.12 USD |
+
+- The new behaviour passes on 1.1.0, and the same case fails on 1.0.0, where the skill does not exist: the eval measures
+  what 1.1.0 added.
+- On 1.0.0 `skill-loaded` and `code-not-changed` still pass (the agent tried to call the missing skill and left the code
+  alone); the four graders about the written file fail. A passing `skill-loaded` therefore does not mean the skill ran.
+- Weak evidence, said plainly: one case, one model (`sonnet`), 3 runs per tag, written after the release and
+  after reading the skill's own rules, not before. It checks the file the skill must produce, not whether a session
+  finds a finding worth recording on its own (the skill says Claude loads it proactively; this case asks for it by name).
+- Cost: the 1.1.0 and 1.0.0 runs together about 0.31 USD at list price.
+
 #### Why the judge failed on 1.0.0 (analysed 2026-10-21)
 
 The two cases were run again on a detached checkout of the tag (`--runs 1 --ablation none`, otherwise the same command)
