@@ -1,0 +1,65 @@
+[
+  {
+    "id": "architecture-review@test-ai-marketplace",
+    "version": "1.0.0",
+    "scope": "project",
+    "enabled": true,
+    "installPath": "/tmp/profile/plugins/cache/test-ai-marketplace/architecture-review/1.0.0",
+    "readFromFolder": "/tmp/checkout/plugins/architecture-review",
+    "folderVersion": "1.0.0",
+    "installedAt": "2026-10-21T00:00:00.000Z",
+    "lastUpdated": "2026-10-21T00:00:00.000Z",
+    "projectPath": "/tmp/project",
+    "projectEnabled": true
+  },
+  {
+    "id": "engineering-paved-path@test-ai-marketplace",
+    "version": "1.0.1",
+    "scope": "project",
+    "enabled": true,
+    "installPath": "/tmp/profile/plugins/cache/test-ai-marketplace/engineering-paved-path/1.0.1",
+    "readFromFolder": "/tmp/checkout/plugins/engineering-paved-path",
+    "folderVersion": "1.0.1",
+    "installedAt": "2026-10-21T00:00:00.000Z",
+    "lastUpdated": "2026-10-21T00:00:00.000Z",
+    "projectPath": "/tmp/project",
+    "projectEnabled": true
+  },
+  {
+    "id": "research-tools@test-ai-marketplace",
+    "version": "1.0.0",
+    "scope": "project",
+    "enabled": true,
+    "installPath": "/tmp/profile/plugins/cache/test-ai-marketplace/research-tools/1.0.0",
+    "readFromFolder": "/tmp/checkout/plugins/research-tools",
+    "folderVersion": "1.0.0",
+    "installedAt": "2026-10-21T00:00:00.000Z",
+    "lastUpdated": "2026-10-21T00:00:00.000Z",
+    "projectPath": "/tmp/project",
+    "projectEnabled": true
+  },
+  {
+    "id": "sdd-engineering@test-ai-marketplace",
+    "version": "1.2.0",
+    "scope": "project",
+    "enabled": true,
+    "installPath": "/tmp/profile/plugins/cache/test-ai-marketplace/sdd-engineering/1.2.0",
+    "readFromFolder": "/tmp/checkout/plugins/sdd-engineering",
+    "folderVersion": "1.2.0",
+    "installedAt": "2026-10-21T00:00:00.000Z",
+    "lastUpdated": "2026-10-21T00:00:00.000Z",
+    "projectPath": "/tmp/project",
+    "errors": [
+      "Requires \"research-tools@test-ai-marketplace\" ^9.0.0, installed 1.0.0"
+    ],
+    "errorDetails": [
+      {
+        "type": "dependency-version-unsatisfied",
+        "plugin": "sdd-engineering",
+        "dependency": "research-tools@test-ai-marketplace"
+      }
+    ],
+    "projectEnabled": true,
+    "hasUserConfig": true
+  }
+]

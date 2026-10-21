@@ -8,6 +8,7 @@
   },
   "scripts": {
     "check": "node scripts/check-marketplace.mjs",
+    "check:install": "node scripts/check-plugin-install.mjs",
     "build:index": "node scripts/build-index.mjs",
     "build:index:fixtures": "node scripts/build-index.mjs --root scripts/__fixtures__/repo --tags-file scripts/__fixtures__/tags.json --fixture",
     "test": "node scripts/run-tests.mjs"

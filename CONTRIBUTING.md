@@ -109,6 +109,7 @@ npm test                               # unit tests of scripts/ and of the plugi
 node scripts/check-marketplace.mjs .   # marketplace and plugin invariants (same as `npm run check`)
 claude plugin validate .               # Claude Code's own validation of the marketplace
 for d in plugins/*/; do claude plugin validate "$d"; done
+node scripts/check-plugin-install.mjs  # test install of sdd-engineering in a throw-away profile, then `claude plugin list --json`
 ```
 
 `check-marketplace.mjs` checks what `claude plugin validate` does not:
@@ -131,6 +132,15 @@ for d in plugins/*/; do claude plugin validate "$d"; done
   an error with `--require-tags`.
 
 Warnings are printed to stderr and do not fail the run; errors do.
+
+`check-plugin-install.mjs` adds the checkout as a marketplace in a throw-away `CLAUDE_CONFIG_DIR`, installs
+`sdd-engineering` (`--plugin <name>` for another one), runs `claude plugin list --json` and exits 1 if any plugin entry
+has `errors` or `errorDetails` (for example `dependency-unsatisfied` or `dependency-version-unsatisfied`, a dependency
+range that the installed version does not satisfy), if the install itself is refused (`range-conflict`,
+`no-matching-tag`), or if the plugin and its dependencies are not all listed, enabled and at their `plugin.json`
+versions. It needs `claude` on the PATH but no login or API key. It reads no release tags: Claude Code consults them only
+for GitHub sources, so `node scripts/check-plugin-install.mjs artemmmon/test-ai-marketplace` (the published `main`, with
+its tags) is the way to test that form by hand.
 
 ### Catalog data and the site
 
@@ -202,7 +212,7 @@ Keep commits small and focused. Pull requests are merged with a merge commit.
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `.github/workflows/validate.yml` | pull requests and pushes to `main` that touch `.claude-plugin/`, `plugins/`, `scripts/` or the workflow itself; manual | `invariants`: `node scripts/check-marketplace.mjs .` with full git history; `claude`: installs Claude Code and runs `claude plugin validate .` and `claude plugin validate` on every `plugins/*/` folder |
+| `.github/workflows/validate.yml` | pull requests and pushes to `main` that touch `.claude-plugin/`, `plugins/`, `scripts/` or the workflow itself; manual | `invariants`: `node scripts/check-marketplace.mjs .` with full git history; `claude`: installs Claude Code and runs `claude plugin validate .` and `claude plugin validate` on every `plugins/*/` folder; `install`: installs Claude Code and runs `node scripts/check-plugin-install.mjs` |
 | `.github/workflows/pages.yml` | pull requests into `main`, pushes to `main`, manual | `checks`: fails if generated files are tracked, runs `npm test` at the root, then typecheck and tests in `site/`; `build`: `node scripts/build-index.mjs`, `vite build`, `check-dist.mjs`; `deploy` (not on pull requests): publishes `site/dist` to GitHub Pages |
 
 Pushing a tag does not start any workflow. After a release the Pages workflow is run by hand, see
