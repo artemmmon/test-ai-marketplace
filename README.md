@@ -123,14 +123,16 @@ Claude's permission rules. Read `hooks/hooks.json`, `.mcp.json` and `bin/` of an
 before installing it. `sdd-engineering` registers hooks and runs scripts from its `scripts/` folder; its
 README lists the files worth reading first.
 
-## Contributing and project docs
+## Documentation map
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): add or change a plugin, local checks, branch and pull request flow, what CI runs.
 - [docs/PLUGIN-GUIDELINES.md](docs/PLUGIN-GUIDELINES.md): authoring rules for skills, agents, hooks, `userConfig` and paths.
 - [docs/RELEASES.md](docs/RELEASES.md): versions, release tags, the release procedure and rollback.
 - [docs/SECURITY.md](docs/SECURITY.md): how to report a vulnerability and what the plugins run.
 - [docs/COST-BASELINE.md](docs/COST-BASELINE.md): what one measured run of the `sdd-engineering` route costs, and how to measure it again.
-- [docs/specs/](docs/specs/): the design specs of the plugins and of the catalog site.
+- [docs/specs/site.md](docs/specs/site.md): the specification of the catalog site (`site/`).
+- [docs/specs/sdd-plugins.md](docs/specs/sdd-plugins.md): the specification of the plugins and the reasons behind their structure.
+- [docs/design/README.md](docs/design/README.md): design mockups of the catalog site.
 - [evals/README.md](evals/README.md): behaviour tests of the plugins.
 
 ## License

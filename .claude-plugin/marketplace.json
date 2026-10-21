@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "test-ai-marketplace",
   "owner": { "name": "artemmmon" },
   "description": "Personal Claude Code plugin marketplace: engineering skills and agents for spec-driven development",
