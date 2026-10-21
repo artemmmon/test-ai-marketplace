@@ -39,7 +39,7 @@ the plugin would not load.
 
 ## Cases
 
-Types: **behaviour** (the plugin does the right thing) and **negative** (the plugin does not do something
+Types: **smoke** (deterministic graders only, no judge: the plugin loads and its agent is dispatched), **behaviour** (the plugin does the right thing) and **negative** (the plugin does not do something
 wrong: stays read-only, writes only where allowed, does not trigger on an unrelated prompt, does not invent
 a finding). Negative cases are named `negative-*`.
 
@@ -67,6 +67,8 @@ a finding). Negative cases are named `negative-*`.
 | sdd-engineering | `spec-every-story-has-criterion` | behaviour | pass 2 on a brief with three requirements (invite by e-mail, a duplicate-member message, a rule that regular members cannot invite) writes a draft in which each has its own criterion naming an existing story, and the report ends with a "Brief coverage" table |
 | sdd-engineering | `negative-spec-creator-writes-only-draft-spec` | negative | asked also for code, a plan and `Status: approved`, spec-creator writes only a draft in `specs/*.md` |
 | sdd-engineering | `negative-unrelated-request-no-sdd` | negative | a small off-by-one bug-fix request that mentions no spec or plan is just fixed: no `sdd-engineering` skill (`run-plan`, `spec-authoring`, `workflow-retro`, `engineering-insights`) or agent is called, and no file appears under `specs/` or `docs/` |
+| sdd-engineering | `smoke-discovery-dispatch` | smoke | the plugin set loads and `spec-creator` is dispatched for pass 1 and writes no file; deterministic graders only, no judge |
+| sdd-engineering | `smoke-run-plan-draft-gate` | smoke | `run-plan` on a draft spec starts no later stage; deterministic grader only, no judge |
 
 Cases that run an agent grade the agent's reply and also check with a `tool_used` grader that the right
 agent or skill was called. In a with/without comparison those checks fail without the plugin by design;
