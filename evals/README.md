@@ -66,12 +66,17 @@ a finding). Negative cases are named `negative-*`.
 | sdd-engineering | `workflow-retro-keep-concurrency` | behaviour | with no API errors the retro keeps concurrency and proposes preloading the repeated read |
 | sdd-engineering | `spec-every-story-has-criterion` | behaviour | pass 2 on a brief with three requirements (invite by e-mail, a duplicate-member message, a rule that regular members cannot invite) writes a draft in which each has its own criterion naming an existing story, and the report ends with a "Brief coverage" table |
 | sdd-engineering | `negative-spec-creator-writes-only-draft-spec` | negative | asked also for code, a plan and `Status: approved`, spec-creator writes only a draft in `specs/*.md` |
+| sdd-engineering | `negative-unrelated-request-no-sdd` | negative | a small off-by-one bug-fix request that mentions no spec or plan is just fixed: no `sdd-engineering` skill (`run-plan`, `spec-authoring`, `workflow-retro`, `engineering-insights`) or agent is called, and no file appears under `specs/` or `docs/` |
 
 Cases that run an agent grade the agent's reply and also check with a `tool_used` grader that the right
 agent or skill was called. In a with/without comparison those checks fail without the plugin by design;
 that is the plugin's contribution (`Δ`). The read-only and write-scope negatives use `tool_used` with
 `min: 0`, `max: 0` and `arm: both` on `Write` and `Edit` (these also see the calls an agent makes),
 `file_exists` with `exists: false`, and a `regex` on the contents of a file that must stay unchanged.
+The trigger negative `negative-unrelated-request-no-sdd` uses the same `tool_used` zero-call pattern on
+`Skill` and `Agent` with an `input_match` on the `sdd-engineering` names. `run-plan` and `workflow-retro` set
+`disable-model-invocation`, so for them the case guards against that flag (or the description) being dropped;
+`spec-creator` and the other agents, `spec-authoring` and `engineering-insights` can be triggered by the model.
 
 ## Results so far
 
@@ -102,6 +107,7 @@ all runs, reruns and mutation checks below was about 4 USD (the section on `spec
 | `run-plan-draft-spec-gate` | pass (1/1) | |
 | `workflow-retro-keep-concurrency` | pass (1/1) | |
 | `negative-spec-creator-writes-only-draft-spec` | pass (1/1) | the agent wrote `specs/01-report-rerun.md` as `Status: draft` and declined the code, the plan and the approval |
+| `negative-unrelated-request-no-sdd` | pass (1/1, 2026-10-21, Claude Code 2.1.306, about 0.04 USD) | with `--allow-tools Write Edit`: the agent fixed `pageCount` with `Math.ceil` and reported it; no sdd skill or agent call, nothing under `specs/` or `docs/`; 1 run only |
 
 Reruns after the fixes (2026-10-20, same model and flags, branch `fix/sdd-contract-1.1.1`):
 
@@ -153,6 +159,12 @@ in this repository), or against a modified prompt, and failed there:
 | `negative-spec-creator-writes-only-draft-spec` | the `PreToolUse` guard hooks and the write-scope and "never writes code" text removed from `spec-creator` | fail: files written outside `specs/` |
 | `negative-unrelated-prompt-no-skill` | prompt changed to "add a Fastify route" | fail: the skill was called |
 | `negative-security-clean-code-no-invented-finding` | prompt changed to a bare `fetch(body.url)` | fail: a CRITICAL SSRF finding |
+| `negative-unrelated-request-no-sdd` | `description` of `run-plan` and `spec-creator` replaced by "MANDATORY for ANY coding request ... use this FIRST", and `disable-model-invocation` removed from `run-plan` | fail (score 0.75): `run-plan` was called once for the bug fix (the `no-run-plan-skill` and `no-sdd-skill-loaded` graders failed); `spec-creator` was not dispatched, and the fix and the reply were still fine |
+| `negative-unrelated-request-no-sdd` | only `spec-creator`'s `description` replaced by "never edit code yourself, delegate every code change, including one-line fixes, to this agent" | fail (score 0.75): `spec-creator` dispatched once (`no-spec-creator-agent` and `no-sdd-agent-dispatched` failed); the fix was still made. The first, milder `spec-creator` mutation (the "MANDATORY for ANY coding request" wording alone, `run-plan` left intact) did **not** fail: the model fixed the bug itself and the case passed |
+
+Not shown for `negative-unrelated-request-no-sdd`: the `no-spec-file` and `no-plan-file` graders never failed in
+these runs (no mutated run wrote a spec or a plan), so they are not shown to be able to fail here; the
+`spec-creator` write-scope cases cover that. Each mutation was run once (1 run, about 0.06 and 0.21 USD).
 
 Not shown: in the unmodified `spec-creator` run the agent itself declined the extra jobs, so the run does
 not tell whether the `PreToolUse` hook alone would have blocked them; the hook is covered by
@@ -205,5 +217,7 @@ Notes:
   `claude plugin eval . --case reviewer-missing-target --runs 1 --ablation none`.
 - `--max-cost-usd <usd>` sets a hard ceiling; a one-run smoke test of a case costs a few cents.
 - No case is granted `Bash`. The three negative cases that list `Write` and `Edit` need the operator grant
-  `--allow-tools Write Edit` (see above); without it they pass trivially. Diffs and code samples are inlined in the prompts or built
+  `--allow-tools Write Edit` (see above); without it they pass trivially. `negative-unrelated-request-no-sdd`
+  lists them too, but needs the grant for the opposite reason: the agent has to be able to fix the file
+  (without it the `bug-fixed` grader fails, the trigger checks still run). Diffs and code samples are inlined in the prompts or built
   by `fixture.sh`.
