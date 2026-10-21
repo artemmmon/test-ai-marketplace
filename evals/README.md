@@ -69,6 +69,7 @@ a finding). Negative cases are named `negative-*`.
 | sdd-engineering | `negative-unrelated-request-no-sdd` | negative | a small off-by-one bug-fix request that mentions no spec or plan is just fixed: no `sdd-engineering` skill (`run-plan`, `spec-authoring`, `workflow-retro`, `engineering-insights`) or agent is called, and no file appears under `specs/` or `docs/` |
 | sdd-engineering | `smoke-discovery-dispatch` | smoke | the plugin set loads and `spec-creator` is dispatched for pass 1 and writes no file; deterministic graders only, no judge |
 | sdd-engineering | `smoke-run-plan-draft-gate` | smoke | `run-plan` on a draft spec starts no later stage; deterministic grader only, no judge |
+| sdd-engineering | `engineering-insights-records-finding` | behaviour | since 1.1.0: told about a quirk in a module, the agent loads `engineering-insights` and writes a dated, anchored entry into a new `INSIGHTS.md` built from the template, without touching the code; deterministic graders, needs `--allow-tools Write Edit` |
 
 Cases that run an agent grade the agent's reply and also check with a `tool_used` grader that the right
 agent or skill was called. In a with/without comparison those checks fail without the plugin by design;
