@@ -6,6 +6,12 @@ All notable changes to this plugin are documented here. The format follows
 
 ## [Unreleased]
 
+### Documentation
+
+- README, "Guards and checks (hooks)": the guards resolve `specs_dir` and `plans_dir` against the session's project root, so
+  the flow must be run from a session opened in the repository being built. Found when `spec-creator` was refused a
+  write into another repository. `INSIGHTS.md` added with the finding. No behaviour change, no version bump.
+
 ## [1.2.0] - 2026-10-20
 
 ### Added
